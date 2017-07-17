@@ -1,0 +1,5 @@
+bdlicense (1.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- new_sys <hanshengyong@bdcom.com.cn>  Wed, 12 Jul 2017 02:04:30 -0700

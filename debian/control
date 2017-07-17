@@ -1,0 +1,15 @@
+Source: bdlicense
+Section: unknown
+Priority: optional
+Maintainer: new_sys <hanshengyong@bdcom.com.cn>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.6
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: git://anonscm.debian.org/collab-maint/bdlicense.git
+#Vcs-Browser: https://anonscm.debian.org/gitweb/?p=collab-maint/bdlicense.git;a=summary
+
+Package: bdlicense
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
