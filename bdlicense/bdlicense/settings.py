@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'bdlicense.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'radius',
+        'NAME': 'bdlicense',
         'USER': 'root',
         'PASSWORD': 'bdyun',
         'HOST':'',

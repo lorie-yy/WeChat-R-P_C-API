@@ -10,5 +10,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 class IndexView(View):
     def get(self, request):
         print "in IndexView"
+        context = {}
+        context['licenses'] = ""
+        return render(request,'index.html',context)
 
-        return HttpResponse('IndexView')
+

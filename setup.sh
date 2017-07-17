@@ -7,8 +7,8 @@ if [ -h "/etc/nginx/sites-enabled/bdyunlicense_nginx.conf" ];then
 fi
 ln -s ./bdyunlicense_nginx.conf /etc/nginx/sites-enabled/bdyunlicense_nginx.conf
 
-db_name=$(mysql -uroot -pbdyun -e "show databases" 2>>$INSTALL_LOG  | grep license)
+db_name=$(mysql -uroot -pbdyun -e "show databases" 2>>$INSTALL_LOG  | grep bdlicense)
 if [ "$db_name" != "license" ];then
-    mysql -uroot -pbdyun -e "create database license character set utf8 collate utf8_unicode_ci"
+    mysql -uroot -pbdyun -e "create database bdlicense character set utf8 collate utf8_general_ci"
     echo "add database 'license' successful ..."
 fi
