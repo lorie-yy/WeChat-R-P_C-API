@@ -34,9 +34,6 @@
                 {% else %}
                     <th>
                         未激活
-                    <span onclick="window.location.href='adminbd/license_activate?id={{ license.id }}'"
-                          style="color:#fff;width: 80px;margin: 0 auto;background-color: #eb2668">
-                        (激活)</span>
                     </th>
                 {% endif %}
                 <th>{{ license.licensetype.discription }}</th>
