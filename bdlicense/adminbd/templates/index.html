@@ -7,19 +7,54 @@
 <body>
 <div>
     <table>
-    <thread>
-        <td>ID</td>
-        <td>KEY</td>
-        <td>LicenseCode</td>
-        <td>Type</td>
-        <td>Time</td>
-    </thread>
-    <tbody>
-    {% for record in licenses %}
-
-    {% endfor %}
-    </tbody>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>KEY</th>
+                <th>LicenseCode</th>
+                <th>LicenseStatus</th>
+                <th>LicenseDiscription</th>
+{#                <th>{% trans 'license过期时间' %}</th>#}
+                <th>最大AP数</th>
+                <th>最大AC数</th>
+                <th>最大用户数</th>
+                <th>license创建时间</th>
+                <th>license过期时间</th>
+{#                <th>操作</th>#}
+            </tr>
+            </thead>
+        <tbody>
+        {% for license in licenses %}
+            <tr>
+                <th>{{ license.id }}</th>
+                <th>{{ license.key_id }}</th>
+                <th>{{ license.license_code }}</th>
+                {% if license.license_status == 1%}
+                    <th>已激活</th>
+                {% else %}
+                    <th>
+                        未激活
+                    </th>
+                {% endif %}
+                <th>{{ license.licensetype.discription }}</th>
+                <th>{{ license.cloudInfo.maxAPs }}</th>
+                <th>{{ license.cloudInfo.maxACs }}</th>
+                <th>{{ license.cloudInfo.maxUsers }}</th>
+                <th>{{ license.build_time }}</th>
+                <th>{{ license.expire_time }}</th>
+{#                <th>#}
+{#                    <span onclick="window.location.href='adminbd/license_details?id={{ license.id }}'"#}
+{#                          style="color:#fff;width: 80px;margin: 0 auto;background-color: #eb2668">#}
+{#                        查看详情</span></th>#}
+            </tr>
+        {% endfor %}
+        </tbody>
     </table>
+</div>
+<div>
+
+    <a href="adminbd/add_license" class="btn fa fa-plus-square btn-turquoise" style="float: right;">添加 LICENSE</a>
+{#    <a href="adminbd/license_activate" class="btn fa fa-plus-square btn-turquoise" style="float: left;">激活 LICENSE</a>#}
 </div>
 
 </body>

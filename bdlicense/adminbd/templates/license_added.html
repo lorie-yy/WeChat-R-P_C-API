@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <form role="form" id="licenseAdd" class="form-horizontal" action="" method="post" >
+         {% csrf_token %}
+        <div id="license_code" style="display: block">
+            <div class="form-group">
+                <label class="col-sm-3 control-label" for="key_id" >key_id</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" name="key_id" id="key_id" >
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label" for="license_code" >license_code</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" name="license_code" id="license_code" >
+                </div>
+            </div>
+            <div class="form-group">
+                    <label class="col-sm-3 control-label" for="license_type" >type</label>
+            <div class="col-sm-4">
+                <select class="form-control" id="license_type" name="license_type" >
+                    {% for licenseType in licenseTypes %}
+                        <option id="bao-month" value="{{ licenseType.type }}">{{ licenseType.discription }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label" for="max_aps" >允许最大AP数量</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" name="max_aps" id="max_aps" >
+                </div>
+            </div>
+        <div class="form-group">
+                <label class="col-sm-3 control-label" for="max_acs" >允许最大AC数量</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" name="max_acs" id="max_acs" >
+                </div>
+            </div>
+        <div class="form-group">
+                <label class="col-sm-3 control-label" for="max_users" >允许最大用户数量</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" name="max_users" id="max_users" >
+                </div>
+            </div>
+        <div class="form-group">
+                <button class="btn btn-success" style="margin-left:50px;">提交</button>
+
+{#                    <a href="" type="reset" class="btn btn-white" style="  float:right;margin-right:50px;">重置</a>#}
+            </div>
+
+        </div>
+    </form>
+</body>
+</html>
