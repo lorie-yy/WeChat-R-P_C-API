@@ -24,7 +24,7 @@ class LicenseRecord(models.Model):
     key_id = models.CharField(max_length=255, null=False, blank=False)
     discription = models.CharField('云平台信息描述',max_length=255, default="")
     license_code = models.CharField(max_length=255, null=False, blank=False)
-    license_status = models.IntegerField(choices=LicenseStatusChoices,verbose_name='license状态',default=0)#0:close;1:open
+    license_status = models.IntegerField(choices=LicenseStatusChoices,verbose_name='license状态')#0:close;1:open
     licensetype= models.ForeignKey(LicenseType)
     cloudInfo = models.ForeignKey(CloudInfo)
     build_time = models.DateTimeField(auto_now_add=True)

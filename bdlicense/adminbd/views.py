@@ -143,23 +143,76 @@ def license_register(request):
         # return JsonResponse(result)
 class ActivateLicenseView(View):
     def get(self,request):
-        # user_name = request.session.get('username')
-        # if not user_name:
-        #     return render(request,'adminbd/license_login.html')
         print "in activate view"
         result = {}
-        license_id = request.GET.get('id')
-        print "get license id",license_id
-        licenseRecord = LicenseRecord.objects.filter(id=int(license_id))
-        if licenseRecord.count() > 0:
-            licenseRecord[0].license_status = 1
-            licenseRecord[0].save()
-            # return HttpResponseRedirect('index')
-            return HttpResponseRedirect('license_details?id='+str(licenseRecord[0].id))
-        # LicenseRecords = LicenseRecord.objects.all()
-        # result['licenses'] = LicenseRecords
-        # return render(request,'index.html',result)
-        # else:
-        #     print "no license"
-        #     result['res'] = 0
+        key_id = request.GET.get('key_id')
+        license_code = request.GET.get('license_code')
+        try:
+            licenseRecord = LicenseRecord.objects.get(key_id=key_id,license_code=license_code)
+
+            if licenseRecord:
+                #modify license status
+                if licenseRecord.license_status == LicenseRecord.CLOSE:
+                    licenseRecord.license_status = LicenseRecord.OPEN
+                    licenseRecord.save()
+                #prepare response params
+                maxAPs = licenseRecord.cloudInfo.maxAPs
+                maxACs = licenseRecord.cloudInfo.maxACs
+                maxUsers = licenseRecord.cloudInfo.maxUsers
+                expire_time = licenseRecord.expire_time
+                result['maxAPs'] = maxAPs
+                result['maxACs'] = maxACs
+                result['maxUsers'] = maxUsers
+                result['expire_time'] = expire_time
+
+                result['res'] = True #validate successfully
+                return JsonResponse(result)
+        except Exception, e:
+            print e
+        result['res'] = False #validate unsuccessfully
+        return JsonResponse(result)
+
+        # licenseRecord = LicenseRecord.objects.filter(key_id=key_id,license_code=license_code)
+        # if licenseRecord.count() > 0:
+        #     print "license record exits based on key_id and license_code given"
+        #     licenseObj = licenseRecord[0]
+        #     if licenseObj.license_status == LicenseRecord.CLOSE:
+        #         licenseObj.license_status = LicenseRecord.OPEN
+        #         licenseObj.save()
+        #     maxAPs = licenseObj.cloudInfo.maxAPs
+        #     maxACs = licenseObj.cloudInfo.maxACs
+        #     maxUsers = licenseObj.cloudInfo.maxUsers
+        #     expire_time = licenseObj.expire_time
+        #     result['maxAPs'] = maxAPs
+        #     result['maxACs'] = maxACs
+        #     result['maxUsers'] = maxUsers
+        #     result['expire_time'] = expire_time
+        #     result['key_id'] = key_id
+        #     result['license_code'] = license_code
+        #     result['res'] = True
         #     return JsonResponse(result)
+        # else:
+        #     print "the key_id or license_code not exits"
+        #     result['res'] = False
+        #     return JsonResponse(result)
+
+class ValidateLicenseView(View):
+    def get(self,request):
+        print "in validate view"
+        result = {}
+        key_id = request.GET.get('key_id')
+        license_code = request.GET.get('license_code')
+        print "usb_key_hardwareId",key_id
+        print "license_key",license_code
+        licenseRecords = LicenseRecord.objects.filter(key_id=key_id,license_code=license_code)
+        if licenseRecords.count() > 0 :
+            if licenseRecords[0].license_status == LicenseRecord.CLOSE:
+                result['res'] = 1 # not activated license
+                return JsonResponse(result)
+            else:
+                result['res'] = 2 # normal license
+                return JsonResponse(result)
+        else:
+            print "invalid license record"
+            result['res'] = 0 # invalid license
+            return JsonResponse(result)
