@@ -54,10 +54,10 @@
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
                  <li>
-                    <a class="waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
+                    <a class="active-menu waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
                 </li>
                 <li>
-                    <a class="active-menu waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
+                    <a class=" waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
             </ul>
         </div>
@@ -73,7 +73,7 @@
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff">
                         <div class="form-group" style="padding-top: 20px;">
-                            <label class="col-sm-3 control-label" for="key_id" >key_id</label>
+                            <label class="col-sm-3 control-label" for="key_id" >云平台</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="key_id" id="key_id" >
                             </div>
@@ -108,9 +108,9 @@
                         </div>
                         {% if licenseType.type == 1 %}
                         <div class="form-group" style="display: none;">
-                            <label class="col-sm-3 control-label" for="max_aps" >低配AP数量</label>
+                            <label class="col-sm-3 control-label" for="max_aps" >允许最大AP数量</label>
                             <div class="col-sm-4">
-                                <input value="{{  }}" required type="text" class="form-control" name="max_aps" id="max_aps" >
+                                <input value="1" required type="text" class="form-control" name="max_aps" id="max_aps" >
                             </div>
                         </div>
                         <div class="form-group">
@@ -205,7 +205,7 @@
 
         function funct(){
             //获取被选中的option标签
-            var vs = $('#funcSet option:selected').val();
+            var vs = $('#funcSet  option:selected').val();
             if(vs==1){
                 console.log('1');
             } else if(vs==2){
