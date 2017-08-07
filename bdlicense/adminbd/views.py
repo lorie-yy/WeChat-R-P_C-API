@@ -20,7 +20,19 @@ class IndexView(View):
         context = {}
         LicenseRecords = LicenseRecord.objects.all()
         context['licenses'] = LicenseRecords
-        return render(request,'index.html',context)
+        return render(request, 'index.html',context)
+#主页yun
+class IndexViewYun(View):
+    def get(self, request):
+        print "in IndexViewYun"
+        # username = request.session.get('username')
+        # if not username:
+        #     return render(request,'lisence_login.html')
+
+        context = {}
+        LicenseRecords = LicenseRecord.objects.all()
+        context['licenses'] = LicenseRecords
+        return render(request, 'license_yun.html',context)
 
 class AddLicenseView(View):
     def get(self,request):
@@ -39,7 +51,6 @@ class AddLicenseView(View):
         max_ap = request.POST.get("max_aps")
         max_ac = request.POST.get("max_acs")
         max_user = request.POST.get("max_users")
-
         print "print data from html and js"
         print key_id
         print license_code
@@ -71,6 +82,54 @@ class AddLicenseView(View):
             print e
         return HttpResponseRedirect('add_license')
 
+class AddLicenseYunView(View):
+    def get(self,request):
+        # username = request.session.get('username')
+        # if not username:
+        #     return render(request,'lisence_login.html')
+        context = {}
+        licenseTypes = LicenseType.objects.all()
+        context['licenseTypes'] = licenseTypes
+        return render(request, 'license_addyun.html',context)
+
+    def post(self,request):
+        key_id = request.POST.get("key_id",'')
+        license_code = request.POST.get("license_code",'')
+        license_type = request.POST.get("license_type",'1')
+        max_ap = request.POST.get("max_aps")
+        max_ac = request.POST.get("max_acs")
+        max_user = request.POST.get("max_users")
+        print "print data from html and js"
+        print key_id
+        print license_code
+        print license_type
+        print max_ap
+        print max_ac
+        print max_user
+        uu = {}
+        try:
+            cloudinfo = CloudInfo()
+            cloudinfo.maxACs = max_ac
+            cloudinfo.maxAPs = max_ap
+            cloudinfo.maxUsers = max_user
+            cloudinfo.save()
+
+            license = LicenseRecord()
+            license.key_id = key_id
+            license.license_code = license_code
+            license.licensetype.type = license_type
+            license.cloudInfo = cloudinfo
+            #default 0,try not the underline
+            # license.license_status = license.CLOSE
+            license.save()
+
+            result = 1
+            uu = {'res',result}
+            return HttpResponse(uu)
+        except Exception,e:
+            print e
+        return HttpResponseRedirect('add_license_yun')
+
 # 判断是否登录
 def is_login(request):
     uName_NoId = request.session.get('username', False)
@@ -89,10 +148,9 @@ def is_login(request):
 
 #lisence 登陆
 @csrf_exempt
-def lisence_login(request):
+def license_login(request):
     if request.method == "GET":
-        return render(request, 'adminbd/license_login.html')
-
+        return render(request, 'license_login.html')
     if request.method == "POST":
         user_name = request.POST.get('username')
         password = request.POST.get('password')
@@ -105,6 +163,7 @@ def lisence_login(request):
         else:
             result['res'] = 0
             return JsonResponse(result)
+
 
 #lisence 注册
 @csrf_exempt
