@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
-from adminbd.models import LicenseRecord,CloudInfo,LicenseType
+from adminbd.models import LicenseRecord,CloundInformation,LicenseType,LicenseParams
 
 
 # Create your views here.
@@ -30,39 +30,66 @@ class AddLicenseView(View):
         context = {}
         licenseTypes = LicenseType.objects.all()
         context['licenseTypes'] = licenseTypes
+
+        #1:lowLicense,2:middleLicense,3:highLicense
+        lowLicenses = LicenseParams.objects.filter(cloudRankName = "1")
+        middleLicenses = LicenseParams.objects.filter(cloudRankName = "2")
+        highLicenses = LicenseParams.objects.filter(cloudRankName = "3")
+        context['lowLicenses'] = lowLicenses
+        context['middleLicenses'] = middleLicenses
+        context['highLicenses'] = highLicenses
+
         return render(request, 'license_added.html',context)
 
     def post(self,request):
-        key_id = request.POST.get("key_id",'')
-        license_code = request.POST.get("license_code",'')
-        license_type = request.POST.get("license_type",'1')
-        max_ap = request.POST.get("max_aps")
-        max_ac = request.POST.get("max_acs")
-        max_user = request.POST.get("max_users")
+        key_id = request.POST.get("key_id")
+        license_code = request.POST.get("license_code")
+        license_type = request.POST.get("license_type")
+        id = request.POST.get("id")#get licenseParams id to validate which licenseParamsObj
+
+        licenseParamsObj = LicenseParams.objects.get(id=id)
+
+        license = LicenseRecord()
+        license.key_id = key_id
+        license.license_code = license_code
+        license.licensetype.type = license_type
+        license.licenseParams = licenseParamsObj
+        #default 0,try not the underline
+        # license.license_status = license.CLOSE
+        license.save()
+
+        result = 1
+        uu = {'res',result}
+        return HttpResponse(uu)
+        # return HttpResponseRedirect('add_license')
+
+class AddCloudView(View):
+    def get(self,request):
+        # username = request.session.get('username')
+        # if not username:
+        #     return render(request,'lisence_login.html')
+        context = {}
+        cloudInfos = CloundInformation.objects.all()
+        context['cloudInfos'] = cloudInfos
+        return render(request, 'license_added.html',context)
+
+    def post(self,request):
+        cloudNumber = request.POST.get("cloudNumber",'')
+        buyer = request.POST.get("buyer",'')
+        installAddress = request.POST.get("installAddress",'')
+        contactor = request.POST.get("contactor")
+        phonenum = request.POST.get("phonenum")
 
         print "print data from html and js"
-        print key_id
-        print license_code
-        print license_type
-        print max_ap
-        print max_ac
-        print max_user
         uu = {}
         try:
-            cloudinfo = CloudInfo()
-            cloudinfo.maxACs = max_ac
-            cloudinfo.maxAPs = max_ap
-            cloudinfo.maxUsers = max_user
+            cloudinfo = CloundInformation()
+            cloudinfo.cloudNumber = cloudNumber
+            cloudinfo.buyer = buyer
+            cloudinfo.installAddress = installAddress
+            cloudinfo.contactor = contactor
+            cloudinfo.phone = phonenum
             cloudinfo.save()
-
-            license = LicenseRecord()
-            license.key_id = key_id
-            license.license_code = license_code
-            license.licensetype.type = license_type
-            license.cloudInfo = cloudinfo
-            #default 0,try not the underline
-            # license.license_status = license.CLOSE
-            license.save()
 
             result = 1
             uu = {'res',result}
