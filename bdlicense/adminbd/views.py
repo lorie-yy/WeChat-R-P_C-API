@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
-from adminbd.models import LicenseRecord,CloudInfo,LicenseType
-
+from adminbd.models import LicenseRecord,CloundInformation,LicenseType,LicenseParams
+from datetime import datetime
 
 # Create your views here.
 #主页
@@ -17,21 +17,35 @@ class IndexView(View):
         # if not username:
         #     return render(request,'lisence_login.html')
 
+        cloud_id = request.GET.get('cloud_id')
         context = {}
-        LicenseRecords = LicenseRecord.objects.all()
-        context['licenses'] = LicenseRecords
+        print "cloud_id",cloud_id
+        if cloud_id:
+            cloudObj = CloundInformation.objects.get(id=cloud_id)
+            licenseRecords = cloudObj.licenserecord_set.all()
+            print "licenseRecords.count():"
+            print licenseRecords.count()
+            context['licenses'] = licenseRecords
+            context['cloud_id'] = int(cloud_id)
+        else:
+            LicenseRecords = LicenseRecord.objects.all()
+            context['licenses'] = LicenseRecords
+
+        cloudInfos = CloundInformation.objects.all()
+        context['cloudInfos'] = cloudInfos
+
         return render(request, 'index.html',context)
 #主页yun
 class IndexViewYun(View):
     def get(self, request):
-        print "in IndexViewYun"
+        print "in IndexYunView"
         # username = request.session.get('username')
         # if not username:
         #     return render(request,'lisence_login.html')
 
         context = {}
-        LicenseRecords = LicenseRecord.objects.all()
-        context['licenses'] = LicenseRecords
+        cloudInfos = CloundInformation.objects.all()
+        context['cloudInfos'] = cloudInfos
         return render(request, 'license_yun.html',context)
 
 class AddLicenseView(View):
@@ -39,96 +53,101 @@ class AddLicenseView(View):
         # username = request.session.get('username')
         # if not username:
         #     return render(request,'lisence_login.html')
+        print "in add license get func"
+
         context = {}
         licenseTypes = LicenseType.objects.all()
         context['licenseTypes'] = licenseTypes
+
+        licenseParams = LicenseParams.objects.all()
+        context['licenseParams'] = licenseParams
+
+        cloudInfos = CloundInformation.objects.all()
+        context['cloudInfos'] = cloudInfos
+
         return render(request, 'license_added.html',context)
 
     def post(self,request):
-        key_id = request.POST.get("key_id",'')
-        license_code = request.POST.get("license_code",'')
-        license_type = request.POST.get("license_type",'1')
-        max_ap = request.POST.get("max_aps")
-        max_ac = request.POST.get("max_acs")
-        max_user = request.POST.get("max_users")
-        print "print data from html and js"
-        print key_id
-        print license_code
-        print license_type
-        print max_ap
-        print max_ac
-        print max_user
+        print "in add license post func"
+        params = request.POST.copy()
+        print params
+        key_id = params['key_id']
+        license_code = params['license_code']
+        license_type = params['license_type']
+        licensePid = params['licensePID']#get licenseParams id to validate which licenseParamsObj
+        cloud_info = params['cloud_info']
+        license_time = params['license_time']
+
+
+        cur_time = datetime.now()
+        print cur_time
+        cur_year = cur_time.year
+        fut_year = cur_year+int(license_time)
+        cur_time = cur_time.replace(year=fut_year)
+        print cur_time
+
         uu = {}
         try:
-            cloudinfo = CloudInfo()
-            cloudinfo.maxACs = max_ac
-            cloudinfo.maxAPs = max_ap
-            cloudinfo.maxUsers = max_user
-            cloudinfo.save()
-
             license = LicenseRecord()
             license.key_id = key_id
             license.license_code = license_code
-            license.licensetype.type = license_type
-            license.cloudInfo = cloudinfo
-            #default 0,try not the underline
-            # license.license_status = license.CLOSE
+            license.licenseType_id = license_type
+            license.cloudInfo_id = cloud_info
+            license.expire_time = cur_time
+            if licensePid:
+                license.licenseParam_id = int(licensePid)
             license.save()
-
+            print "save license"
             result = 1
-            uu = {'res',result}
-            return HttpResponse(uu)
+            uu = {'res':result}
+            return JsonResponse(uu)
         except Exception,e:
             print e
-        return HttpResponseRedirect('add_license')
+        result = 0
+        uu = {'res':result}
+        return JsonResponse(uu)
 
-class AddLicenseYunView(View):
+
+class AddCloudView(View):
     def get(self,request):
         # username = request.session.get('username')
         # if not username:
         #     return render(request,'lisence_login.html')
-        context = {}
-        licenseTypes = LicenseType.objects.all()
-        context['licenseTypes'] = licenseTypes
-        return render(request, 'license_addyun.html',context)
+        # context = {}
+        # cloudInfos = CloundInformation.objects.all()
+        # context['cloudInfos'] = cloudInfos
+        return render(request, 'license_addyun.html')
 
     def post(self,request):
-        key_id = request.POST.get("key_id",'')
-        license_code = request.POST.get("license_code",'')
-        license_type = request.POST.get("license_type",'1')
-        max_ap = request.POST.get("max_aps")
-        max_ac = request.POST.get("max_acs")
-        max_user = request.POST.get("max_users")
-        print "print data from html and js"
-        print key_id
-        print license_code
-        print license_type
-        print max_ap
-        print max_ac
-        print max_user
+        print "in add cloud post func"
+        params = request.POST.copy()
+        print params
+        cloud_name = params['cloud_name']
+        install_add = params['install_add']
+        cloud_buyer = params['cloud_buyer']
+        contacts = params['contacts']
+        phone = params['phone']
+
         uu = {}
         try:
-            cloudinfo = CloudInfo()
-            cloudinfo.maxACs = max_ac
-            cloudinfo.maxAPs = max_ap
-            cloudinfo.maxUsers = max_user
+            cloudinfo = CloundInformation()
+            cloudinfo.cloudName = cloud_name
+            cloudinfo.installAddress = install_add
+            cloudinfo.buyer = cloud_buyer
+            cloudinfo.contacts = contacts
+            cloudinfo.phone = phone
             cloudinfo.save()
 
-            license = LicenseRecord()
-            license.key_id = key_id
-            license.license_code = license_code
-            license.licensetype.type = license_type
-            license.cloudInfo = cloudinfo
-            #default 0,try not the underline
-            # license.license_status = license.CLOSE
-            license.save()
-
             result = 1
-            uu = {'res',result}
-            return HttpResponse(uu)
+            uu = {'res':result}
+            return JsonResponse(uu)
         except Exception,e:
             print e
-        return HttpResponseRedirect('add_license_yun')
+        result = 0
+        uu = {'res':result}
+        return JsonResponse(uu)
+        # return HttpResponseRedirect('add_cloud')
+
 
 # 判断是否登录
 def is_login(request):
@@ -210,50 +229,29 @@ class ActivateLicenseView(View):
             licenseRecord = LicenseRecord.objects.get(key_id=key_id,license_code=license_code)
 
             if licenseRecord:
+                print "have licenseRecord"
                 #modify license status
                 if licenseRecord.license_status == LicenseRecord.CLOSE:
                     licenseRecord.license_status = LicenseRecord.OPEN
                     licenseRecord.save()
                 #prepare response params
-                maxAPs = licenseRecord.cloudInfo.maxAPs
-                maxACs = licenseRecord.cloudInfo.maxACs
-                maxUsers = licenseRecord.cloudInfo.maxUsers
+                maxAPs = licenseRecord.licenseParam.maxAPs
+                maxACs = licenseRecord.licenseParam.maxACs
+                maxUsers = licenseRecord.licenseParam.maxUsers
                 expire_time = licenseRecord.expire_time
-                result['maxAPs'] = maxAPs
-                result['maxACs'] = maxACs
-                result['maxUsers'] = maxUsers
-                result['expire_time'] = expire_time
+                result['usb_key_hardwareId'] = key_id
+                result['license_key'] = license_code
+                result['max_ap_allowed'] = maxAPs
+                result['max_ac_allowed'] = maxACs
+                result['max_user_allowed'] = maxUsers
+                result['license_expire_time'] = expire_time
 
-                result['res'] = True #validate successfully
+                result['result'] = True #validate successfully
                 return JsonResponse(result)
         except Exception, e:
             print e
-        result['res'] = False #validate unsuccessfully
+        result['result'] = False #validate unsuccessfully
         return JsonResponse(result)
-
-        # licenseRecord = LicenseRecord.objects.filter(key_id=key_id,license_code=license_code)
-        # if licenseRecord.count() > 0:
-        #     print "license record exits based on key_id and license_code given"
-        #     licenseObj = licenseRecord[0]
-        #     if licenseObj.license_status == LicenseRecord.CLOSE:
-        #         licenseObj.license_status = LicenseRecord.OPEN
-        #         licenseObj.save()
-        #     maxAPs = licenseObj.cloudInfo.maxAPs
-        #     maxACs = licenseObj.cloudInfo.maxACs
-        #     maxUsers = licenseObj.cloudInfo.maxUsers
-        #     expire_time = licenseObj.expire_time
-        #     result['maxAPs'] = maxAPs
-        #     result['maxACs'] = maxACs
-        #     result['maxUsers'] = maxUsers
-        #     result['expire_time'] = expire_time
-        #     result['key_id'] = key_id
-        #     result['license_code'] = license_code
-        #     result['res'] = True
-        #     return JsonResponse(result)
-        # else:
-        #     print "the key_id or license_code not exits"
-        #     result['res'] = False
-        #     return JsonResponse(result)
 
 class ValidateLicenseView(View):
     def get(self,request):

@@ -78,29 +78,42 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="panel">
+                    <div class="col-sm-4">
+                        <select onchange="selectCloud()" class="form-control" id="cloud_info" name="cloud_info" >
+                            <option value="" disabled="" selected="">选择license对应云平台</option>
+                            {% for cloudInfo in cloudInfos %}
+                                <option id="bao-month" value="{{ cloudInfo.id }}" {% ifequal cloud_id  cloudInfo.id %}selected{% endifequal %}>{{ cloudInfo.cloudName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
-                        <a href="/adminbd/add_license_yun" class="btn fa fa-plus-square btn-turquoise pull-right">添加 LICENSE</a>
+                        <a href="/adminbd/add_license" class="btn fa fa-plus-square btn-turquoise pull-right">添加 LICENSE</a>
                     </div>
                     <table class="table table-striped">
                         <thead>
                             <tr>
+                                <th>云平台</th>
                                 <th>ID</th>
-                                <th>KEY</th>
-                                <th>LicenseCode</th>
-                                <th>LicenseStatus</th>
-                                <th>LicenseDiscription</th>
+                                <th>KEY_ID</th>
+                                <th>版本类型</th>
+                                <th>Code</th>
+                                <th>状态</th>
                                 <th>最大AP数</th>
                                 <th>最大AC数</th>
                                 <th>最大用户数</th>
-                                <th>license创建时间</th>
-                                <th>license过期时间</th>
+                                <th>创建时间</th>
+                                <th>过期时间</th>
+
                             </tr>
                         </thead>
                         <tbody>
                         {% for license in licenses %}
                             <tr>
+                                <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
                                 <th>{{ license.id }}</th>
                                 <th>{{ license.key_id }}</th>
+                                <th>{{ license.licenseType.discription }}</th>
                                 <th>{{ license.license_code }}</th>
                                 {% if license.license_status == 1%}
                                     <th>已激活</th>
@@ -109,10 +122,15 @@
                                         未激活
                                     </th>
                                 {% endif %}
-                                <th>{{ license.licensetype.discription }}</th>
-                                <th>{{ license.cloudInfo.maxAPs }}</th>
-                                <th>{{ license.cloudInfo.maxACs }}</th>
-                                <th>{{ license.cloudInfo.maxUsers }}</th>
+                            {% if license.licenseParam.maxAPs %}
+                                <th>{{ license.licenseParam.maxAPs }}</th>
+                                <th>{{ license.licenseParam.maxACs }}</th>
+                                <th>{{ license.licenseParam.maxUsers }}</th>
+                            {% else %}
+                                <th>无</th>
+                                <th>无</th>
+                                <th>无</th>
+                            {% endif %}
                                 <th>{{ license.build_time }}</th>
                                 <th>{{ license.expire_time }}</th>
                             </tr>
@@ -141,6 +159,14 @@
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
+
+    <script>
+        function selectCloud(){
+            var cloud_id = $('#cloud_info option:selected').val();
+{#            alert(cloud_id);#}
+            window.location.href = "/adminbd?cloud_id="+cloud_id;
+        }
+    </script>
 </body>
 
 </html>
