@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
-from adminbd.models import LicenseRecord,CloundInformation,LicenseType,LicenseParams
+from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicenseParams
 from datetime import datetime
 
 # Create your views here.
@@ -13,46 +13,46 @@ from datetime import datetime
 class IndexView(View):
     def get(self, request):
         print "in IndexView"
-        # username = request.session.get('username')
-        # if not username:
-        #     return render(request,'lisence_login.html')
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
         context = {}
         print "cloud_id",cloud_id
         if cloud_id:
-            cloudObj = CloundInformation.objects.get(id=cloud_id)
+            cloudObj = CloudInformation.objects.get(id=cloud_id)
             licenseRecords = cloudObj.licenserecord_set.all()
-            print "licenseRecords.count():"
-            print licenseRecords.count()
             context['licenses'] = licenseRecords
             context['cloud_id'] = int(cloud_id)
         else:
             LicenseRecords = LicenseRecord.objects.all()
             context['licenses'] = LicenseRecords
 
-        cloudInfos = CloundInformation.objects.all()
+        cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
+        context['username'] = username
 
         return render(request, 'index.html',context)
 #主页yun
 class IndexViewYun(View):
     def get(self, request):
         print "in IndexYunView"
-        # username = request.session.get('username')
-        # if not username:
-        #     return render(request,'lisence_login.html')
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
 
         context = {}
-        cloudInfos = CloundInformation.objects.all()
+        cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
+        context['username'] = username
         return render(request, 'license_yun.html',context)
 
 class AddLicenseView(View):
     def get(self,request):
-        # username = request.session.get('username')
-        # if not username:
-        #     return render(request,'lisence_login.html')
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
         print "in add license get func"
 
         context = {}
@@ -62,12 +62,17 @@ class AddLicenseView(View):
         licenseParams = LicenseParams.objects.all()
         context['licenseParams'] = licenseParams
 
-        cloudInfos = CloundInformation.objects.all()
+        cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
+        context['username'] = username
 
         return render(request, 'license_added.html',context)
 
     def post(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
         print "in add license post func"
         params = request.POST.copy()
         print params
@@ -110,15 +115,19 @@ class AddLicenseView(View):
 
 class AddCloudView(View):
     def get(self,request):
-        # username = request.session.get('username')
-        # if not username:
-        #     return render(request,'lisence_login.html')
-        # context = {}
-        # cloudInfos = CloundInformation.objects.all()
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+        # cloudInfos = CloudInformation.objects.all()
         # context['cloudInfos'] = cloudInfos
-        return render(request, 'license_addyun.html')
+        context['username'] = username
+        return render(request, 'license_addyun.html',context)
 
     def post(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
         print "in add cloud post func"
         params = request.POST.copy()
         print params
@@ -130,7 +139,7 @@ class AddCloudView(View):
 
         uu = {}
         try:
-            cloudinfo = CloundInformation()
+            cloudinfo = CloudInformation()
             cloudinfo.cloudName = cloud_name
             cloudinfo.installAddress = install_add
             cloudinfo.buyer = cloud_buyer
@@ -148,33 +157,22 @@ class AddCloudView(View):
         return JsonResponse(uu)
         # return HttpResponseRedirect('add_cloud')
 
-
-# 判断是否登录
-def is_login(request):
-    uName_NoId = request.session.get('username', False)
-    user_name = request.session.get('user_name', False)
-    shop_id = request.session.get('shop_id', False)
-    if user_name and uName_NoId:
-        loginUsers=User.objects.filter(username=user_name)
-        if loginUsers.count()>0:
-            loginUser=loginUsers[0]
-        else:
-            print("error!loginUser's count is [%d]" % (loginUsers.count()))
-            loginUser=User()
-    else:
-        loginUser=User()
-    return (uName_NoId,user_name, shop_id, loginUser )
-
 #lisence 登陆
 @csrf_exempt
 def license_login(request):
     if request.method == "GET":
         return render(request, 'license_login.html')
     if request.method == "POST":
-        user_name = request.POST.get('username')
-        password = request.POST.get('password')
+        params = request.POST.copy()
+        user_name = params['username']
+        password = params['password']
+        print "---------"
+        print params
+
         result = {}
         user_pass = authenticate(username=user_name,password=password)
+        print "user is passed or not"
+        print user_pass
         if user_pass:
             request.session['username'] = user_name
             result['res'] = 1
@@ -183,42 +181,18 @@ def license_login(request):
             result['res'] = 0
             return JsonResponse(result)
 
-
-#lisence 注册
 @csrf_exempt
-def license_register(request):
-    if request.method == 'GET':
-        return render(request, 'adminbd/license_login.html')
-    if request.method == 'POST':
-        user_name = request.POST.get('username')
-        password = request.POST.get('paw1')
-        result = {}
-        same_user = User.objects.filter(username=user_name)
+def license_logout(request):
+    if request.method == "GET":
+        username = request.session.get('username',False)
+        if username is False:
+            return render(request, 'license_login.html')
 
-        if same_user.count() > 0:
-            result['res'] = 0
-            return JsonResponse(result)
-        else:
-            new_user = User()
-            new_user.username = user_name
-            new_user.password = password
-            new_user.save()
-            result['res'] = 1
-            return JsonResponse(result)
+        user=User.objects.get(username=username)
+        user.save()
+        request.session.flush()
+        return HttpResponseRedirect('license_login')
 
-        # res = 0
-        # if same_user.count() == 0:
-        #         new_user = User.objects.create_user(username=user_name,
-        #                                             password=password)
-        #         new_user.is_active=1
-        # else:
-        #     new_user = new_user[0]
-        #     new_user.set_password(password)
-        #
-        # new_user.save()
-        # res = 1
-        # result['res'] = res
-        # return JsonResponse(result)
 class ActivateLicenseView(View):
     def get(self,request):
         print "in activate view"
@@ -244,8 +218,9 @@ class ActivateLicenseView(View):
                 result['max_ap_allowed'] = maxAPs
                 result['max_ac_allowed'] = maxACs
                 result['max_user_allowed'] = maxUsers
-                result['license_expire_time'] = expire_time
-
+                #expire_time format string
+                str_expire_time = expire_time.strftime('%Y-%m-%d')
+                result['license_expire_time'] = str_expire_time
                 result['result'] = True #validate successfully
                 return JsonResponse(result)
         except Exception, e:
