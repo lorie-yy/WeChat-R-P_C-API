@@ -69,23 +69,34 @@
     <div id="page-inner">
         <div class="row">
             <div class="col-md-12">
-                <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false" >
+                <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff">
                         <div class="form-group" style="padding-top: 20px;">
-                            <label class="col-sm-3 control-label" for="key_id" >key_id</label>
+                            <label class="col-sm-3 control-label" for="key_id" >license硬件ID</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="key_id" id="key_id" >
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="license_code" >license_code</label>
+                            <label class="col-sm-3 control-label" for="license_code" >license编码</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="license_code" id="license_code" >
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="license_type" >类型</label>
+                            <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
+                            <div class="col-sm-4">
+                                <select onchange="" class="form-control" id="cloud_info" name="cloud_info" >
+                                    <option value="" disabled="" selected="">选择license对应云平台</option>
+                                    {% for cloudInfo in cloudInfos %}
+                                        <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="license_type" >license类型</label>
                             <div class="col-sm-4">
                                 <select onchange="func()" class="form-control" id="license_type" name="license_type" >
                                     <option value="" disabled="" selected="">选择功能类型</option>
@@ -96,40 +107,30 @@
                             </div>
                         </div>
                         <div style="display: none" class="form-group" id="setting">
-                             <label class="col-sm-3 control-label" for="acc" >配置</label>
+                             <label class="col-sm-3 control-label" for="acc" >license配置</label>
                              <div class="col-sm-4">
                                  <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
                                         <option value="" disabled="" selected="">选择配置类型</option>
-                                        <option value="1">低配</option>
-                                        <option value="2">中配</option>
-                                        <option value="3">高配</option>
-                                </select>
+                                     {% for  licenseParam in licenseParams%}
+                                        <option value="{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
+                                     {% endfor %}
+                                 </select>
                              </div>
                         </div>
-                        {% if licenseType.type == 1 %}
-                        <div class="form-group" style="display: none;">
-                            <label class="col-sm-3 control-label" for="max_aps" >低配AP数量</label>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="license_time" >license有效期</label>
                             <div class="col-sm-4">
-                                <input value="{{  }}" required type="text" class="form-control" name="max_aps" id="max_aps" >
+                                <select onchange="func()" class="form-control" id="license_time" name="license_time" >
+                                    <option value="" disabled="" selected="">选择license有效时间</option>
+                                        <option id="one" value="1">一年</option>
+                                        <option id="two" value="2">两年</option>
+                                        <option id="three" value="3">三年</option>
+                                        <option id="five" value="5">五年</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="max_acs" >允许最大AC数量</label>
-                            <div class="col-sm-4">
-                                <input value="1" required type="text" class="form-control" name="max_acs" id="max_acs" >
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="max_users" >允许最大用户数量</label>
-                            <div class="col-sm-4">
-                                <input value="1" required type="text" class="form-control" name="max_users" id="max_users" >
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <div class="form-group">
-                            <button id="submit" class="btn btn-success" style="margin-left:50px;">提交</button>
-                {#                    <a href="" type="reset" class="btn btn-white" style="  float:right;margin-right:50px;">重置</a>#}
+                            <a id="submit" class="btn btn-success" style="margin-left:50px;">提交</a>
                         </div>
 
                     </div>
@@ -157,41 +158,48 @@
     <script src="../../static/assets/js/custom-scripts.js"></script>
     <script src="../../static/js/jquery.3.2.1.js"></script>
     <script>
-        var keyid, licenseCode, licenseType, maxAps, maxAcs, maxUsers;
+        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_time;
         $("#submit").click(function(){
             keyid =$.trim($("input[name='key_id']").val());
             licenseCode =$.trim($("input[name='license_code']").val());
-            licenseType =$.trim($("input[name='license_type']").val());
-            maxAps =$.trim($("input[name='max_aps']").val());
-            maxAcs =$.trim($("input[name='max_acs']").val());
-            maxUsers =$.trim($("input[name='max_users']").val());
-            if(!keyid && !licenseCode && !licenseType && !maxAps && !maxAcs && !maxUsers){
-                console.log("null")
-            }else{
-               query()
+            licenseType =$.trim($('#license_type').val());
+            licenseParamsID =$.trim($('#funcSet').val());
+            cloud_info =$.trim($('#cloud_info').val());
+            license_time =$.trim($('#license_time').val());
+            if(!keyid ){
+                alert('请输入key id');
+            }else if(!licenseCode ){
+                alert('请输入license code');
+            }else if(!cloud_info){
+                alert('请选择对应云平台');
+            }else if(!licenseType){
+                alert('请选择license类型');
+
+            }else if (licenseType == "1" && !licenseParamsID ){
+                alert('请选择配置类型');
+            }else if(!license_time){
+                alert('请选择license有效时间');
+            }
+            else{
+               $.ajax({
+                    url:"/adminbd/add_license",
+                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,license_time:license_time, license_type:licenseType,licensePID:licenseParamsID,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    type:"POST",
+                    success:function(data) {
+                        if(data.res == 1){
+                            alert('license添加成功！');
+                            window.location.href = '/adminbd/add_license';
+                        }else{
+                            alert('license添加失败！');
+                        }
+                    },
+                   error:function(){
+                        alert('服务器错误！');
+                   }
+            })
             }
         });
 
-        query();
-
-        var addLicense = "/adminbd/add_license";
-        var addLicenses = "/adminbd/AddLicenseView";
-        function query(){
-            $.ajax({
-                url:addLicense,
-                data:{key_id:keyid, license_code:licenseCode, license_type:licenseType, max_aps:maxAps,
-                max_acs:maxAcs, max_users:maxUsers},
-                type:"POST",
-                success:function(data) {
-                    console.log(data);
-                    if(data.res == 1){
-
-                    }else{
-                        console.log('error');
-                    }
-                }
-            })
-        }
         function func(){
             //获取被选中的option标签
             var vs = $('#license_type option:selected').val();
@@ -203,17 +211,6 @@
             }
         }
 
-        function funct(){
-            //获取被选中的option标签
-            var vs = $('#funcSet option:selected').val();
-            if(vs==1){
-                console.log('1');
-            } else if(vs==2){
-                console.log('2');
-            } else if(vs==3){
-               console.log('3');
-            }
-        }
     </script>
 </body>
 </html>
