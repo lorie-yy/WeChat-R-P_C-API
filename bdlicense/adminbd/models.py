@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class LicenseType(models.Model):
@@ -17,6 +18,7 @@ class LicenseParams(models.Model):
 
 class CloudInformation(models.Model):
     id = models.AutoField(primary_key=True)
+    cloudUser = models.ManyToManyField(User,null=True)
     cloudName = models.CharField('云平台名称',max_length=255,blank=False, null=False)
     buyer = models.CharField('购买方',max_length=255)
     buyTime = models.DateTimeField('购买时间',auto_now_add=True)

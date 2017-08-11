@@ -95,17 +95,19 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="panel">
+                {% if is_superuser %}
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
-
                         <a href="/adminbd/add_cloud" class="btn btn-turquoise text-right">
                               <span class="fa fa-plus-square"></span>  添加云平台
                         </a>
                     </div>
+                {% endif %}
                     <table class="table table-striped">
                         <thead >
                             <tr>
                                 <th>ID</th>
                                 <th>云平台名称</th>
+{#                                <th>云平台管理员</th>#}
                                 <th>购买者</th>
                                 <th>购买时间</th>
                                 <th>安装地址</th>
@@ -119,6 +121,7 @@
                                 <th>{{ cloudInfo.id }}</th>
                                 <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ cloudInfo.id }}'" >{{ cloudInfo.cloudName }}</span></th>
                                 <th>{{ cloudInfo.buyer }}</th>
+{#                                <th>{{ cloudInfo }}</th>#}
                                 <th>{{ cloudInfo.buyTime }}</th>
                                 <th>{{ cloudInfo.installAddress }}</th>
                                 <th>{{ cloudInfo.contacts }}</th>

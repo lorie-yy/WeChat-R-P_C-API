@@ -94,6 +94,18 @@
                                 <input required type="text" class="form-control" name="cloud_name" id="cloud_name" >
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="cloud_user" >云平台管理员</label>
+                            <div class="col-sm-4">
+                                <select onchange="func()" class="form-control" id="cloud_user" name="cloud_user" >
+                                    <option value="" disabled="" selected="">选择管理员</option>
+                                    {% for cloudUser in cloudUsers %}
+                                        <option id="bao-month" value="{{ cloudUser.id }}">{{ cloudUser.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
                         <div class="form-group" >
                             <label class="col-sm-3 control-label" for="install_add" >安装地址</label>
                             <div class="col-sm-4">
@@ -151,9 +163,10 @@
     <script src="../../static/assets/js/custom-scripts.js"></script>
     <script src="../../static/js/jquery.3.2.1.js"></script>
     <script>
-        var cloud_name, install_add, cloud_buyer, contacts, phone;
+        var cloud_name,cloud_user, install_add, cloud_buyer, contacts, phone;
         $("#submit").click(function(){
             cloud_name =$.trim($("input[name='cloud_name']").val());
+            cloud_user =$.trim($("#cloud_user").val());
             install_add =$.trim($("input[name='install_add']").val());
             cloud_buyer =$.trim($("input[name='cloud_buyer']").val());
             contacts =$.trim($("input[name='contacts']").val());
@@ -177,7 +190,7 @@
         function query(){
             $.ajax({
                 url:"/adminbd/add_cloud",
-                data:{cloud_name:cloud_name, install_add:install_add, cloud_buyer:cloud_buyer, contacts:contacts,
+                data:{cloud_name:cloud_name, cloud_user:cloud_user,install_add:install_add, cloud_buyer:cloud_buyer, contacts:contacts,
                 phone:phone,csrfmiddlewaretoken:'{{ csrf_token }}'},
                 type:"POST",
                 success:function(data) {

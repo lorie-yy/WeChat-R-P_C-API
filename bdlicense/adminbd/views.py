@@ -18,20 +18,45 @@ class IndexView(View):
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
+        is_superuser = request.session.get('is_superuser')
         context = {}
         print "cloud_id",cloud_id
+
         if cloud_id:
             cloudObj = CloudInformation.objects.get(id=cloud_id)
             licenseRecords = cloudObj.licenserecord_set.all()
-            context['licenses'] = licenseRecords
+            if is_superuser:
+                context['licenses'] = licenseRecords
+            else:
+                licenseList = []
+                licenseList.append(licenseRecords)
+                context['licenses'] = licenseList
             context['cloud_id'] = int(cloud_id)
         else:
-            LicenseRecords = LicenseRecord.objects.all()
-            context['licenses'] = LicenseRecords
+            if is_superuser:
+                LicenseRecords = LicenseRecord.objects.all()
+                context['licenses'] = LicenseRecords
+            else:
+                user = User.objects.get(username=username)
+                # print "user = User.objects.get(username=username)"
+                user_clouds = user.cloudinformation_set.all()
+                # print "user_clouds = user.cloudinformation.all()"
+                licenseList = []
+                for cloud in user_clouds:
+                    licenses = LicenseRecord.objects.filter(id=cloud.id)
+                    licenseList.append(licenses)
+                    # print "licenseList.append(licenses)"
+                context['licenses'] = licenseList
+
+                for i in licenseList:
+                    for j in i:
+                        print j.key_id
+                # print "finish!!!!!!!!!!!!!!!!!"
 
         cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
         context['username'] = username
+        context['is_superuser'] = is_superuser
 
         return render(request, 'index.html',context)
 #主页yun
@@ -41,11 +66,18 @@ class IndexViewYun(View):
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
-
+        is_superuser = request.session.get('is_superuser')
         context = {}
-        cloudInfos = CloudInformation.objects.all()
-        context['cloudInfos'] = cloudInfos
+        if is_superuser:
+            cloudInfos = CloudInformation.objects.all()
+            context['cloudInfos'] = cloudInfos
+        else:
+            user = User.objects.get(username=username)
+            cloudInfos = user.cloudinformation_set.all()
+            context['cloudInfos'] = cloudInfos
+
         context['username'] = username
+        context['is_superuser'] = is_superuser
         return render(request, 'license_yun.html',context)
 
 class AddLicenseView(View):
@@ -134,7 +166,10 @@ class AddCloudView(View):
         context = {}
         # cloudInfos = CloudInformation.objects.all()
         # context['cloudInfos'] = cloudInfos
+        cloudUsers = User.objects.all()
+        context['cloudUsers'] = cloudUsers
         context['username'] = username
+
         return render(request, 'license_addyun.html',context)
 
     def post(self,request):
@@ -145,6 +180,7 @@ class AddCloudView(View):
         params = request.POST.copy()
         print params
         cloud_name = params['cloud_name']
+        cloud_user_id = params['cloud_user']
         install_add = params['install_add']
         cloud_buyer = params['cloud_buyer']
         contacts = params['contacts']
@@ -159,6 +195,10 @@ class AddCloudView(View):
             cloudinfo.contacts = contacts
             cloudinfo.phone = phone
             cloudinfo.save()
+            if cloud_user_id:
+                userObj = User.objects.get(id=int(cloud_user_id))
+                cloudinfo.cloudUser.add(userObj)
+                print "cloud added user successfully"
 
             result = 1
             uu = {'res':result}
@@ -192,6 +232,7 @@ def license_login(request):
         user_pass = authenticate(username=user_name,password=password)
         if user_pass:
             request.session['username'] = user_name
+            request.session['is_superuser'] = user_pass.is_superuser
             result['res'] = 1
             return JsonResponse(result)
         else:
