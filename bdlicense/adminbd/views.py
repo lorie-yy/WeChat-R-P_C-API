@@ -183,9 +183,13 @@ def license_login(request):
         print params
 
         result = {}
+        userObj = User.objects.filter(username=user_name)
+        if userObj.count() == 0:
+            print "username not exists"
+            result['res'] = 2
+            return JsonResponse(result)
+
         user_pass = authenticate(username=user_name,password=password)
-        print "user is passed or not"
-        print user_pass
         if user_pass:
             request.session['username'] = user_name
             result['res'] = 1

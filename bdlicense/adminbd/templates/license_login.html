@@ -38,9 +38,6 @@
     </div>
 </div>
 <script>
-    //$('.login-submit').click(function(){
-      //  location.href='adminbd/index'
-  //  });
     var inputUser, inputPassword;
     $(".login-submit").click(function(){
         inputUser =$.trim($(".input-user").val());
@@ -60,14 +57,15 @@
             data:{username:inputUser,password:inputPassword,csrfmiddlewaretoken:'{{ csrf_token }}'},
             type:"POST",
             success:function(data) {
-{#                 console.log(data);#}
                 if(data.res == 1){
-                    alert('登录成功');
                     window.location.href='/adminbd/index';
-                }else{
-                    alert('登录失败');
+                }else if(data.res == 2){
+                    alert('用户名不存在');
                     window.location.href='/adminbd/license_login';
-{#                    console.log('error');#}
+                }
+                else{
+                    alert('用户名和密码不匹配');
+                    window.location.href='/adminbd/license_login';
                 }
             },
             error:function(){

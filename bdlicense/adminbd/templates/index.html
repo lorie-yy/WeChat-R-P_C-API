@@ -35,15 +35,6 @@
                          <i style="color: red" class="material-icons dp48">toc</i>
                     </a>
                 </div>
-{#                <i class="material-icons dp48">toc</i>#}
-{#                <ul class="user-info-menu left-links list-inline list-unstyled">#}
-{#                    <li class="hidden-sm hidden-xs" >#}
-{#                        <a href="#" data-toggle="sidebar">#}
-{#                            <i class="material-icons dp48">toc</i>#}
-{#                        </a>#}
-{#                    </li>#}
-{##}
-{#                </ul>#}
             </div>
 
         </div>
@@ -64,13 +55,6 @@
                 </li>
             </ul>
         </div>
-{#        <ul class="nav navbar-top-links navbar-right">#}
-{#            <li>#}
-{#                <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">#}
-{#                    <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>#}
-{#                </a>#}
-{#            </li>#}
-{#        </ul>#}
     </nav>
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
@@ -213,7 +197,6 @@
     <script>
         function selectCloud(){
             var cloud_id = $('#cloud_info option:selected').val();
-{#            alert(cloud_id);#}
             window.location.href = "/adminbd?cloud_id="+cloud_id;
         }
     </script>
