@@ -166,9 +166,10 @@
             licenseParamsID =$.trim($('#funcSet').val());
             cloud_info =$.trim($('#cloud_info').val());
             license_time =$.trim($('#license_time').val());
-            if(!keyid ){
-                alert('请输入key id');
-            }else if(!licenseCode ){
+{#            if(!keyid ){#}
+{#                alert('请输入key id');#}
+{#            }else #}
+            if(!licenseCode ){
                 alert('请输入license code');
             }else if(!cloud_info){
                 alert('请选择对应云平台');
@@ -188,6 +189,9 @@
                     success:function(data) {
                         if(data.res == 1){
                             alert('license添加成功！');
+                            window.location.href = '/adminbd/add_license';
+                        }else if(data.res == 2){
+                            alert('license code 已存在！');
                             window.location.href = '/adminbd/add_license';
                         }else{
                             alert('license添加失败！');

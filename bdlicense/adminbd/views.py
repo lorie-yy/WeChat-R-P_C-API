@@ -76,14 +76,27 @@ class AddLicenseView(View):
         print "in add license post func"
         params = request.POST.copy()
         print params
-        key_id = params['key_id']
+        # key_id = params['key_id']
         license_code = params['license_code']
         license_type = params['license_type']
         licensePid = params['licensePID']#get licenseParams id to validate which licenseParamsObj
         cloud_info = params['cloud_info']
         license_time = params['license_time']
 
-
+        uu = {}
+        #license_code is not unique
+        if license_code:
+            print "license_code",license_code
+            licenseRecordObj = LicenseRecord.objects.filter(license_code=license_code)
+            if licenseRecordObj:
+                print "license_code is not unique"
+                result = 2
+                uu = {'res':result}
+                return JsonResponse(uu)
+            else:
+                print "license_code is unique"
+                pass
+        #format expire time
         cur_time = datetime.now()
         print cur_time
         cur_year = cur_time.year
@@ -91,10 +104,10 @@ class AddLicenseView(View):
         cur_time = cur_time.replace(year=fut_year)
         print cur_time
 
-        uu = {}
+        # add new LicenseRecord
         try:
             license = LicenseRecord()
-            license.key_id = key_id
+            # license.key_id = key_id
             license.license_code = license_code
             license.licenseType_id = license_type
             license.cloudInfo_id = cloud_info
@@ -200,14 +213,23 @@ class ActivateLicenseView(View):
         key_id = request.GET.get('key_id')
         license_code = request.GET.get('license_code')
         try:
-            licenseRecord = LicenseRecord.objects.get(key_id=key_id,license_code=license_code)
+            # licenseRecord = LicenseRecord.objects.get(key_id=key_id,license_code=license_code)
+            licenseRecord = LicenseRecord.objects.get(license_code=license_code)
 
             if licenseRecord:
-                print "have licenseRecord"
+                print "licenseRecord is exist by this license_code"
+
+                #update license key_id
+                if key_id:
+                    licenseRecord.key_id = key_id
+                    licenseRecord.save()
+                    print "update license key_id successfully"
+
                 #modify license status
                 if licenseRecord.license_status == LicenseRecord.CLOSE:
                     licenseRecord.license_status = LicenseRecord.OPEN
                     licenseRecord.save()
+
                 #prepare response params
                 maxAPs = licenseRecord.licenseParam.maxAPs
                 maxACs = licenseRecord.licenseParam.maxACs
@@ -218,9 +240,11 @@ class ActivateLicenseView(View):
                 result['max_ap_allowed'] = maxAPs
                 result['max_ac_allowed'] = maxACs
                 result['max_user_allowed'] = maxUsers
+
                 #expire_time format string
                 str_expire_time = expire_time.strftime('%Y-%m-%d')
                 result['license_expire_time'] = str_expire_time
+
                 result['result'] = True #validate successfully
                 return JsonResponse(result)
         except Exception, e:
