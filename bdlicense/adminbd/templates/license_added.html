@@ -6,6 +6,7 @@
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <title>登录器管理后台</title>
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
@@ -20,6 +21,7 @@
     <!-- Google Fonts-->
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
+
     <style>
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
@@ -35,6 +37,13 @@
                 <i class="material-icons dp48">toc</i>
             </div>
         </div>
+        <ul class="nav navbar-left">
+            <li>
+                <a href="/adminbd/index.html" style="padding-top: 20px;">
+                   <b style="font-size:15px"> License管理平台</b>
+                </a>
+            </li>
+        </ul>
         <ul class="nav navbar-top-links navbar-right">
             <li>
                 <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
@@ -60,6 +69,11 @@
                     <a class="active-menu waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
             </ul>
+            <ul style="margin-top: 450px;">
+                <li style="font-size: 12px;">
+                    上海博达通信数据有限公司版权所有©2017
+                </li>
+            </ul>
         </div>
     </nav>
   <!-- /. NAV SIDE  -->
@@ -71,24 +85,24 @@
             <div class="col-md-12">
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
-                    <div class="form-horizontal" id="license_code" style="background-color: #fff">
-                        <div class="form-group" style="padding-top: 20px;">
-                            <label class="col-sm-3 control-label" for="key_id" >license硬件ID</label>
+                    <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
+                        <div class="form-group" style="padding-top: 20px;display: none;">
+                            <label class="col-sm-3 control-label" for="key_id" >License硬件ID</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="key_id" id="key_id" >
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="license_code" >license编码</label>
+                            <label class="col-sm-3 control-label" for="license_code" >license 码</label>
                             <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="license_code" id="license_code" >
+                                <input style="padding-right:0;padding-left: 0; " required type="text" class="form-control" name="license_code" id="license_code" >
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
                             <div class="col-sm-4">
                                 <select onchange="" class="form-control" id="cloud_info" name="cloud_info" >
-                                    <option value="" disabled="" selected="">选择license对应云平台</option>
+                                    <option value="" disabled="" selected="">选择License对应云平台</option>
                                     {% for cloudInfo in cloudInfos %}
                                         <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
                                     {% endfor %}
@@ -96,7 +110,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="license_type" >license类型</label>
+                            <label class="col-sm-3 control-label" for="license_type" >License类型</label>
                             <div class="col-sm-4">
                                 <select onchange="func()" class="form-control" id="license_type" name="license_type" >
                                     <option value="" disabled="" selected="">选择功能类型</option>
@@ -107,7 +121,7 @@
                             </div>
                         </div>
                         <div style="display: none" class="form-group" id="setting">
-                             <label class="col-sm-3 control-label" for="acc" >license配置</label>
+                             <label class="col-sm-3 control-label" for="acc" >License配置</label>
                              <div class="col-sm-4">
                                  <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
                                         <option value="" disabled="" selected="">选择配置类型</option>
@@ -118,10 +132,10 @@
                              </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="license_time" >license有效期</label>
+                            <label class="col-sm-3 control-label" for="license_time" >License有效期</label>
                             <div class="col-sm-4">
                                 <select onchange="func()" class="form-control" id="license_time" name="license_time" >
-                                    <option value="" disabled="" selected="">选择license有效时间</option>
+                                    <option value="" disabled="" selected="">选择License有效时间</option>
                                         <option id="one" value="1">一年</option>
                                         <option id="two" value="2">两年</option>
                                         <option id="three" value="3">三年</option>
@@ -212,5 +226,6 @@
         }
 
     </script>
+  <script src="../../static/js/ie.js"></script>
 </body>
 </html>
