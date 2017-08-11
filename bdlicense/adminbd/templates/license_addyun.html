@@ -6,6 +6,8 @@
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
     <title>登录器管理后台</title>
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
@@ -35,6 +37,13 @@
                 <i class="material-icons dp48">toc</i>
             </div>
         </div>
+        <ul class="nav navbar-left">
+            <li>
+                <a href="/adminbd/index.html" style="padding-top: 20px;">
+                   <b style="font-size:15px"> License管理平台</b>
+                </a>
+            </li>
+        </ul>
         <ul class="nav navbar-top-links navbar-right">
             <li>
                 <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
@@ -60,6 +69,11 @@
                     <a class=" waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
             </ul>
+            <ul style="margin-top: 450px;">
+                <li style="font-size: 12px;">
+                    上海博达通信数据有限公司版权所有©2017
+                </li>
+            </ul>
         </div>
     </nav>
   <!-- /. NAV SIDE  -->
@@ -71,14 +85,14 @@
             <div class="col-md-12">
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false" >
                      {% csrf_token %}
-                    <div class="form-horizontal" id="license_code" style="background-color: #fff">
+                    <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
                         <div class="form-group" style="padding-top: 20px;">
                             <label class="col-sm-3 control-label" for="cloud_name" >云平台名称</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="cloud_name" id="cloud_name" >
                             </div>
                         </div>
-                        <div class="form-group" style="padding-top: 20px;">
+                        <div class="form-group" >
                             <label class="col-sm-3 control-label" for="install_add" >安装地址</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="install_add" id="install_add" >
@@ -91,14 +105,14 @@
                             </div>
                         </div>
 
-                        <div class="form-group" style="padding-top: 20px;">
+                        <div class="form-group" >
                             <label class="col-sm-3 control-label" for="contacts" >联系人</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="contacts" id="contacts" >
                             </div>
                         </div>
 
-                        <div class="form-group" style="padding-top: 20px;">
+                        <div class="form-group" >
                             <label class="col-sm-3 control-label" for="phone" >联系电话</label>
                             <div class="col-sm-4">
                                 <input required type="text" class="form-control" name="phone" id="phone" >
@@ -178,5 +192,7 @@
             })
         }
     </script>
+    <script src="../../static/js/ie.js"></script>
+
 </body>
 </html>

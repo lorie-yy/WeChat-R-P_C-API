@@ -6,6 +6,8 @@
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
     <title>登录器管理后台</title>
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
@@ -32,6 +34,13 @@
                 <i class="material-icons dp48">toc</i>
             </div>
         </div>
+         <ul class="nav navbar-left">
+            <li>
+                <a href="/adminbd/index.html" style="padding-top: 20px;">
+                   <b style="font-size:15px"> License管理平台</b>
+                </a>
+            </li>
+        </ul>
         <ul class="nav navbar-top-links navbar-right">
             <li>
                 <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
@@ -54,7 +63,14 @@
                     <a class="active-menu waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
                 </li>
                 <li>
-                    <a class="waves-effect waves-dark" href="/adminbd/index.html"><i class="fa fa-dashboard"></i> License列表</a>
+                    <a class="waves-effect waves-dark" href="/adminbd/index.html">
+                        <i class="fa fa-dashboard"></i> License列表
+                    </a>
+                </li>
+            </ul>
+             <ul style="margin-top: 450px;">
+                <li style="font-size: 12px;">
+                    上海博达通信数据有限公司版权所有©2017
                 </li>
             </ul>
         </div>
@@ -79,10 +95,13 @@
             <div class="col-md-12">
                 <div class="panel">
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
-                        <a href="/adminbd/add_cloud" class="btn fa fa-plus-square btn-turquoise pull-right">添加云平台</a>
+
+                        <a href="/adminbd/add_cloud" class="btn btn-turquoise text-right">
+                              <span class="fa fa-plus-square"></span>  添加云平台
+                        </a>
                     </div>
                     <table class="table table-striped">
-                        <thead>
+                        <thead >
                             <tr>
                                 <th>ID</th>
                                 <th>云平台名称</th>
@@ -93,7 +112,7 @@
                                 <th>联系电话</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="font-size: 12px;">
                         {% for cloudInfo in cloudInfos %}
                             <tr>
                                 <th>{{ cloudInfo.id }}</th>
@@ -116,6 +135,8 @@
     <!-- JS Scripts-->
     <!-- jQuery Js -->
     <script src="../../static/assets/js/jquery-1.10.2.js"></script>
+        <script src="../../static/js/ie.js"></script>
+
 	<!-- Bootstrap Js -->
     <script src="../../static/assets/js/bootstrap.min.js"></script>
 	<script src="../../static/assets/materialize/js/materialize.min.js"></script>
