@@ -253,6 +253,27 @@ class ActivateLicenseView(View):
         result['result'] = False #validate unsuccessfully
         return JsonResponse(result)
 
+class ModifyPasswordView(View):
+    def get(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+        context['username'] = username
+        return render(request,'modify_password.html',context)
+    def post(self,request):
+        param = request.POST.copy()
+        username = param['username']
+        password = param['pwd1']
+        userObj = User.objects.filter(username=username)
+        if userObj:
+            userObj[0].set_password(password)
+            userObj[0].save()
+            return JsonResponse({'res':1})
+        else:
+            print "username is not exist"
+            return JsonResponse({'res':0})
+
 class ValidateLicenseView(View):
     def get(self,request):
         print "in validate view"
