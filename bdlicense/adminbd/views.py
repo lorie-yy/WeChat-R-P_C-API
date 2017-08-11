@@ -229,6 +229,7 @@ class ActivateLicenseView(View):
                 if licenseRecord.license_status == LicenseRecord.CLOSE:
                     licenseRecord.license_status = LicenseRecord.OPEN
                     licenseRecord.save()
+                    print "license status updated successfully"
 
                 #prepare response params
                 maxAPs = licenseRecord.licenseParam.maxAPs
