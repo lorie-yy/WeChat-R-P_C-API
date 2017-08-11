@@ -64,12 +64,19 @@
                 </li>
             </ul>
         </div>
+        <ul class="nav navbar-top-links navbar-right">
+            <li>
+                <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
+                    <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>
+                </a>
+            </li>
+        </ul>
     </nav>
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
         <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>
         <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>
-        <li><a href="adminbd/license_login"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
+        <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
    <!--/. NAV TOP  -->
      <div id="" class="sidebar-menu toggle-others ">
@@ -135,7 +142,7 @@
                         <thead>
                             <tr>
                                 <th>云平台</th>
-                                <th>ID</th>
+{#                                <th>ID</th>#}
                                 <th>KEY_ID</th>
                                 <th>版本类型</th>
                                 <th>Code</th>
@@ -143,7 +150,7 @@
                                 <th>最大AP数</th>
                                 <th>最大AC数</th>
                                 <th>最大用户数</th>
-                                <th>创建时间</th>
+                                <th>购买时间</th>
                                 <th>过期时间</th>
 
                             </tr>
@@ -152,7 +159,7 @@
                         {% for license in licenses %}
                             <tr>
                                 <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
-                                <th>{{ license.id }}</th>
+{#                                <th>{{ license.id }}</th>#}
                                 <th>{{ license.key_id }}</th>
                                 <th>{{ license.licenseType.discription }}</th>
                                 <th>{{ license.license_code }}</th>

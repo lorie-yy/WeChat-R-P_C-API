@@ -47,7 +47,7 @@
         <ul class="nav navbar-top-links navbar-right">
             <li>
                 <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
-                    <i class="fa fa-user fa-fw"></i> <b>admin</b> <i class="material-icons right">arrow_drop_down</i>
+                    <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>
                 </a>
             </li>
         </ul>
@@ -86,12 +86,12 @@
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
-                        <div class="form-group" style="padding-top: 20px;display: none;">
-                            <label class="col-sm-3 control-label" for="key_id" >License硬件ID</label>
-                            <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="key_id" id="key_id" >
-                            </div>
-                        </div>
+{#                        <div class="form-group" style="padding-top: 20px;display: none;">#}
+{#                            <label class="col-sm-3 control-label" for="key_id" >License硬件ID</label>#}
+{#                            <div class="col-sm-4">#}
+{#                                <input required type="text" class="form-control" name="key_id" id="key_id" >#}
+{#                            </div>#}
+{#                        </div>#}
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="license_code" >license 码</label>
                             <div class="col-sm-4">
@@ -180,9 +180,10 @@
             licenseParamsID =$.trim($('#funcSet').val());
             cloud_info =$.trim($('#cloud_info').val());
             license_time =$.trim($('#license_time').val());
-            if(!keyid ){
-                alert('请输入key id');
-            }else if(!licenseCode ){
+{#            if(!keyid ){#}
+{#                alert('请输入key id');#}
+{#            }else #}
+            if(!licenseCode ){
                 alert('请输入license code');
             }else if(!cloud_info){
                 alert('请选择对应云平台');
@@ -202,6 +203,9 @@
                     success:function(data) {
                         if(data.res == 1){
                             alert('license添加成功！');
+                            window.location.href = '/adminbd/add_license';
+                        }else if(data.res == 2){
+                            alert('license code 已存在！');
                             window.location.href = '/adminbd/add_license';
                         }else{
                             alert('license添加失败！');
