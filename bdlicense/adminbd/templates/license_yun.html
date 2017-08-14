@@ -30,7 +30,7 @@
             <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="index.html">
                 <img src="../../static/images/logo-w.png" />
             </a>
-            <div id="sideNav" href="">
+            <div id="sideNav" class="" href="">
                 <i class="material-icons dp48">toc</i>
             </div>
         </div>
@@ -53,10 +53,15 @@
     <ul id="dropdown1" class="dropdown-content">
         <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>
         <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>
+<<<<<<< HEAD
+        <li><a href="#"><i class="fa fa-gear fa-fw"></i>用户管理</a></li>
+        <li><a href="adminbd/license_login"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
+=======
         <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
+>>>>>>> master
     </ul>
    <!--/. NAV TOP  -->
-    <nav class="navbar-default navbar-side" role="navigation">
+    <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
                 <li>
@@ -68,15 +73,16 @@
                     </a>
                 </li>
             </ul>
-             <ul style="margin-top: 450px;">
+              <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
                 <li style="font-size: 12px;">
                     上海博达通信数据有限公司版权所有©2017
                 </li>
             </ul>
+
         </div>
     </nav>
     <!-- /. NAV SIDE  -->
-    <div id="page-wrapper">
+    <div id="page-wrapper" class="page-wrapper">
        <div class="header" style="opacity: 0;padding-bottom:7px;"></div>
        <div class="header" style="display: none; background:#fff; padding-bottom:20px;padding-top:30px;">
                      <div style="height:115px;">
@@ -134,8 +140,8 @@
     <!-- /. WRAPPER  -->
     <!-- JS Scripts-->
     <!-- jQuery Js -->
-    <script src="../../static/assets/js/jquery-1.10.2.js"></script>
-        <script src="../../static/js/ie.js"></script>
+    <script src="../../static/js/jquery.3.2.1.js"></script>
+    <script src="../../static/js/ie.js"></script>
 
 	<!-- Bootstrap Js -->
     <script src="../../static/assets/js/bootstrap.min.js"></script>
@@ -144,7 +150,7 @@
     <script src="../../static/assets/js/jquery.metisMenu.js"></script>
     <!-- Morris Chart Js -->
     <script src="../../static/assets/js/morris/raphael-2.1.0.min.js"></script>
-    <script src="../../static/assets/js/morris/morris.js"></script>
+{#    <script src="../../static/assets/js/morris/morris.js"></script>#}
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>

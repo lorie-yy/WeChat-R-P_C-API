@@ -59,7 +59,7 @@
         <li><a href="/adminbd/license_login"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
    <!--/. NAV TOP  -->
-    <nav class="navbar-default navbar-side" role="navigation">
+    <nav class="navbar-default navbar-side" role="navigation"  style="height: 85%;">
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
                  <li>
@@ -69,7 +69,7 @@
                     <a class="active-menu waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
             </ul>
-            <ul style="margin-top: 450px;">
+              <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
                 <li style="font-size: 12px;">
                     上海博达通信数据有限公司版权所有©2017
                 </li>
@@ -77,7 +77,7 @@
         </div>
     </nav>
   <!-- /. NAV SIDE  -->
-    <div id="page-wrapper" style="top: 60px;">
+    <div id="page-wrapper" class="page-wrapper" style="top: 60px;">
    <div class="header" style="opacity: 0; padding-bottom:3px;"></div>
 
     <div id="page-inner">
@@ -86,16 +86,25 @@
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
+<<<<<<< HEAD
+                        <div class="form-group" style="padding-top: 20px;display: none;">
+                            <label class="col-sm-3 control-label" for="key_id" >License硬件ID</label>
+                            <div class="col-sm-4">
+                                <input  required type="text" class="form-control" name="key_id" id="key_id" >
+                            </div>
+                        </div>
+=======
 {#                        <div class="form-group" style="padding-top: 20px;display: none;">#}
 {#                            <label class="col-sm-3 control-label" for="key_id" >License硬件ID</label>#}
 {#                            <div class="col-sm-4">#}
 {#                                <input required type="text" class="form-control" name="key_id" id="key_id" >#}
 {#                            </div>#}
 {#                        </div>#}
+>>>>>>> master
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="license_code" >license 码</label>
                             <div class="col-sm-4">
-                                <input style="padding-right:0;padding-left: 0; " required type="text" class="form-control" name="license_code" id="license_code" >
+                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " required type="text" class="form-control" name="license_code" id="license_code" >
                             </div>
                         </div>
                         <div class="form-group">
@@ -156,7 +165,7 @@
   <!-- /. WRAPPER  -->
     <!-- JS Scripts-->
     <!-- jQuery Js -->
-    <script src="../../static/assets/js/jquery-1.10.2.js"></script>
+    <script src="../../static/js/jquery.3.2.1.js"></script>
 	<!-- Bootstrap Js -->
     <script src="../../static/assets/js/bootstrap.min.js"></script>
 	<script src="../../static/assets/materialize/js/materialize.min.js"></script>
@@ -170,7 +179,8 @@
 
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
-    <script src="../../static/js/jquery.3.2.1.js"></script>
+
+
     <script>
         var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_time;
         $("#submit").click(function(){

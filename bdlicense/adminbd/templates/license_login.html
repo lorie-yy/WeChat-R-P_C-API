@@ -42,17 +42,34 @@
       //  location.href='adminbd/index'
   //  });
     var inputUser, inputPassword;
+    inputUser =$.trim($(".input-user").val());
+    inputPassword =$.trim($(".input-password").val());
     $(".login-submit").click(function(){
+<<<<<<< HEAD
+        if(!inputUser&&!inputPassword){
+            console.log("null")
+=======
         inputUser =$.trim($(".input-user").val());
         inputPassword =$.trim($(".input-password").val());
         if(!inputUser){
             alert('请输入用户名');
         }else if(!inputPassword){
             alert('请输入用密码');
+>>>>>>> master
         }else{
            query()
         }
 
+    });
+
+     $("body").keydown(function() {
+        if (event.keyCode == "13") {//keyCode=13是回车键
+            if(!inputUser&&!inputPassword){
+                console.log("null")
+            }else{
+                query()
+             }
+        }
     });
     function query(){
         $.ajax({
@@ -75,6 +92,7 @@
             }
         })
         }
+
 </script>
 </body>
 </html>

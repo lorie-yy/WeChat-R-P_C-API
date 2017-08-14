@@ -24,7 +24,8 @@
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
     <style>
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
-        .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
+        .form-group label{padding: 0rem 1rem 0.2rem 1rem;}
+        #license_code .form-group{margin-bottom: 0;}
     </style>
 </head>
 <body>
@@ -59,7 +60,7 @@
         <li><a href="/adminbd/license_login"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
    <!--/. NAV TOP  -->
-    <nav class="navbar-default navbar-side" role="navigation">
+    <nav class="navbar-default navbar-side" role="navigation"  style="height: 85%;">
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
                  <li>
@@ -69,7 +70,7 @@
                     <a class=" waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
             </ul>
-            <ul style="margin-top: 450px;">
+            <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
                 <li style="font-size: 12px;">
                     上海博达通信数据有限公司版权所有©2017
                 </li>
@@ -77,7 +78,7 @@
         </div>
     </nav>
   <!-- /. NAV SIDE  -->
-    <div id="page-wrapper" style="top: 60px;">
+    <div id="page-wrapper" class="page-wrapper" style="top: 60px;">
    <div class="header" style="opacity: 0; padding-bottom:3px;"></div>
 
     <div id="page-inner">
@@ -87,35 +88,35 @@
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
                         <div class="form-group" style="padding-top: 20px;">
-                            <label class="col-sm-3 control-label" for="cloud_name" >云平台名称</label>
+                            <label class="col-sm-3 control-label" for="cloud_name" >云平台名称:</label>
                             <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="cloud_name" id="cloud_name" >
+                                <input placeholder="请输入云平台名称" required type="text" class="form-control" name="cloud_name" id="cloud_name" >
                             </div>
                         </div>
                         <div class="form-group" >
-                            <label class="col-sm-3 control-label" for="install_add" >安装地址</label>
+                            <label class="col-sm-3 control-label" for="install_add" >安装地址:</label>
                             <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="install_add" id="install_add" >
+                                <input placeholder="请输入安装地址" required type="text" class="form-control" name="install_add" id="install_add" >
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="cloud_buyer" >购买方</label>
+                            <label class="col-sm-3 control-label" for="cloud_buyer" >购买方:</label>
                             <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="cloud_buyer" id="cloud_buyer" >
+                                <input placeholder="请输入购买方" required type="text" class="form-control" name="cloud_buyer" id="cloud_buyer" >
                             </div>
                         </div>
 
                         <div class="form-group" >
-                            <label class="col-sm-3 control-label" for="contacts" >联系人</label>
+                            <label class="col-sm-3 control-label" for="contacts" >联系人:</label>
                             <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="contacts" id="contacts" >
+                                <input placeholder="请输入联系人" required type="text" class="form-control" name="contacts" id="contacts" >
                             </div>
                         </div>
 
                         <div class="form-group" >
-                            <label class="col-sm-3 control-label" for="phone" >联系电话</label>
+                            <label class="col-sm-3 control-label" for="phone" >联系电话:</label>
                             <div class="col-sm-4">
-                                <input required type="text" class="form-control" name="phone" id="phone" >
+                                <input placeholder="请输入联系电话" required type="text" class="form-control" name="phone" id="phone" >
                             </div>
                         </div>
 
@@ -133,21 +134,21 @@
   <!-- /. WRAPPER  -->
     <!-- JS Scripts-->
     <!-- jQuery Js -->
-    <script src="../../static/assets/js/jquery-1.10.2.js"></script>
+     <script src="../../static/js/jquery.3.2.1.js"></script>
 	<!-- Bootstrap Js -->
     <script src="../../static/assets/js/bootstrap.min.js"></script>
 	<script src="../../static/assets/materialize/js/materialize.min.js"></script>
     <!-- Metis Menu Js -->
     <script src="../../static/assets/js/jquery.metisMenu.js"></script>
     <script src="../../static/assets/js/morris/raphael-2.1.0.min.js"></script>
-    <script src="../../static/assets/js/morris/morris.js"></script>
+{#    <script src="../../static/assets/js/morris/morris.js"></script>#}
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
 
     <!-- Custom Js -->
-    <script src="../../static/assets/js/custom-scripts.js"></script>
-    <script src="../../static/js/jquery.3.2.1.js"></script>
+{#    <script src="../../static/assets/js/custom-scripts.js"></script>#}
+
     <script>
         var cloud_name, install_add, cloud_buyer, contacts, phone;
         $("#submit").click(function(){
