@@ -80,6 +80,26 @@ class IndexViewYun(View):
         context['is_superuser'] = is_superuser
         return render(request, 'license_yun.html',context)
 
+#用户主页
+class UserIndexView(View):
+    def get(self, request):
+        print "in IndexYunView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+        if is_superuser:
+            userSets = User.objects.all()
+            context['userSets'] = userSets
+        else:
+            print "not superuser,no right to display the user list"
+            return HttpResponse("No Right")
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        return render(request, 'user_list.html',context)
+
 class AddLicenseView(View):
     def get(self,request):
         username = request.session.get('username')
@@ -159,6 +179,58 @@ class AddLicenseView(View):
 
 
 class AddCloudView(View):
+    def get(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+        # cloudInfos = CloudInformation.objects.all()
+        # context['cloudInfos'] = cloudInfos
+        cloudUsers = User.objects.all()
+        context['cloudUsers'] = cloudUsers
+        context['username'] = username
+
+        return render(request, 'license_addyun.html',context)
+
+    def post(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        print "in add cloud post func"
+        params = request.POST.copy()
+        print params
+        cloud_name = params['cloud_name']
+        cloud_user_id = params['cloud_user']
+        install_add = params['install_add']
+        cloud_buyer = params['cloud_buyer']
+        contacts = params['contacts']
+        phone = params['phone']
+
+        uu = {}
+        try:
+            cloudinfo = CloudInformation()
+            cloudinfo.cloudName = cloud_name
+            cloudinfo.installAddress = install_add
+            cloudinfo.buyer = cloud_buyer
+            cloudinfo.contacts = contacts
+            cloudinfo.phone = phone
+            cloudinfo.save()
+            if cloud_user_id:
+                userObj = User.objects.get(id=int(cloud_user_id))
+                cloudinfo.cloudUser.add(userObj)
+                print "cloud added user successfully"
+
+            result = 1
+            uu = {'res':result}
+            return JsonResponse(uu)
+        except Exception,e:
+            print e
+        result = 0
+        uu = {'res':result}
+        return JsonResponse(uu)
+        # return HttpResponseRedirect('add_cloud')
+
+class AddUserView(View):
     def get(self,request):
         username = request.session.get('username')
         if not username:
