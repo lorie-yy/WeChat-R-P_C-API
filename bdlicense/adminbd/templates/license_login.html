@@ -39,6 +39,8 @@
 </div>
 <script>
     var inputUser, inputPassword;
+    inputUser =$.trim($(".input-user").val());
+    inputPassword =$.trim($(".input-password").val());
     $(".login-submit").click(function(){
         inputUser =$.trim($(".input-user").val());
         inputPassword =$.trim($(".input-password").val());
@@ -50,6 +52,16 @@
            query()
         }
 
+    });
+
+     $("body").keydown(function() {
+        if (event.keyCode == "13") {//keyCode=13是回车键
+            if(!inputUser&&!inputPassword){
+                console.log("null")
+            }else{
+                query()
+             }
+        }
     });
     function query(){
         $.ajax({
@@ -73,6 +85,7 @@
             }
         })
         }
+
 </script>
 </body>
 </html>
