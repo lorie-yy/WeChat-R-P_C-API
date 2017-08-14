@@ -29,15 +29,9 @@
             <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="/adminbd/index.html">
                 <img src="../../static/images/logo-w.png" />
             </a>
-            <div  class="nav navbar-left">
-                 <div class="accordion-heading" style="margin-top: 19px;">
-                    <a  style="padding-top: 20px;" class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
-                         <i style="color: red" class="material-icons dp48">toc</i>
-                    </a>
-                </div>
-{#            <div id="sideNav" class="" href="">#}
-{#                <i class="material-icons dp48">toc</i>#}
-{#            </div>#}
+            <div id="sideNav" class="" href="">
+                <i class="material-icons dp48">toc</i>
+            </div>
 
             </div>
         </div>
@@ -76,7 +70,7 @@
                     <a class="waves-effect waves-dark" href="/adminbd/index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
                 <li>
-                    <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-dashboard"></i> 用户列表</a>
+                    <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-user"></i> 用户列表</a>
                 </li>
             </ul>
              <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
@@ -103,7 +97,7 @@
               </div><div>
         </div>
     <div id="page-inner">
-        <div class="row">
+        <div class="row" style="background-color: #fff;">
             <div class="col-md-12">
                 <div class="panel">
                     <div class="clearfix" style="padding-top: 13px;">
@@ -144,8 +138,7 @@
                         {% endif %}
                         </tbody>
                     </table>
-            <a href="/adminbd/user_list" class="btn btn-gray btn-single pull-right" type="reset">返回</a>
-
+                    <a style="margin-bottom: 18px;" href="/adminbd/user_list" class="btn btn-gray btn-single pull-right" type="reset">返回</a>
                 </div>
             </div>
         </div>

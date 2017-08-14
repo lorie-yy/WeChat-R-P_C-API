@@ -21,11 +21,11 @@
             <form id="ff" action="" onsubmit="return false" >
                 <label class="login-input">
                     <span class="login-user-ico"></span>
-                    <input class="input-user" type="text" name="" value="" required placeholder="用户名" />
+                    <input class="input-user" type="text" name=""  required placeholder="用户名" />
                 </label>
                 <label class="login-input">
                     <span class="login-password-ico"></span>
-                    <input class="input-password" type="password" name="" value="" required placeholder="密码" />
+                    <input class="input-password" type="password" name="" required placeholder="密码" />
                 </label>
                 <label class="login-checkbox compare_button">
                     <input  type="checkbox" value=""  checked id="compare_39680" class="checkbox-input" name="">
@@ -39,10 +39,8 @@
 </div>
 <script>
     var inputUser, inputPassword;
-    inputUser =$.trim($(".input-user").val());
-    inputPassword =$.trim($(".input-password").val());
     $(".login-submit").click(function(){
-        inputUser =$.trim($(".input-user").val());
+         inputUser =$.trim($(".input-user").val());
         inputPassword =$.trim($(".input-password").val());
         if(!inputUser){
             alert('请输入用户名');
@@ -55,12 +53,16 @@
     });
 
      $("body").keydown(function() {
+        inputUser =$.trim($(".input-user").val());
+        inputPassword =$.trim($(".input-password").val());
         if (event.keyCode == "13") {//keyCode=13是回车键
-            if(!inputUser&&!inputPassword){
-                console.log("null")
+            if(!inputUser){
+                alert('请输入用户名');
+            }else if(!inputPassword){
+                alert('请输入用密码');
             }else{
-                query()
-             }
+               query()
+            }
         }
     });
     function query(){

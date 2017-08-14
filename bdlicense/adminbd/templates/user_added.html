@@ -13,6 +13,8 @@
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
     <!-- Bootstrap Styles-->
     <link href="../../static/css/bootstrap.css" rel="stylesheet" />
+    <link href="../../static/css/bootstrap-multiselect.css" rel="stylesheet" />
+
     <!-- FontAwesome Styles-->
     <link href="../../static/assets/css/font-awesome.css" rel="stylesheet" />
       <!-- Morris Chart Styles-->
@@ -73,7 +75,7 @@
                 </li>
                 {% if is_superuser %}
                     <li>
-                        <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-dashboard"></i> 用户列表</a>
+                        <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-user"></i> 用户列表</a>
                     </li>
                 {% endif %}
             </ul>
@@ -125,7 +127,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="sel_cloud" >云平台:</label>
                             <div class="col-sm-4">
-                                <select onchange="func()" class="form-control" id="sel_cloud" name="sel_cloud" >
+                                <select onchange="func()" class="form-control" id="" name="sel_cloud" >
                                     <option value="" disabled="" selected="">选择云平台</option>
                                     {% for cloudInfo in cloudInfos %}
                                         <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
@@ -133,7 +135,6 @@
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <button id="submit" class="btn btn-success" style="margin-left:50px;">提交</button>
                         </div>
@@ -158,11 +159,16 @@
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
+    <script src="../../static/assets/js/bootstrap.min.js"></script>
+    <script src="../../static/js/bootstrap-multiselect.js"></script>
 
     <!-- Custom Js -->
 {#    <script src="../../static/assets/js/custom-scripts.js"></script>#}
 
     <script>
+        $(document).ready(function() {
+            $('#example-getting-started').multiselect();
+        });
         var user_name,sel_cloud,pwd1,pwd2,super_user;
         $("#submit").click(function(){
             user_name =$.trim($("input[name='user_name']").val());
