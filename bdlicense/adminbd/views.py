@@ -87,15 +87,22 @@ class UserIndexView(View):
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
+
         is_superuser = request.session.get('is_superuser')
         context = {}
         if is_superuser:
             userSets = User.objects.all()
+            # userList = []
+            # for userSet in userSets:
+            #     userClouds = userSet.cloudinformation_set.all()
+            #     userList.append(userClouds)
+            # context['userList'] = userList
             context['userSets'] = userSets
         else:
             print "not superuser,no right to display the user list"
             return HttpResponse("No Right")
 
+        # context['userSets'] = userSets
         context['username'] = username
         context['is_superuser'] = is_superuser
         return render(request, 'user_list.html',context)
@@ -235,42 +242,52 @@ class AddUserView(View):
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
-        context = {}
-        # cloudInfos = CloudInformation.objects.all()
-        # context['cloudInfos'] = cloudInfos
-        cloudUsers = User.objects.all()
-        context['cloudUsers'] = cloudUsers
-        context['username'] = username
 
-        return render(request, 'license_addyun.html',context)
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+        cloudInfos = CloudInformation.objects.all()
+        context['cloudInfos'] = cloudInfos
+        # cloudUsers = User.objects.all()
+        # context['cloudUsers'] = cloudUsers
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+
+        return render(request, 'user_added.html',context)
 
     def post(self,request):
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
-        print "in add cloud post func"
+
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        print "in add user post func"
         params = request.POST.copy()
         print params
-        cloud_name = params['cloud_name']
-        cloud_user_id = params['cloud_user']
-        install_add = params['install_add']
-        cloud_buyer = params['cloud_buyer']
-        contacts = params['contacts']
-        phone = params['phone']
-
+        user_name = params['user_name']
+        sel_cloud = params['sel_cloud']
+        pwd = params['pwd1']
         uu = {}
+        userSet = User.objects.filter(username=user_name)
+        if userSet.count() > 0 :
+            print "user exists"
+            result = 2
+            uu = {'res':result}
+            return JsonResponse(uu)
         try:
-            cloudinfo = CloudInformation()
-            cloudinfo.cloudName = cloud_name
-            cloudinfo.installAddress = install_add
-            cloudinfo.buyer = cloud_buyer
-            cloudinfo.contacts = contacts
-            cloudinfo.phone = phone
-            cloudinfo.save()
-            if cloud_user_id:
-                userObj = User.objects.get(id=int(cloud_user_id))
-                cloudinfo.cloudUser.add(userObj)
-                print "cloud added user successfully"
+            user = User.objects.create_user(username=user_name,password=pwd)
+            print user
+            user.is_superuser = 0
+            user.is_staff = 1
+            user.is_active = 1
+            user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+            user.save()
+
+            userObj = User.objects.get(username=user_name)
+            cloudObj = CloudInformation.objects.filter(id=int(sel_cloud))
+            userObj.cloudinformation_set.add(cloudObj[0])
+            userObj.save()
 
             result = 1
             uu = {'res':result}
@@ -280,7 +297,29 @@ class AddUserView(View):
         result = 0
         uu = {'res':result}
         return JsonResponse(uu)
-        # return HttpResponseRedirect('add_cloud')
+
+
+class UserCloudView(View):
+    def get(self, request):
+        print "in IndexView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        user_id = request.GET.get('id')
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+
+        if user_id:
+            userObj = User.objects.get(id=user_id)
+            userCloudSets = userObj.cloudinformation_set.all()
+            context['userCloudSets'] = userCloudSets
+            context['userObj'] = userObj
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+
+        return render(request, 'cloud_user.html',context)
 
 #lisence 登陆
 @csrf_exempt
@@ -411,3 +450,36 @@ class ValidateLicenseView(View):
             print "invalid license record"
             result['res'] = 0 # invalid license
             return JsonResponse(result)
+
+class ValidateUserView(View):
+    def post(self,request):
+        print "in validate user view"
+        params = request.POST.copy()
+        uu = {}
+        username = params['username']
+        pwd = params['password']
+
+        userSet = User.objects.filter(username=username)
+        if userSet.count() == 0:
+            print "no user"
+            result = 0
+            uu['res'] = result
+            return JsonResponse(uu)
+
+        user_pass = authenticate(username=username,password=pwd)
+        if user_pass:
+            if user_pass.is_superuser:
+                print "user passed and is superuser"
+                result = 1
+                uu['res'] = result
+                return JsonResponse(uu)
+            else:
+                print "user passed but not superuser"
+                result = 2
+                uu['res'] = result
+                return JsonResponse(uu)
+        else:
+            print "user and password not passed"
+            result = 3
+            uu['res'] = result
+            return JsonResponse(uu)

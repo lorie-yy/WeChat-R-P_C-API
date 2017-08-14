@@ -93,50 +93,35 @@
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
                         <div class="form-group" style="padding-top: 20px;">
-                            <label class="col-sm-3 control-label" for="cloud_name" >云平台名称:</label>
+                            <label class="col-sm-3 control-label" for="user_name" >云平台管理员:</label>
                             <div class="col-sm-4">
-                                <input placeholder="请输入云平台名称" required type="text" class="form-control" name="cloud_name" id="cloud_name" >
+                                <input placeholder="管理员名称" required type="text" class="form-control" name="user_name" id="user_name" >
+                            </div>
+                        </div>
+                    <div class="form-group" style="padding-top: 30px;">
+                            <label class="col-sm-3 control-label" for="pwd1" >请输入新密码</label>
+                            <div class="col-sm-4">
+                                <input style="padding-right:0;padding-left: 0; " required type="password" class="form-control" name="pwd1" id="pwd1" >
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="pwd2" >请再次输入</label>
+                            <div class="col-sm-4">
+                                <input style="padding-right:0;padding-left: 0; " required type="password" class="form-control" name="pwd2" id="pwd2" >
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="cloud_user" >云平台管理员</label>
+                            <label class="col-sm-3 control-label" for="sel_cloud" >云平台:</label>
                             <div class="col-sm-4">
-                                <select onchange="func()" class="form-control" id="cloud_user" name="cloud_user" >
-                                    <option value="" disabled="" selected="">选择管理员</option>
-                                    {% for cloudUser in cloudUsers %}
-                                        <option id="bao-month" value="{{ cloudUser.id }}">{{ cloudUser.username }}</option>
+                                <select onchange="func()" class="form-control" id="sel_cloud" name="sel_cloud" >
+                                    <option value="" disabled="" selected="">选择云平台</option>
+                                    {% for cloudInfo in cloudInfos %}
+                                        <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group" >
-                            <label class="col-sm-3 control-label" for="install_add" >安装地址:</label>
-                            <div class="col-sm-4">
-                                <input placeholder="请输入安装地址" required type="text" class="form-control" name="install_add" id="install_add" >
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="cloud_buyer" >购买方:</label>
-                            <div class="col-sm-4">
-                                <input placeholder="请输入购买方" required type="text" class="form-control" name="cloud_buyer" id="cloud_buyer" >
-                            </div>
-                        </div>
-
-                        <div class="form-group" >
-                            <label class="col-sm-3 control-label" for="contacts" >联系人:</label>
-                            <div class="col-sm-4">
-                                <input placeholder="请输入联系人" required type="text" class="form-control" name="contacts" id="contacts" >
-                            </div>
-                        </div>
-
-                        <div class="form-group" >
-                            <label class="col-sm-3 control-label" for="phone" >联系电话:</label>
-                            <div class="col-sm-4">
-                                <input placeholder="请输入联系电话" required type="text" class="form-control" name="phone" id="phone" >
-                            </div>
-                        </div>
-
 
                         <div class="form-group">
                             <button id="submit" class="btn btn-success" style="margin-left:50px;">提交</button>
@@ -167,24 +152,22 @@
 {#    <script src="../../static/assets/js/custom-scripts.js"></script>#}
 
     <script>
-        var cloud_name,cloud_user, install_add, cloud_buyer, contacts, phone;
+        var user_name,sel_cloud,pwd1,pwd2;
         $("#submit").click(function(){
-            cloud_name =$.trim($("input[name='cloud_name']").val());
-            cloud_user =$.trim($("#cloud_user").val());
-            install_add =$.trim($("input[name='install_add']").val());
-            cloud_buyer =$.trim($("input[name='cloud_buyer']").val());
-            contacts =$.trim($("input[name='contacts']").val());
-            phone =$.trim($("input[name='phone']").val());
-            if(!cloud_name){
-                alert('请输入云平台名称');
-            }else if(!install_add){
-                alert('请输入云平台安装地址');
-            }else if(!cloud_buyer){
-                alert('请输入购买方名称');
-            }else if(!contacts){
-                alert('请输入联系人');
-            }else if(!phone){
-                alert('请输入联系电话');
+            user_name =$.trim($("input[name='user_name']").val());
+            sel_cloud =$.trim($("#sel_cloud").val());
+            pwd1 =$.trim($("#pwd1").val());
+            pwd2 =$.trim($("#pwd2").val());
+            if(!user_name){
+                alert('请输入云平台管理员名称');
+            }else if(!pwd1){
+                alert('请输入密码');
+            }else if(!pwd2){
+                alert('请再次输入密码');
+            }else if(pwd1 != pwd2){
+                alert('两次输入密码不同');
+            }else if(!sel_cloud){
+                alert('请选择云平台');
             }
             else{
                query()
@@ -193,14 +176,16 @@
 
         function query(){
             $.ajax({
-                url:"/adminbd/add_cloud",
-                data:{cloud_name:cloud_name, cloud_user:cloud_user,install_add:install_add, cloud_buyer:cloud_buyer, contacts:contacts,
-                phone:phone,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                url:"/adminbd/add_user",
+                data:{user_name:user_name, sel_cloud:sel_cloud,pwd1:pwd1,csrfmiddlewaretoken:'{{ csrf_token }}'},
                 type:"POST",
                 success:function(data) {
                     if(data.res == 1){
                         alert('添加成功');
-                        window.location.href = '/adminbd/add_cloud';
+                        window.location.href = '/adminbd/add_user';
+                    }else if(data.res == 2 ){
+                        alert('用户名已存在');
+                        window.location.href = '/adminbd/add_user';
                     }else{
                        alert('添加失败');
                     }

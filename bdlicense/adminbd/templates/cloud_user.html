@@ -7,7 +7,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-
     <title>登录器管理后台</title>
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
@@ -24,30 +23,40 @@
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
 
 </head>
-<body>
+<body style="position: relative">
     <nav class="navbar navbar-default top-navbar" role="navigation">
         <div class="navbar-header">
-            <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="index.html">
+            <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="/adminbd/index.html">
                 <img src="../../static/images/logo-w.png" />
             </a>
-            <div id="sideNav" class="" href="">
-                <i class="material-icons dp48">toc</i>
+            <div  class="nav navbar-left">
+                 <div class="accordion-heading" style="margin-top: 19px;">
+                    <a  style="padding-top: 20px;" class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                         <i style="color: red" class="material-icons dp48">toc</i>
+                    </a>
+                </div>
+{#            <div id="sideNav" class="" href="">#}
+{#                <i class="material-icons dp48">toc</i>#}
+{#            </div>#}
+
             </div>
         </div>
-         <ul class="nav navbar-left">
-            <li>
-                <a href="/adminbd/index.html" style="padding-top: 20px;">
-                   <b style="font-size:15px"> License管理平台</b>
-                </a>
-            </li>
-        </ul>
-        <ul class="nav navbar-top-links navbar-right">
-            <li>
-                <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
-                    <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>
-                </a>
-            </li>
-        </ul>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-left">
+                <li>
+                    <a href="/adminbd/index.html" style="padding-top: 20px;">
+                       <b style="font-size:15px"> License管理平台</b>
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav navbar-top-links navbar-right">
+                <li>
+                    <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
+                        <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </nav>
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
@@ -57,22 +66,20 @@
         <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
    <!--/. NAV TOP  -->
-    <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
+      <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
-                <li>
-                    <a class="active-menu waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
+                  <li>
+                    <a class="waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
                 </li>
                 <li>
-                    <a class="waves-effect waves-dark" href="/adminbd/index.html">
-                        <i class="fa fa-dashboard"></i> License列表
-                    </a>
+                    <a class="active-menu waves-effect waves-dark" href="/adminbd/index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
                 <li>
                     <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-dashboard"></i> 用户列表</a>
                 </li>
             </ul>
-              <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
+             <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
                 <li style="font-size: 12px;">
                     上海博达通信数据有限公司版权所有©2017
                 </li>
@@ -99,39 +106,46 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="panel">
-                {% if is_superuser %}
-                    <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
-                        <a href="/adminbd/add_cloud" class="btn btn-turquoise text-right">
-                              <span class="fa fa-plus-square"></span>  添加云平台
-                        </a>
+                    <div class="clearfix" style="padding-top: 13px;">
+                    {% if is_superuser %}
+                        <div class="col-sm-2 right">
+                             <a href="/adminbd/add_user" class="btn  btn btn-turquoise text-right">
+                                 <span class="fa fa-plus-square"></span> 添加管理员
+                             </a>
+                        </div>
+                    {% endif %}
                     </div>
-                {% endif %}
+
+                    <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
+
+                    </div>
                     <table class="table table-striped">
-                        <thead >
+                        <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>云平台名称</th>
-                                <th>购买者</th>
-                                <th>购买时间</th>
-                                <th>安装地址</th>
-                                <th>联系人</th>
-                                <th>联系电话</th>
+                                <th>用户名</th>
+                                <th>对应云平台名称</th>
                             </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
-                        {% for cloudInfo in cloudInfos %}
-                            <tr>
-                                <td>{{ cloudInfo.id }}</td>
-                                <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ cloudInfo.id }}'" >{{ cloudInfo.cloudName }}</span></td>
-                                <td>{{ cloudInfo.buyer }}</td>
-                                <td>{{ cloudInfo.buyTime }}</td>
-                                <td>{{ cloudInfo.installAddress }}</td>
-                                <td>{{ cloudInfo.contacts }}</td>
-                                <td>{{ cloudInfo.phone }}</td>
-                            </tr>
-                        {% endfor %}
+
+                        {% if is_superuser %}
+                            {% if userCloudSets %}
+                                {% for userCloudSet in userCloudSets %}
+                                         <tr>
+                                            <td>{{ userObj.username }}</td>
+                                            <td>{{ userCloudSet.cloudName }}</td>
+                                         </tr>
+                                {% endfor %}
+                                {% else %}
+                                    <tr><td>该用户下没有可管理的云平台</td></tr>
+                                {% endif %}
+                        {% else %}
+                            <th>暂无权限查看用户列表，请联系超级用户</th>
+                        {% endif %}
                         </tbody>
                     </table>
+            <a href="/adminbd/user_list" class="btn btn-gray btn-single pull-right" type="reset">返回</a>
+
                 </div>
             </div>
         </div>
@@ -142,7 +156,6 @@
     <!-- jQuery Js -->
     <script src="../../static/js/jquery.3.2.1.js"></script>
     <script src="../../static/js/ie.js"></script>
-
 	<!-- Bootstrap Js -->
     <script src="../../static/assets/js/bootstrap.min.js"></script>
 	<script src="../../static/assets/materialize/js/materialize.min.js"></script>
@@ -150,12 +163,19 @@
     <script src="../../static/assets/js/jquery.metisMenu.js"></script>
     <!-- Morris Chart Js -->
     <script src="../../static/assets/js/morris/raphael-2.1.0.min.js"></script>
-{#    <script src="../../static/assets/js/morris/morris.js"></script>#}
+    <script src="../../static/assets/js/morris/morris.js"></script>
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
+
+    <script>
+        function selectCloud(){
+            var cloud_id = $('#cloud_info option:selected').val();
+            window.location.href = "/adminbd?cloud_id="+cloud_id;
+        }
+    </script>
 </body>
 
 </html>
