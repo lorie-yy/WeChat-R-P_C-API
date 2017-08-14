@@ -125,25 +125,10 @@
                                 <th>编号</th>
                                 <th>用户名</th>
                                 <th>是否为超级用户</th>
-{#                                <th>操作</th>#}
+                                <th>操作</th>
                             </tr>
                         </thead>
-                        <tbody style="font-size: 12px;">
-{#                        {% if is_superuser %}#}
-{#                            {% for user in userList %}#}
-{#                                {{ user }}#}
-{#                                {% for u in user %}#}
-{#                                    {{ u }}#}
-{#                                     <tr>#}
-{#                                        <th>{{ u.cloudUser_set.all }}</th>#}
-{#                                        <th>{{ u.cloudName }}</th>#}
-{#                                     </tr>#}
-{#                                {% endfor %}#}
-{#                            {% endfor %}#}
-{#                        {% else %}#}
-{#                            <th>暂无权限查看用户列表，请联系超级用户</th>#}
-{#                        {% endif %}#}
-
+                        <tbody style="font-size: 15px;">
                         {% if is_superuser %}
                             {% for user in userSets %}
                                      <tr>
@@ -154,10 +139,21 @@
                                          {% else %}
                                              <td>否</td>
                                          {% endif %}
-                                        <th>{{ user.cloudinformation }}</th>
-                                     <td>
-
-                                     </td>
+                                        <td>
+{#                                            <div class="btn-group">#}
+{#                                                <a href="{% url 'adminbd:add_user' %}?id={{ user.id }}"#}
+{#                                                   class="btn btn-white btn-sm btn-icon ">#}
+{#                                                    修改#}
+{#                                                </a>#}
+{#                                                <a href="javascript:void(0);" onclick="delAp({{ user.id }})"#}
+{#                                                   class="btn btn-white btn-sm btn-icon ">#}
+{#                                                   删除#}
+{#                                                </a>#}
+                                                <a href="{% url 'adminbd:user_cloud' %}?id={{ user.id }}"
+                                                    class="btn btn-white btn-sm btn-icon">
+                                                   查看关联云平台
+                                                </a>
+                                        </td>
                                      </tr>
                             {% endfor %}
                         {% else %}

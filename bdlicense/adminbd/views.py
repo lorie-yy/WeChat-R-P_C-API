@@ -298,6 +298,29 @@ class AddUserView(View):
         uu = {'res':result}
         return JsonResponse(uu)
 
+
+class UserCloudView(View):
+    def get(self, request):
+        print "in IndexView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        user_id = request.GET.get('id')
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+
+        if user_id:
+            userObj = User.objects.get(id=user_id)
+            userCloudSets = userObj.cloudinformation_set.all()
+            context['userCloudSets'] = userCloudSets
+            context['userObj'] = userObj
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+
+        return render(request, 'cloud_user.html',context)
+
 #lisence 登陆
 @csrf_exempt
 def license_login(request):
