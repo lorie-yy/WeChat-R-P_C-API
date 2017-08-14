@@ -18,4 +18,5 @@ urlpatterns = patterns(
     url(r'^license_logout',views.license_logout, name='license_logout'),
     url(r'^license_activate',views.ActivateLicenseView.as_view(), name='license_activate'),
     url(r'^license_invalid',views.ValidateLicenseView.as_view(), name='license_invalid'),
+    url(r'^user_invalid',views.ValidateUserView.as_view(), name='user_invalid'),
 )

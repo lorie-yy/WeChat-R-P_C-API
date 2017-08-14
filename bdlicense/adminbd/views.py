@@ -450,3 +450,36 @@ class ValidateLicenseView(View):
             print "invalid license record"
             result['res'] = 0 # invalid license
             return JsonResponse(result)
+
+class ValidateUserView(View):
+    def post(self,request):
+        print "in validate user view"
+        params = request.POST.copy()
+        uu = {}
+        username = params['username']
+        pwd = params['password']
+
+        userSet = User.objects.filter(username=username)
+        if userSet.count() == 0:
+            print "no user"
+            result = 0
+            uu['res'] = result
+            return JsonResponse(uu)
+
+        user_pass = authenticate(username=username,password=pwd)
+        if user_pass:
+            if user_pass.is_superuser:
+                print "user passed and is superuser"
+                result = 1
+                uu['res'] = result
+                return JsonResponse(uu)
+            else:
+                print "user passed but not superuser"
+                result = 2
+                uu['res'] = result
+                return JsonResponse(uu)
+        else:
+            print "user and password not passed"
+            result = 3
+            uu['res'] = result
+            return JsonResponse(uu)
