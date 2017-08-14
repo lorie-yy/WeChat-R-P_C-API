@@ -107,18 +107,10 @@
             <div class="col-md-12">
                 <div class="panel">
                     <div class="clearfix" style="padding-top: 13px;">
-                        <div class="col-sm-4 left">
-                            <select onchange="selectCloud()" class="form-control" id="cloud_info" name="cloud_info" >
-                                <option value="" disabled="" selected="">选择license对应云平台</option>
-                                {% for cloudInfo in cloudInfos %}
-                                    <option id="bao-month" value="{{ cloudInfo.id }}" {% ifequal cloud_id  cloudInfo.id %}selected{% endifequal %}>{{ cloudInfo.cloudName }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
                     {% if is_superuser %}
                         <div class="col-sm-2 right">
-                             <a href="/adminbd/add_license" class="btn  btn btn-turquoise text-right">
-                                 <span class="fa fa-plus-square"></span>  添加 LICENSE
+                             <a href="/adminbd/add_user" class="btn  btn btn-turquoise text-right">
+                                 <span class="fa fa-plus-square"></span> 添加管理员
                              </a>
                         </div>
                     {% endif %}
@@ -130,87 +122,46 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>云平台</th>
-{#                                <th>ID</th>#}
-                                <th>KEY_ID</th>
-                                <th>版本类型</th>
-                                <th>Code</th>
-                                <th>状态</th>
-                                <th>最大AP数</th>
-                                <th>最大AC数</th>
-                                <th>最大用户数</th>
-                                <th>购买时间</th>
-                                <th>过期时间</th>
-
+                                <th>编号</th>
+                                <th>用户名</th>
+                                <th>是否为超级用户</th>
+{#                                <th>操作</th>#}
                             </tr>
                         </thead>
                         <tbody style="font-size: 12px;">
+{#                        {% if is_superuser %}#}
+{#                            {% for user in userList %}#}
+{#                                {{ user }}#}
+{#                                {% for u in user %}#}
+{#                                    {{ u }}#}
+{#                                     <tr>#}
+{#                                        <th>{{ u.cloudUser_set.all }}</th>#}
+{#                                        <th>{{ u.cloudName }}</th>#}
+{#                                     </tr>#}
+{#                                {% endfor %}#}
+{#                            {% endfor %}#}
+{#                        {% else %}#}
+{#                            <th>暂无权限查看用户列表，请联系超级用户</th>#}
+{#                        {% endif %}#}
+
                         {% if is_superuser %}
-                            {% for license in licenses %}
-                                <tr>
-                                    <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
-    {#                                <th>{{ license.id }}</th>#}
-                                    {% if license.key_id %}
-                                        <th>{{ license.key_id }}</th>
-                                    {% else %}
-                                        <th>暂无</th>
-                                    {% endif %}
-                                    <th>{{ license.licenseType.discription }}</th>
-                                    <th>{{ license.license_code }}</th>
-                                    {% if license.license_status == 1%}
-                                        <th>已激活</th>
-                                    {% else %}
-                                        <th>
-                                            未激活
-                                        </th>
-                                    {% endif %}
-                                {% if license.licenseParam.maxAPs %}
-                                    <th>{{ license.licenseParam.maxAPs }}</th>
-                                    <th>{{ license.licenseParam.maxACs }}</th>
-                                    <th>{{ license.licenseParam.maxUsers }}</th>
-                                {% else %}
-                                    <th>无</th>
-                                    <th>无</th>
-                                    <th>无</th>
-                                {% endif %}
-                                    <th>{{ license.build_time }}</th>
-                                    <th>{{ license.expire_time }}</th>
-                                </tr>
+                            {% for user in userSets %}
+                                     <tr>
+                                        <td>{{ user.id }}</td>
+                                        <td>{{ user.username }}</td>
+                                         {% if user.is_superuser %}
+                                            <td>是</td>
+                                         {% else %}
+                                             <td>否</td>
+                                         {% endif %}
+                                        <th>{{ user.cloudinformation }}</th>
+                                     <td>
+
+                                     </td>
+                                     </tr>
                             {% endfor %}
                         {% else %}
-                            {% for lic in licenses %}
-                                {% for license in lic %}
-                                        <tr>
-                                        <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
-        {#                                <th>{{ license.id }}</th>#}
-                                        {% if license.key_id %}
-                                            <th>{{ license.key_id }}</th>
-                                        {% else %}
-                                            <th>暂无</th>
-                                        {% endif %}
-                                        <th>{{ license.licenseType.discription }}</th>
-                                        <th>{{ license.license_code }}</th>
-                                        {% if license.license_status == 1%}
-                                            <th>已激活</th>
-                                        {% else %}
-                                            <th>
-                                                未激活
-                                            </th>
-                                        {% endif %}
-                                    {% if license.licenseParam.maxAPs %}
-                                        <th>{{ license.licenseParam.maxAPs }}</th>
-                                        <th>{{ license.licenseParam.maxACs }}</th>
-                                        <th>{{ license.licenseParam.maxUsers }}</th>
-                                    {% else %}
-                                        <th>无</th>
-                                        <th>无</th>
-                                        <th>无</th>
-                                    {% endif %}
-                                        <th>{{ license.build_time }}</th>
-                                        <th>{{ license.expire_time }}</th>
-                                    </tr>
-                                {% endfor %}
-                            {% endfor %}
+                            <th>暂无权限查看用户列表，请联系超级用户</th>
                         {% endif %}
                         </tbody>
                     </table>
