@@ -268,6 +268,7 @@ class AddUserView(View):
         user_name = params['user_name']
         sel_cloud = params['sel_cloud']
         pwd = params['pwd1']
+        super_user = params['super_user']
         uu = {}
         userSet = User.objects.filter(username=user_name)
         if userSet.count() > 0 :
@@ -278,7 +279,10 @@ class AddUserView(View):
         try:
             user = User.objects.create_user(username=user_name,password=pwd)
             print user
-            user.is_superuser = 0
+            if super_user == 0:
+                user.is_superuser = 0
+            else:
+                user.is_superuser = 1
             user.is_staff = 1
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")

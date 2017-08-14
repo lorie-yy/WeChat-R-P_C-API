@@ -13,6 +13,8 @@
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
     <!-- Bootstrap Styles-->
     <link href="../../static/css/bootstrap.css" rel="stylesheet" />
+    <link href="../../static/css/bootstrap-multiselect.css" rel="stylesheet" />
+
     <!-- FontAwesome Styles-->
     <link href="../../static/assets/css/font-awesome.css" rel="stylesheet" />
       <!-- Morris Chart Styles-->
@@ -66,14 +68,16 @@
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
                  <li>
-                    <a class="active-menu waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
+                    <a class="waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
                 </li>
                 <li>
                     <a class=" waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
-                <li>
-                    <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-dashboard"></i> 用户列表</a>
-                </li>
+                {% if is_superuser %}
+                    <li>
+                        <a class="active-menu waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-user"></i> 用户列表</a>
+                    </li>
+                {% endif %}
             </ul>
             <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
                 <li style="font-size: 12px;">
@@ -98,7 +102,16 @@
                                 <input placeholder="管理员名称" required type="text" class="form-control" name="user_name" id="user_name" >
                             </div>
                         </div>
-                    <div class="form-group" style="padding-top: 30px;">
+                        <div class="form-group">
+                                <label class="col-sm-3 control-label" for="super_user" >是否为超级用户:</label>
+                                <div class="col-sm-4">
+                                    <select onchange="func()" class="form-control" id="super_user" name="super_user" >
+                                        <option id="bao-month" value="0">否</option>
+                                        <option id="bao-month" value="1">是</option>
+                                    </select>
+                                </div>
+                            </div>
+                        <div class="form-group" style="padding-top: 30px;">
                             <label class="col-sm-3 control-label" for="pwd1" >请输入新密码</label>
                             <div class="col-sm-4">
                                 <input style="padding-right:0;padding-left: 0; " required type="password" class="form-control" name="pwd1" id="pwd1" >
@@ -114,7 +127,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="sel_cloud" >云平台:</label>
                             <div class="col-sm-4">
-                                <select onchange="func()" class="form-control" id="sel_cloud" name="sel_cloud" >
+                                <select onchange="func()" class="form-control" id="" name="sel_cloud" >
                                     <option value="" disabled="" selected="">选择云平台</option>
                                     {% for cloudInfo in cloudInfos %}
                                         <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
@@ -122,7 +135,6 @@
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <button id="submit" class="btn btn-success" style="margin-left:50px;">提交</button>
                         </div>
@@ -147,15 +159,21 @@
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
+    <script src="../../static/assets/js/bootstrap.min.js"></script>
+    <script src="../../static/js/bootstrap-multiselect.js"></script>
 
     <!-- Custom Js -->
 {#    <script src="../../static/assets/js/custom-scripts.js"></script>#}
 
     <script>
-        var user_name,sel_cloud,pwd1,pwd2;
+        $(document).ready(function() {
+            $('#example-getting-started').multiselect();
+        });
+        var user_name,sel_cloud,pwd1,pwd2,super_user;
         $("#submit").click(function(){
             user_name =$.trim($("input[name='user_name']").val());
             sel_cloud =$.trim($("#sel_cloud").val());
+            super_user =$.trim($("#super_user").val());
             pwd1 =$.trim($("#pwd1").val());
             pwd2 =$.trim($("#pwd2").val());
             if(!user_name){
@@ -177,7 +195,7 @@
         function query(){
             $.ajax({
                 url:"/adminbd/add_user",
-                data:{user_name:user_name, sel_cloud:sel_cloud,pwd1:pwd1,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                data:{user_name:user_name, super_user:super_user,sel_cloud:sel_cloud,pwd1:pwd1,csrfmiddlewaretoken:'{{ csrf_token }}'},
                 type:"POST",
                 success:function(data) {
                     if(data.res == 1){
