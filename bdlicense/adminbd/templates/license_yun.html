@@ -52,13 +52,9 @@
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
         <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>
+        <li><a href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
         <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>
-<<<<<<< HEAD
-        <li><a href="#"><i class="fa fa-gear fa-fw"></i>用户管理</a></li>
-        <li><a href="adminbd/license_login"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
-=======
         <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
->>>>>>> master
     </ul>
    <!--/. NAV TOP  -->
     <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
@@ -100,17 +96,19 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="panel">
+                {% if is_superuser %}
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
-
                         <a href="/adminbd/add_cloud" class="btn btn-turquoise text-right">
                               <span class="fa fa-plus-square"></span>  添加云平台
                         </a>
                     </div>
+                {% endif %}
                     <table class="table table-striped">
                         <thead >
                             <tr>
                                 <th>ID</th>
                                 <th>云平台名称</th>
+{#                                <th>云平台管理员</th>#}
                                 <th>购买者</th>
                                 <th>购买时间</th>
                                 <th>安装地址</th>
@@ -124,6 +122,7 @@
                                 <th>{{ cloudInfo.id }}</th>
                                 <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ cloudInfo.id }}'" >{{ cloudInfo.cloudName }}</span></th>
                                 <th>{{ cloudInfo.buyer }}</th>
+{#                                <th>{{ cloudInfo }}</th>#}
                                 <th>{{ cloudInfo.buyTime }}</th>
                                 <th>{{ cloudInfo.installAddress }}</th>
                                 <th>{{ cloudInfo.contacts }}</th>

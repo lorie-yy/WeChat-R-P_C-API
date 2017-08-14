@@ -18,20 +18,45 @@ class IndexView(View):
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
+        is_superuser = request.session.get('is_superuser')
         context = {}
         print "cloud_id",cloud_id
+
         if cloud_id:
             cloudObj = CloudInformation.objects.get(id=cloud_id)
             licenseRecords = cloudObj.licenserecord_set.all()
-            context['licenses'] = licenseRecords
+            if is_superuser:
+                context['licenses'] = licenseRecords
+            else:
+                licenseList = []
+                licenseList.append(licenseRecords)
+                context['licenses'] = licenseList
             context['cloud_id'] = int(cloud_id)
         else:
-            LicenseRecords = LicenseRecord.objects.all()
-            context['licenses'] = LicenseRecords
+            if is_superuser:
+                LicenseRecords = LicenseRecord.objects.all()
+                context['licenses'] = LicenseRecords
+            else:
+                user = User.objects.get(username=username)
+                # print "user = User.objects.get(username=username)"
+                user_clouds = user.cloudinformation_set.all()
+                # print "user_clouds = user.cloudinformation.all()"
+                licenseList = []
+                for cloud in user_clouds:
+                    licenses = LicenseRecord.objects.filter(id=cloud.id)
+                    licenseList.append(licenses)
+                    # print "licenseList.append(licenses)"
+                context['licenses'] = licenseList
+
+                for i in licenseList:
+                    for j in i:
+                        print j.key_id
+                # print "finish!!!!!!!!!!!!!!!!!"
 
         cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
         context['username'] = username
+        context['is_superuser'] = is_superuser
 
         return render(request, 'index.html',context)
 #主页yun
@@ -41,12 +66,39 @@ class IndexViewYun(View):
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
-
+        is_superuser = request.session.get('is_superuser')
         context = {}
-        cloudInfos = CloudInformation.objects.all()
-        context['cloudInfos'] = cloudInfos
+        if is_superuser:
+            cloudInfos = CloudInformation.objects.all()
+            context['cloudInfos'] = cloudInfos
+        else:
+            user = User.objects.get(username=username)
+            cloudInfos = user.cloudinformation_set.all()
+            context['cloudInfos'] = cloudInfos
+
         context['username'] = username
+        context['is_superuser'] = is_superuser
         return render(request, 'license_yun.html',context)
+
+#用户主页
+class UserIndexView(View):
+    def get(self, request):
+        print "in IndexYunView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+        if is_superuser:
+            userSets = User.objects.all()
+            context['userSets'] = userSets
+        else:
+            print "not superuser,no right to display the user list"
+            return HttpResponse("No Right")
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        return render(request, 'user_list.html',context)
 
 class AddLicenseView(View):
     def get(self,request):
@@ -134,7 +186,10 @@ class AddCloudView(View):
         context = {}
         # cloudInfos = CloudInformation.objects.all()
         # context['cloudInfos'] = cloudInfos
+        cloudUsers = User.objects.all()
+        context['cloudUsers'] = cloudUsers
         context['username'] = username
+
         return render(request, 'license_addyun.html',context)
 
     def post(self,request):
@@ -145,6 +200,7 @@ class AddCloudView(View):
         params = request.POST.copy()
         print params
         cloud_name = params['cloud_name']
+        cloud_user_id = params['cloud_user']
         install_add = params['install_add']
         cloud_buyer = params['cloud_buyer']
         contacts = params['contacts']
@@ -159,6 +215,62 @@ class AddCloudView(View):
             cloudinfo.contacts = contacts
             cloudinfo.phone = phone
             cloudinfo.save()
+            if cloud_user_id:
+                userObj = User.objects.get(id=int(cloud_user_id))
+                cloudinfo.cloudUser.add(userObj)
+                print "cloud added user successfully"
+
+            result = 1
+            uu = {'res':result}
+            return JsonResponse(uu)
+        except Exception,e:
+            print e
+        result = 0
+        uu = {'res':result}
+        return JsonResponse(uu)
+        # return HttpResponseRedirect('add_cloud')
+
+class AddUserView(View):
+    def get(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+        # cloudInfos = CloudInformation.objects.all()
+        # context['cloudInfos'] = cloudInfos
+        cloudUsers = User.objects.all()
+        context['cloudUsers'] = cloudUsers
+        context['username'] = username
+
+        return render(request, 'license_addyun.html',context)
+
+    def post(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        print "in add cloud post func"
+        params = request.POST.copy()
+        print params
+        cloud_name = params['cloud_name']
+        cloud_user_id = params['cloud_user']
+        install_add = params['install_add']
+        cloud_buyer = params['cloud_buyer']
+        contacts = params['contacts']
+        phone = params['phone']
+
+        uu = {}
+        try:
+            cloudinfo = CloudInformation()
+            cloudinfo.cloudName = cloud_name
+            cloudinfo.installAddress = install_add
+            cloudinfo.buyer = cloud_buyer
+            cloudinfo.contacts = contacts
+            cloudinfo.phone = phone
+            cloudinfo.save()
+            if cloud_user_id:
+                userObj = User.objects.get(id=int(cloud_user_id))
+                cloudinfo.cloudUser.add(userObj)
+                print "cloud added user successfully"
 
             result = 1
             uu = {'res':result}
@@ -183,11 +295,16 @@ def license_login(request):
         print params
 
         result = {}
+        userObj = User.objects.filter(username=user_name)
+        if userObj.count() == 0:
+            print "username not exists"
+            result['res'] = 2
+            return JsonResponse(result)
+
         user_pass = authenticate(username=user_name,password=password)
-        print "user is passed or not"
-        print user_pass
         if user_pass:
             request.session['username'] = user_name
+            request.session['is_superuser'] = user_pass.is_superuser
             result['res'] = 1
             return JsonResponse(result)
         else:
@@ -252,6 +369,27 @@ class ActivateLicenseView(View):
             print e
         result['result'] = False #validate unsuccessfully
         return JsonResponse(result)
+
+class ModifyPasswordView(View):
+    def get(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+        context['username'] = username
+        return render(request,'modify_password.html',context)
+    def post(self,request):
+        param = request.POST.copy()
+        username = param['username']
+        password = param['pwd1']
+        userObj = User.objects.filter(username=username)
+        if userObj:
+            userObj[0].set_password(password)
+            userObj[0].save()
+            return JsonResponse({'res':1})
+        else:
+            print "username is not exist"
+            return JsonResponse({'res':0})
 
 class ValidateLicenseView(View):
     def get(self,request):

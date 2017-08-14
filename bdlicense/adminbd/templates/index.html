@@ -29,12 +29,18 @@
             <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="/adminbd/index.html">
                 <img src="../../static/images/logo-w.png" />
             </a>
-            <div id="sideNav" class="" href="">
-                <i class="material-icons dp48">toc</i>
+            <div  class="nav navbar-left">
+                 <div class="accordion-heading" style="margin-top: 19px;">
+                    <a  style="padding-top: 20px;" class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                         <i style="color: red" class="material-icons dp48">toc</i>
+                    </a>
+                </div>
+{#            <div id="sideNav" class="" href="">#}
+{#                <i class="material-icons dp48">toc</i>#}
+{#            </div>#}
+
             </div>
-
         </div>
-
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-left">
                 <li>
@@ -51,17 +57,11 @@
                 </li>
             </ul>
         </div>
-{#        <ul class="nav navbar-top-links navbar-right">#}
-{#            <li>#}
-{#                <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">#}
-{#                    <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>#}
-{#                </a>#}
-{#            </li>#}
-{#        </ul>#}
     </nav>
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
         <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>
+        <li><a href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
         <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>
         <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
@@ -112,11 +112,13 @@
                                 {% endfor %}
                             </select>
                         </div>
+                    {% if is_superuser %}
                         <div class="col-sm-2 right">
                              <a href="/adminbd/add_license" class="btn  btn btn-turquoise text-right">
                                  <span class="fa fa-plus-square"></span>  添加 LICENSE
                              </a>
                         </div>
+                    {% endif %}
                     </div>
 
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
@@ -140,33 +142,73 @@
                             </tr>
                         </thead>
                         <tbody style="font-size: 12px;">
-                        {% for license in licenses %}
-                            <tr>
-                                <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
-{#                                <th>{{ license.id }}</th>#}
-                                <th>{{ license.key_id }}</th>
-                                <th>{{ license.licenseType.discription }}</th>
-                                <th>{{ license.license_code }}</th>
-                                {% if license.license_status == 1%}
-                                    <th>已激活</th>
+                        {% if is_superuser %}
+                            {% for license in licenses %}
+                                <tr>
+                                    <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
+    {#                                <th>{{ license.id }}</th>#}
+                                    {% if license.key_id %}
+                                        <th>{{ license.key_id }}</th>
+                                    {% else %}
+                                        <th>暂无</th>
+                                    {% endif %}
+                                    <th>{{ license.licenseType.discription }}</th>
+                                    <th>{{ license.license_code }}</th>
+                                    {% if license.license_status == 1%}
+                                        <th>已激活</th>
+                                    {% else %}
+                                        <th>
+                                            未激活
+                                        </th>
+                                    {% endif %}
+                                {% if license.licenseParam.maxAPs %}
+                                    <th>{{ license.licenseParam.maxAPs }}</th>
+                                    <th>{{ license.licenseParam.maxACs }}</th>
+                                    <th>{{ license.licenseParam.maxUsers }}</th>
                                 {% else %}
-                                    <th>
-                                        未激活
-                                    </th>
+                                    <th>无</th>
+                                    <th>无</th>
+                                    <th>无</th>
                                 {% endif %}
-                            {% if license.licenseParam.maxAPs %}
-                                <th>{{ license.licenseParam.maxAPs }}</th>
-                                <th>{{ license.licenseParam.maxACs }}</th>
-                                <th>{{ license.licenseParam.maxUsers }}</th>
-                            {% else %}
-                                <th>无</th>
-                                <th>无</th>
-                                <th>无</th>
-                            {% endif %}
-                                <th>{{ license.build_time }}</th>
-                                <th>{{ license.expire_time }}</th>
-                            </tr>
-                        {% endfor %}
+                                    <th>{{ license.build_time }}</th>
+                                    <th>{{ license.expire_time }}</th>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            {% for lic in licenses %}
+                                {% for license in lic %}
+                                        <tr>
+                                        <th><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></th>
+        {#                                <th>{{ license.id }}</th>#}
+                                        {% if license.key_id %}
+                                            <th>{{ license.key_id }}</th>
+                                        {% else %}
+                                            <th>暂无</th>
+                                        {% endif %}
+                                        <th>{{ license.licenseType.discription }}</th>
+                                        <th>{{ license.license_code }}</th>
+                                        {% if license.license_status == 1%}
+                                            <th>已激活</th>
+                                        {% else %}
+                                            <th>
+                                                未激活
+                                            </th>
+                                        {% endif %}
+                                    {% if license.licenseParam.maxAPs %}
+                                        <th>{{ license.licenseParam.maxAPs }}</th>
+                                        <th>{{ license.licenseParam.maxACs }}</th>
+                                        <th>{{ license.licenseParam.maxUsers }}</th>
+                                    {% else %}
+                                        <th>无</th>
+                                        <th>无</th>
+                                        <th>无</th>
+                                    {% endif %}
+                                        <th>{{ license.build_time }}</th>
+                                        <th>{{ license.expire_time }}</th>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -196,7 +238,6 @@
     <script>
         function selectCloud(){
             var cloud_id = $('#cloud_info option:selected').val();
-{#            alert(cloud_id);#}
             window.location.href = "/adminbd?cloud_id="+cloud_id;
         }
     </script>

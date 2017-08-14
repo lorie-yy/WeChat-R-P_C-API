@@ -38,24 +38,16 @@
     </div>
 </div>
 <script>
-    //$('.login-submit').click(function(){
-      //  location.href='adminbd/index'
-  //  });
     var inputUser, inputPassword;
     inputUser =$.trim($(".input-user").val());
     inputPassword =$.trim($(".input-password").val());
     $(".login-submit").click(function(){
-<<<<<<< HEAD
-        if(!inputUser&&!inputPassword){
-            console.log("null")
-=======
         inputUser =$.trim($(".input-user").val());
         inputPassword =$.trim($(".input-password").val());
         if(!inputUser){
             alert('请输入用户名');
         }else if(!inputPassword){
             alert('请输入用密码');
->>>>>>> master
         }else{
            query()
         }
@@ -77,14 +69,15 @@
             data:{username:inputUser,password:inputPassword,csrfmiddlewaretoken:'{{ csrf_token }}'},
             type:"POST",
             success:function(data) {
-{#                 console.log(data);#}
                 if(data.res == 1){
-                    alert('登录成功');
                     window.location.href='/adminbd/index';
-                }else{
-                    alert('登录失败');
+                }else if(data.res == 2){
+                    alert('用户名不存在');
                     window.location.href='/adminbd/license_login';
-{#                    console.log('error');#}
+                }
+                else{
+                    alert('用户名和密码不匹配');
+                    window.location.href='/adminbd/license_login';
                 }
             },
             error:function(){
