@@ -27,12 +27,15 @@
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
         .form-group label{padding: 0rem 1rem 0.2rem 1rem;}
         #license_code .form-group{margin-bottom: 0;}
-        .superUsers{}
-        .superUsers option{text-align: left;}
-        .list-select{}
-        .list-select .btn-group{width: 100%;}
-        .list-select button{width: 100%;}
-        .list-select ul{width: 100%;}
+        .multiselect-container .input-group .form-control{height: 29px;width: 190px;border: 1px solid #ccc;}
+        .multiselect-container .input-group .input-group-addon{}
+        .multiselect-container .input-group .input-group-btn .multiselect-clear-filter{box-shadow: inherit;height: 37px;}
+        .example-onDeselectAll .multiselect-container li a input{margin: 0;}
+        .checkbox input[type=checkbox], .checkbox-inline input[type=checkbox], .radio input[type=radio], .radio-inline input[type=radio]{
+            margin: 0;
+        }
+        [type="checkbox"]:not(:checked), [type="checkbox"]:checked{opacity:1;margin: 0;right: 0;top: 4px; left: 10px;}
+
     </style>
 </head>
 <body>
@@ -183,11 +186,17 @@
 
        $(document).ready(function() {
            $('#example-onDeselectAll').multiselect({
+                enableFiltering: true,
                 includeSelectAllOption: true,
+                selectAllJustVisible: false,
                 selectAllText:"选择全部",
                 nonSelectedText:"请选择云平台",
                 allSelectedText:"全部选择云平台",
                 nSelectedText:"云平台",
+
+                buttonWidth: '100%',
+                maxHeight: 240,
+                numberDisplayed: 1,
                 onDeselectAll: function() {
                     //alert('onDeselectAll triggered!');
                 }
