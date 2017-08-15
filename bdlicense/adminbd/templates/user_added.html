@@ -13,8 +13,6 @@
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
     <!-- Bootstrap Styles-->
     <link href="../../static/css/bootstrap.css" rel="stylesheet" />
-    <link href="../../static/css/bootstrap-multiselect.css" rel="stylesheet" />
-
     <!-- FontAwesome Styles-->
     <link href="../../static/assets/css/font-awesome.css" rel="stylesheet" />
       <!-- Morris Chart Styles-->
@@ -24,10 +22,23 @@
     <!-- Google Fonts-->
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
+    <link rel="stylesheet" href="../../static/css/bootstrap-multiselect.css" type="text/css"/>
     <style>
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
         .form-group label{padding: 0rem 1rem 0.2rem 1rem;}
+        .multiselect{float: inherit;}
+        .multiselect-selected-text{float: left;}
+        .caret{float: right;margin-top: 6px;}
         #license_code .form-group{margin-bottom: 0;}
+        .multiselect-container .input-group .form-control{height: 29px;width: 190px;border: 1px solid #ccc;}
+        .multiselect-container .input-group .input-group-addon{}
+        .multiselect-container .input-group .input-group-btn .multiselect-clear-filter{box-shadow: inherit;height: 37px;}
+        .example-onDeselectAll .multiselect-container li a input{margin: 0;}
+        .checkbox input[type=checkbox], .checkbox-inline input[type=checkbox], .radio input[type=radio], .radio-inline input[type=radio]{
+            margin: 0;
+        }
+        [type="checkbox"]:not(:checked), [type="checkbox"]:checked{opacity:1;margin: 0;right: 0;top: 4px; left: 10px;}
+
     </style>
 </head>
 <body>
@@ -99,10 +110,10 @@
                         <div class="form-group" style="padding-top: 20px;">
                             <label class="col-sm-3 control-label" for="user_name" >云平台管理员:</label>
                             <div class="col-sm-4">
-                                <input placeholder="管理员名称" required type="text" class="form-control" name="user_name" id="user_name" >
+                                <input style="padding-right:0;padding-left: 0; " placeholder="管理员名称" required type="text" class="form-control" name="user_name" id="user_name" >
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group superUsers">
                                 <label class="col-sm-3 control-label" for="super_user" >是否为超级用户:</label>
                                 <div class="col-sm-4">
                                     <select onchange="func()" class="form-control" id="super_user" name="super_user" >
@@ -111,11 +122,10 @@
                                     </select>
                                 </div>
                             </div>
-                        <div class="form-group">
+                        <div class="form-group list-select">
                             <label class="col-sm-3 control-label" for="sel_cloud" >云平台:</label>
                             <div class="col-sm-4">
-                                <select onchange="func()" class="form-control" id="sel_cloud" name="sel_cloud" >
-                                    <option value="" disabled="" selected="">选择云平台</option>
+                                <select id="example-onDeselectAll" multiple="multiple">
                                     {% for cloudInfo in cloudInfos %}
                                         <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
                                     {% endfor %}
@@ -132,34 +142,48 @@
         </div>
     </div>
 </div>
-  <!-- /. WRAPPER  -->
+   <!-- /. WRAPPER  -->
     <!-- JS Scripts-->
     <!-- jQuery Js -->
-     <script src="../../static/js/jquery.3.2.1.js"></script>
+    <script src="../../static/js/jquery.3.2.1.js"></script>
 	<!-- Bootstrap Js -->
     <script src="../../static/assets/js/bootstrap.min.js"></script>
 	<script src="../../static/assets/materialize/js/materialize.min.js"></script>
+    <script type="text/javascript" src="../../static/js/bootstrap-multiselect.js"></script>
     <!-- Metis Menu Js -->
     <script src="../../static/assets/js/jquery.metisMenu.js"></script>
     <script src="../../static/assets/js/morris/raphael-2.1.0.min.js"></script>
-{#    <script src="../../static/assets/js/morris/morris.js"></script>#}
+    <script src="../../static/assets/js/morris/morris.js"></script>
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
-    <script src="../../static/assets/js/bootstrap.min.js"></script>
-    <script src="../../static/js/bootstrap-multiselect.js"></script>
 
     <!-- Custom Js -->
-{#    <script src="../../static/assets/js/custom-scripts.js"></script>#}
-
+    <script src="../../static/assets/js/custom-scripts.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#example-getting-started').multiselect();
+
+       $(document).ready(function() {
+           $('#example-onDeselectAll').multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                selectAllJustVisible: false,
+                selectAllText:"选择全部",
+                nonSelectedText:"请选择云平台",
+                allSelectedText:"全部选择云平台",
+                nSelectedText:"云平台",
+
+                buttonWidth: '100%',
+                maxHeight: 240,
+                numberDisplayed: 1,
+                onDeselectAll: function() {
+                    //alert('onDeselectAll triggered!');
+                }
         });
+    });
         var user_name,sel_cloud,pwd1,pwd2,super_user;
         $("#submit").click(function(){
             user_name =$.trim($("input[name='user_name']").val());
-            sel_cloud =$.trim($("#sel_cloud").val());
+            sel_cloud =$.trim($("#example-onDeselectAll").val());
             super_user =$.trim($("#super_user").val());
             if(!user_name){
                 alert('请输入云平台管理员名称');
@@ -167,7 +191,7 @@
             else if(!sel_cloud){
                 alert('请选择云平台');
             }
-            else{
+              else{
                query()
             }
         });
