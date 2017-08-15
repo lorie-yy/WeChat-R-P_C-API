@@ -259,14 +259,13 @@ class AddUserView(View):
         if not username:
             return render(request,'license_login.html')
 
-        print "in add user post func"
         params = request.POST.copy()
         print params
         user_name = params['user_name']
-        print user_name
         sel_cloud = params['sel_cloud']
-        # sel_cloud = [2, 3]
+        cloud_id_list = sel_cloud.split(',')
         super_user = params['super_user']
+
         uu = {}
         userSet = User.objects.filter(username=user_name)
         if userSet.count() > 0:
@@ -274,6 +273,7 @@ class AddUserView(View):
             result = 2
             uu = {'res':result}
             return JsonResponse(uu)
+
         try:
             user = User.objects.create_user(username=user_name,password="123456")
             print "create new user and inital pwd is 123456"
@@ -286,14 +286,19 @@ class AddUserView(View):
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
             #add cloud admin
-            for cid in sel_cloud:
-                cloudObj = CloudInformation.objects.filter(id=int(cid))
-                user.cloudinformation_set.add(cloudObj[0])
-                user.save()
+            if cloud_id_list:
+                for cloud_id in cloud_id_list:
+                    cloudObj = CloudInformation.objects.filter(id=int(cloud_id))
+                    user.cloudinformation_set.add(cloudObj[0])
+                    user.save()
 
-            result = 1
-            uu = {'res':result}
-            return JsonResponse(uu)
+                result = 1
+                uu = {'res':result}
+                return JsonResponse(uu)
+            else:
+                result = 0
+                uu = {'res':result}
+                return JsonResponse(uu)
         except Exception,e:
             print e
         result = 0
