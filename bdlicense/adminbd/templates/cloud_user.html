@@ -54,9 +54,9 @@
     </nav>
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
-        <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>
+{#        <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>#}
         <li><a href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
-        <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>
+{#        <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>#}
         <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
    <!--/. NAV TOP  -->
@@ -101,13 +101,13 @@
             <div class="col-md-12">
                 <div class="panel">
                     <div class="clearfix" style="padding-top: 13px;">
-                    {% if is_superuser %}
-                        <div class="col-sm-2 right">
-                             <a href="/adminbd/add_user" class="btn  btn btn-turquoise text-right">
-                                 <span class="fa fa-plus-square"></span> 添加管理员
-                             </a>
-                        </div>
-                    {% endif %}
+{#                    {% if is_superuser %}#}
+{#                        <div class="col-sm-2 right">#}
+{#                             <a href="/adminbd/add_user" class="btn  btn btn-turquoise text-right">#}
+{#                                 <span class="fa fa-plus-square"></span> 添加管理员#}
+{#                             </a>#}
+{#                        </div>#}
+{#                    {% endif %}#}
                     </div>
 
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">

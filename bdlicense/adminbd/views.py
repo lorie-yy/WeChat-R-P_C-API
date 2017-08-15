@@ -259,25 +259,24 @@ class AddUserView(View):
         if not username:
             return render(request,'license_login.html')
 
-        username = request.session.get('username')
-        if not username:
-            return render(request,'license_login.html')
-        print "in add user post func"
         params = request.POST.copy()
         print params
         user_name = params['user_name']
         sel_cloud = params['sel_cloud']
-        pwd = params['pwd1']
+        cloud_id_list = sel_cloud.split(',')
         super_user = params['super_user']
+
         uu = {}
         userSet = User.objects.filter(username=user_name)
-        if userSet.count() > 0 :
+        if userSet.count() > 0:
             print "user exists"
             result = 2
             uu = {'res':result}
             return JsonResponse(uu)
+
         try:
-            user = User.objects.create_user(username=user_name,password=pwd)
+            user = User.objects.create_user(username=user_name,password="123456")
+            print "create new user and inital pwd is 123456"
             print user
             if super_user == 0:
                 user.is_superuser = 0
@@ -286,16 +285,20 @@ class AddUserView(View):
             user.is_staff = 1
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
-            user.save()
+            #add cloud admin
+            if cloud_id_list:
+                for cloud_id in cloud_id_list:
+                    cloudObj = CloudInformation.objects.filter(id=int(cloud_id))
+                    user.cloudinformation_set.add(cloudObj[0])
+                    user.save()
 
-            userObj = User.objects.get(username=user_name)
-            cloudObj = CloudInformation.objects.filter(id=int(sel_cloud))
-            userObj.cloudinformation_set.add(cloudObj[0])
-            userObj.save()
-
-            result = 1
-            uu = {'res':result}
-            return JsonResponse(uu)
+                result = 1
+                uu = {'res':result}
+                return JsonResponse(uu)
+            else:
+                result = 0
+                uu = {'res':result}
+                return JsonResponse(uu)
         except Exception,e:
             print e
         result = 0
@@ -361,8 +364,8 @@ def license_logout(request):
         if username is False:
             return render(request, 'license_login.html')
 
-        user=User.objects.get(username=username)
-        user.save()
+        # user=User.objects.get(username=username)
+        # user.save()
         request.session.flush()
         return HttpResponseRedirect('license_login')
 
@@ -456,9 +459,9 @@ class ValidateLicenseView(View):
             return JsonResponse(result)
 
 class ValidateUserView(View):
-    def post(self,request):
+    def get(self,request):
         print "in validate user view"
-        params = request.POST.copy()
+        params = request.GET.copy()
         uu = {}
         username = params['username']
         pwd = params['password']

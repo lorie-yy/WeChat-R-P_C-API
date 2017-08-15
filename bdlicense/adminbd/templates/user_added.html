@@ -26,7 +26,7 @@
     <style>
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
         .form-group label{padding: 0rem 1rem 0.2rem 1rem;}
-        .multiselect{float: inherit;}
+        .multiselect{clear: both}
         .multiselect-selected-text{float: left;}
         .caret{float: right;margin-top: 6px;}
         #license_code .form-group{margin-bottom: 0;}
@@ -68,9 +68,9 @@
     </nav>
     <!-- Dropdown Structure -->
     <ul id="dropdown1" class="dropdown-content">
-        <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>
+{#        <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>#}
         <li><a href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
-        <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>
+{#        <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>#}
 
         <li><a href="/adminbd/license_login"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
     </ul>
@@ -122,33 +122,8 @@
                                     </select>
                                 </div>
                             </div>
-                        <div class="form-group" style="padding-top: 30px;">
-                            <label class="col-sm-3 control-label" for="pwd1" >请输入新密码</label>
-                            <div class="col-sm-4">
-                                <input style="padding-right:0;padding-left: 0; " required placeholder="请输入新密码" type="password" class="form-control" name="pwd1" id="pwd1" >
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label"  for="pwd2" >请再次输入</label>
-                            <div class="col-sm-4">
-                                <input style="padding-right:0;padding-left: 0; " required placeholder="请再次输入" type="password" class="form-control" name="pwd2" id="pwd2" >
-                            </div>
-                        </div>
-
-{#                        <div class="form-group">#}
-{#                            <label class="col-sm-3 control-label" for="sel_cloud" >云平台123:</label>#}
-{#                            <div class="col-sm-4">#}
-{#                                <select onchange="func()" class="form-control" id="" name="sel_cloud" >#}
-{#                                    <option value="" disabled="" selected="">选择云平台</option>#}
-{#                                    {% for cloudInfo in cloudInfos %}#}
-{#                                        <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>#}
-{#                                    {% endfor %}#}
-{#                                </select>#}
-{#                            </div>#}
-{#                        </div>#}
-
-                        <div class="form-group list-select">
-                            <label class="col-sm-3 control-label" for="sel_cloud" >云平台:</label>
+                        <div class="form-group list-select" style="margin-top: 15px; ">
+                            <label class="col-sm-3 control-label" for="sel_cloud" >选择管理的云平台:</label>
                             <div class="col-sm-4">
                                 <select id="example-onDeselectAll" multiple="multiple">
                                     {% for cloudInfo in cloudInfos %}
@@ -158,7 +133,9 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <button id="submit" class="btn btn-success" style="margin-left:50px;">提交</button>
+                            <button id="submit" class="btn btn-success" style="margin-left:50px;margin-bottom: 10px;">提交</button>
+                            <a style="margin-bottom: 10px;margin-right: 200px" href="/adminbd/user_list" class="btn btn-gray btn-single pull-right" type="reset">返回</a>
+
                         </div>
 
                     </div>
@@ -210,17 +187,10 @@
             user_name =$.trim($("input[name='user_name']").val());
             sel_cloud =$.trim($("#example-onDeselectAll").val());
             super_user =$.trim($("#super_user").val());
-            pwd1 =$.trim($("#pwd1").val());
-            pwd2 =$.trim($("#pwd2").val());
             if(!user_name){
                 alert('请输入云平台管理员名称');
-            }else if(!pwd1){
-                alert('请输入密码');
-            }else if(!pwd2){
-                alert('请再次输入密码');
-            }else if(pwd1 != pwd2){
-                alert('两次输入密码不同');
-            }else if(!sel_cloud){
+            }
+            else if(!sel_cloud){
                 alert('请选择云平台');
             }
               else{
@@ -231,7 +201,7 @@
         function query(){
             $.ajax({
                 url:"/adminbd/add_user",
-                data:{user_name:user_name, super_user:super_user,sel_cloud:sel_cloud,pwd1:pwd1,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                data:{user_name:user_name, super_user:super_user,sel_cloud:sel_cloud,csrfmiddlewaretoken:'{{ csrf_token }}'},
                 type:"POST",
                 success:function(data) {
                     if(data.res == 1){
