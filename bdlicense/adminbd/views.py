@@ -259,9 +259,6 @@ class AddUserView(View):
         if not username:
             return render(request,'license_login.html')
 
-        username = request.session.get('username')
-        if not username:
-            return render(request,'license_login.html')
         print "in add user post func"
         params = request.POST.copy()
         print params
@@ -277,7 +274,7 @@ class AddUserView(View):
             uu = {'res':result}
             return JsonResponse(uu)
         try:
-            user = User.objects.create_user(username=user_name,password=pwd)
+            user = User.objects.create_user(username=user_name,password="123456")
             print user
             if super_user == 0:
                 user.is_superuser = 0
@@ -292,6 +289,12 @@ class AddUserView(View):
             cloudObj = CloudInformation.objects.filter(id=int(sel_cloud))
             userObj.cloudinformation_set.add(cloudObj[0])
             userObj.save()
+
+            # userObj = User.objects.get(username=user_name)
+            # for cid in sel_cloud:
+            #     cloudObj = CloudInformation.objects.filter(id=int(cid))
+            #     userObj.cloudinformation_set.add(cloudObj[0])
+            #     userObj.save()
 
             result = 1
             uu = {'res':result}
@@ -361,8 +364,8 @@ def license_logout(request):
         if username is False:
             return render(request, 'license_login.html')
 
-        user=User.objects.get(username=username)
-        user.save()
+        # user=User.objects.get(username=username)
+        # user.save()
         request.session.flush()
         return HttpResponseRedirect('license_login')
 
@@ -456,9 +459,9 @@ class ValidateLicenseView(View):
             return JsonResponse(result)
 
 class ValidateUserView(View):
-    def post(self,request):
+    def get(self,request):
         print "in validate user view"
-        params = request.POST.copy()
+        params = request.GET.copy()
         uu = {}
         username = params['username']
         pwd = params['password']
