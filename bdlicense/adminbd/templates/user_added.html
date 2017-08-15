@@ -111,23 +111,10 @@
                                     </select>
                                 </div>
                             </div>
-{#                        <div class="form-group" style="padding-top: 30px;">#}
-{#                            <label class="col-sm-3 control-label" for="pwd1" >请输入新密码</label>#}
-{#                            <div class="col-sm-4">#}
-{#                                <input style="padding-right:0;padding-left: 0; " required type="password" class="form-control" name="pwd1" id="pwd1" >#}
-{#                            </div>#}
-{#                        </div>#}
-{#                        <div class="form-group">#}
-{#                            <label class="col-sm-3 control-label" for="pwd2" >请再次输入</label>#}
-{#                            <div class="col-sm-4">#}
-{#                                <input style="padding-right:0;padding-left: 0; " required type="password" class="form-control" name="pwd2" id="pwd2" >#}
-{#                            </div>#}
-{#                        </div>#}
-
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="sel_cloud" >云平台:</label>
                             <div class="col-sm-4">
-                                <select onchange="func()" class="form-control" id="" name="sel_cloud" >
+                                <select onchange="func()" class="form-control" id="sel_cloud" name="sel_cloud" >
                                     <option value="" disabled="" selected="">选择云平台</option>
                                     {% for cloudInfo in cloudInfos %}
                                         <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
@@ -174,18 +161,9 @@
             user_name =$.trim($("input[name='user_name']").val());
             sel_cloud =$.trim($("#sel_cloud").val());
             super_user =$.trim($("#super_user").val());
-{#            pwd1 =$.trim($("#pwd1").val());#}
-{#            pwd2 =$.trim($("#pwd2").val());#}
             if(!user_name){
                 alert('请输入云平台管理员名称');
             }
-{#            else if(!pwd1){#}
-{#                alert('请输入密码');#}
-{#            }else if(!pwd2){#}
-{#                alert('请再次输入密码');#}
-{#            }else if(pwd1 != pwd2){#}
-{#                alert('两次输入密码不同');#}
-{#            }#}
             else if(!sel_cloud){
                 alert('请选择云平台');
             }

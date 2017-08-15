@@ -263,18 +263,20 @@ class AddUserView(View):
         params = request.POST.copy()
         print params
         user_name = params['user_name']
+        print user_name
         sel_cloud = params['sel_cloud']
-        pwd = params['pwd1']
+        # sel_cloud = [2, 3]
         super_user = params['super_user']
         uu = {}
         userSet = User.objects.filter(username=user_name)
-        if userSet.count() > 0 :
+        if userSet.count() > 0:
             print "user exists"
             result = 2
             uu = {'res':result}
             return JsonResponse(uu)
         try:
             user = User.objects.create_user(username=user_name,password="123456")
+            print "create new user and inital pwd is 123456"
             print user
             if super_user == 0:
                 user.is_superuser = 0
@@ -283,18 +285,11 @@ class AddUserView(View):
             user.is_staff = 1
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
-            user.save()
-
-            userObj = User.objects.get(username=user_name)
-            cloudObj = CloudInformation.objects.filter(id=int(sel_cloud))
-            userObj.cloudinformation_set.add(cloudObj[0])
-            userObj.save()
-
-            # userObj = User.objects.get(username=user_name)
-            # for cid in sel_cloud:
-            #     cloudObj = CloudInformation.objects.filter(id=int(cid))
-            #     userObj.cloudinformation_set.add(cloudObj[0])
-            #     userObj.save()
+            #add cloud admin
+            for cid in sel_cloud:
+                cloudObj = CloudInformation.objects.filter(id=int(cid))
+                user.cloudinformation_set.add(cloudObj[0])
+                user.save()
 
             result = 1
             uu = {'res':result}
