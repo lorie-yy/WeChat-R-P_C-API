@@ -113,7 +113,7 @@
                                 <select onchange="func()" class="form-control" id="license_type" name="license_type" >
                                     <option value="" disabled="" selected="">选择功能类型</option>
                                     {% for licenseType in licenseTypes %}
-                                        <option id="bao-month" value="{{ licenseType.type }}">{{ licenseType.discription }}</option>
+                                        <option id="bao-month" value="{{ licenseType.id }}">{{ licenseType.discription }}</option>
                                     {% endfor %}
                                 </select>
                             </div>

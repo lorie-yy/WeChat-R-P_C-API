@@ -41,6 +41,11 @@
                     </a>
                 </li>
             </ul>
+            <ul>
+                <div class="col-sm-2">
+                    <a class="btn btn-info btn-sm" style="margin-right: 0px;" href="/adminbd">下载AP导入模板</a>
+                </div>
+            </ul>
             <ul class="nav navbar-top-links navbar-right">
                 <li>
                     <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
@@ -125,7 +130,7 @@
                         <thead>
                             <tr>
                                 <th>云平台</th>
-{#                                <th>ID</th>#}
+                                <th>是否有效</th>
                                 <th>KEY_ID</th>
                                 <th>版本类型</th>
                                 <th>Code</th>
@@ -143,7 +148,13 @@
                             {% for license in licenses %}
                                 <tr>
                                     <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></td>
-    {#                                <th>{{ license.id }}</th>#}
+                                    {% if license.is_valid  == 1%}
+                                        <td>有效</td>
+                                    {% elif license.is_valid  == 2 %}
+                                        <td>已注册</td>
+                                        {% else %}
+                                        <td>无效</td>
+                                    {% endif %}
                                     {% if license.key_id %}
                                         <td>{{ license.key_id }}</td>
                                     {% else %}

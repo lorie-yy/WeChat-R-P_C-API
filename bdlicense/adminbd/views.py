@@ -168,7 +168,7 @@ class AddLicenseView(View):
             license = LicenseRecord()
             # license.key_id = key_id
             license.license_code = license_code
-            license.licenseType_id = license_type
+            license.licenseType_id = int(license_type)
             license.cloudInfo_id = cloud_info
             license.expire_time = cur_time
             if licensePid:
@@ -369,11 +369,26 @@ def license_logout(request):
         request.session.flush()
         return HttpResponseRedirect('license_login')
 
+class UpdateKeyIDView(View):
+    def get(self,request):
+        params = request.GET.copy()
+        key_id = params['key_id']
+        license_code = params['license_code']
+        #update license key_id
+        licenses = LicenseRecord.objects.filter(license_code=license_code)
+        licenses.update(key_id=key_id)
+        print "update license key_id successfully"
+
+        #modify license status
+        licenses.update(license_status=LicenseRecord.OPEN)
+        print "license status updated successfully"
+        return HttpResponse("OK")
+
 class ActivateLicenseView(View):
     def get(self,request):
         print "in activate view"
         result = {}
-        key_id = request.GET.get('key_id')
+        # key_id = request.GET.get('key_id')
         license_code = request.GET.get('license_code')
         try:
             # licenseRecord = LicenseRecord.objects.get(key_id=key_id,license_code=license_code)
@@ -382,24 +397,17 @@ class ActivateLicenseView(View):
             if licenseRecord:
                 print "licenseRecord is exist by this license_code"
 
-                #update license key_id
-                if key_id:
-                    licenseRecord.key_id = key_id
-                    licenseRecord.save()
-                    print "update license key_id successfully"
-
-                #modify license status
-                if licenseRecord.license_status == LicenseRecord.CLOSE:
-                    licenseRecord.license_status = LicenseRecord.OPEN
-                    licenseRecord.save()
-                    print "license status updated successfully"
-
                 #prepare response params
-                maxAPs = licenseRecord.licenseParam.maxAPs
-                maxACs = licenseRecord.licenseParam.maxACs
-                maxUsers = licenseRecord.licenseParam.maxUsers
+                if licenseRecord.licenseType.type == "1":
+                    maxAPs = licenseRecord.licenseParam.maxAPs
+                    maxACs = licenseRecord.licenseParam.maxACs
+                    maxUsers = licenseRecord.licenseParam.maxUsers
+                else:
+                    maxAPs = 0
+                    maxACs = 0
+                    maxUsers = 0
                 expire_time = licenseRecord.expire_time
-                result['usb_key_hardwareId'] = key_id
+                # result['usb_key_hardwareId'] = key_id
                 result['license_key'] = license_code
                 result['max_ap_allowed'] = maxAPs
                 result['max_ac_allowed'] = maxACs
@@ -458,6 +466,172 @@ class ValidateLicenseView(View):
             result['res'] = 0 # invalid license
             return JsonResponse(result)
 
+class RegisterLicenseView111(View):
+    def get(self,request):
+        print "in register view"
+        result = {}
+        params = request.GET.copy()
+        license_code = params['license_code']
+        newlicense = LicenseRecord.objects.get(license_code=license_code)
+
+        if newlicense.is_valid == 1:
+            if newlicense.license_status == 1:
+                #prepare response params
+                result['cloud_id'] = newlicense.cloudInfo_id
+                result['cloud_type'] = newlicense.licenseType.type
+                result['usb_key_hardwareId'] = newlicense.key_id
+                result['license_key'] = license_code
+
+                expire_time = newlicense.expire_time
+                str_expire_time = expire_time.strftime('%Y-%m-%d')#expire_time format string
+                result['license_expire_time'] = str_expire_time
+
+                #get all the licenses by the newlicense on the same cloud
+                print "new license cloud id",newlicense.cloudInfo_id
+                licenses = LicenseRecord.objects.filter(cloudInfo_id=newlicense.cloudInfo_id)
+                print "licenses.count():",licenses.count()
+                if licenses.count() > 0:
+                    for license in licenses:
+                        if license.licenseType.type == newlicense.licenseType.type:#repeat register license
+                            if license.licenseType.type == "1" and license.is_valid:
+                                print "same type license and is basic license"
+                                print license.licenseType.type
+                                print "license is_valid"
+                                print license.is_valid
+                                license.is_valid = 0
+                                license.save()
+                                print license.is_valid
+                                result["is_odd"] = 0
+
+                                #prepare licenseparams response
+                                maxAPs = newlicense.licenseParam.maxAPs
+                                maxACs = newlicense.licenseParam.maxACs
+                                maxUsers = newlicense.licenseParam.maxUsers
+                                result['max_ap_allowed'] = maxAPs
+                                result['max_ac_allowed'] = maxACs
+                                result['max_user_allowed'] = maxUsers
+
+                                result['result'] = True
+                                return JsonResponse(result)
+                            elif license.licenseType.type == "2":
+                                print "charging license"
+                                result['charging'] = True
+                                return JsonResponse(result)
+                            elif license.licenseType.type == "4":
+                                result['analysis'] = True
+                                return JsonResponse(result)
+                        else:#new license
+                            print "new license and never register"
+                            if newlicense.licenseType.type == "1":
+                                print "new license and never register basic license"
+                                maxAPs = newlicense.licenseParam.maxAPs
+                                maxACs = newlicense.licenseParam.maxACs
+                                maxUsers = newlicense.licenseParam.maxUsers
+                                result['max_ap_allowed'] = maxAPs
+                                result['max_ac_allowed'] = maxACs
+                                result['max_user_allowed'] = maxUsers
+                                result['result'] = True
+                                return JsonResponse(result)
+                            elif newlicense.licenseType.type == "2":
+                                print "new license and never register and charging license"
+                                result['charging'] = True
+                                return JsonResponse(result)
+                            elif newlicense.licenseType.type == "4":
+                                print "new license and never register and analysis license"
+                                result['analysis'] = True
+                                return JsonResponse(result)
+                else:
+                    print "new license and never register"
+                    result['result'] = True
+                    return JsonResponse(result)
+            else:
+                #license not activated
+                result['result'] = 2
+                return JsonResponse(result)
+        else:
+            #license invalid
+            result['result'] = 1
+            return JsonResponse(result)
+
+class RegisterLicenseView(View):
+    def get(self,request):
+        print "in register view"
+        uu = {}
+        params = request.GET.copy()
+        license_code = params['license_code']
+        newlicenses = LicenseRecord.objects.filter(license_code=license_code)
+        if newlicenses:
+            print "license exists"
+            if newlicenses[0].is_valid == 1:
+                print "license valid"
+                if newlicenses[0].license_status == 1:
+                    print "active license"
+                    license_type = newlicenses[0].licenseType.type
+                    if license_type == "1":#basic license and Expansion
+                        basic_license = LicenseRecord.objects.filter(
+                            cloudInfo_id = newlicenses[0].cloudInfo_id,
+                            is_valid=2,
+                            licenseType_id=1,
+                            license_status = 1
+                        )
+                        if basic_license.count() > 0:
+                            basic_license.update(is_valid=0)
+                        # newlicenses.update(is_valid=2)
+                    elif license_type == "2":#charging license
+                        charging_license = LicenseRecord.objects.filter(
+                            cloudInfo_id = newlicenses[0].cloudInfo_id,
+                            is_valid=2,
+                            licenseType_id=2,
+                            license_status = 1
+                        )
+                        if charging_license.count() > 0:
+                            return JsonResponse({"result":2})
+                    elif license_type == "4":#analysis license
+                        analysis_license = LicenseRecord.objects.filter(
+                            cloudInfo_id = newlicenses[0].cloudInfo_id,
+                            is_valid=2,
+                            licenseType_id=3,
+                            license_status = 1
+                        )
+                        if analysis_license.count() > 0:
+                            return JsonResponse({"result":2})
+
+                    cloud_id = newlicenses[0].cloudInfo.id
+                    uu['license_type'] = license_type
+                    uu['cloud_id'] = cloud_id
+                    uu['result'] = 0
+                    return JsonResponse(uu)
+                else:
+                    print "inactive license"
+                    uu['result'] = 1
+                    return JsonResponse(uu)
+            else:
+                print "license invalid"
+                uu['result'] = 1
+                return JsonResponse(uu)
+
+        else:
+            print "license dont exist"
+            uu['result'] = 1
+            return JsonResponse(uu)
+
+class RegisterResultView(View):
+    def get(self,request):
+        params = request.GET.copy()
+        print params
+        # key_id = params['key_id']
+        result = params['result']
+        license_code = params['license_code']
+        if result == "0":
+            licenses = LicenseRecord.objects.filter(license_code=license_code)
+            print licenses.count()
+            if licenses.count() > 0:
+                licenses.update(is_valid = 2)
+                return HttpResponse("0")
+        else:
+            print "Register failed"
+            return HttpResponse("1")
+
 class ValidateUserView(View):
     def get(self,request):
         print "in validate user view"
@@ -490,3 +664,29 @@ class ValidateUserView(View):
             result = 3
             uu['res'] = result
             return JsonResponse(uu)
+
+IMPORT_FILE_PATH = "adminbd/templates/import_file/"
+IMPORT_FILE_TEMPLATE_AP = "ap_import_template.xls"
+
+import os.path
+def handle_download_file(path,file_name):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    file=os.path.join(path,file_name)
+    down_data=[]
+    if os.path.isfile(file):
+        f=open(file)
+        try:
+            down_data=f.read()
+        finally:
+            f.close()
+    return down_data
+
+def download_ap_template(request):
+    cur_path=os.path.abspath('.')
+    target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
+    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_TEMPLATE_AP)
+    response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
+    # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
+    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_TEMPLATE_AP
+    return response
