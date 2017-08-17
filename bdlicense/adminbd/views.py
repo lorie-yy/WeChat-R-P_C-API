@@ -110,6 +110,7 @@ class UserIndexView(View):
 class AddLicenseView(View):
     def get(self,request):
         username = request.session.get('username')
+        is_superuser = request.session.get('is_superuser')
         if not username:
             return render(request,'license_login.html')
         print "in add license get func"
@@ -124,6 +125,7 @@ class AddLicenseView(View):
         cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
         context['username'] = username
+        context['is_superuser'] = is_superuser
 
         return render(request, 'license_added.html',context)
 
@@ -190,12 +192,15 @@ class AddCloudView(View):
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
         context = {}
         # cloudInfos = CloudInformation.objects.all()
         # context['cloudInfos'] = cloudInfos
         cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
+        context['is_superuser'] = is_superuser
 
         return render(request, 'license_addyun.html',context)
 
@@ -427,10 +432,12 @@ class ActivateLicenseView(View):
 class ModifyPasswordView(View):
     def get(self,request):
         username = request.session.get('username')
+        is_superuser = request.session.get('is_superuser')
         if not username:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
+        context['is_superuser'] = is_superuser
         return render(request,'modify_password.html',context)
     def post(self,request):
         param = request.POST.copy()
@@ -665,8 +672,8 @@ class ValidateUserView(View):
             uu['res'] = result
             return JsonResponse(uu)
 
-IMPORT_FILE_PATH = "adminbd/templates/import_file/"
-IMPORT_FILE_TEMPLATE_AP = "ap_import_template.xls"
+IMPORT_FILE_PATH = "adminbd/templates/download_file/"
+IMPORT_FILE_TEMPLATE_AP = "bdls.tar.gz"
 
 import os.path
 def handle_download_file(path,file_name):
@@ -682,7 +689,7 @@ def handle_download_file(path,file_name):
             f.close()
     return down_data
 
-def download_ap_template(request):
+def download_license_file(request):
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,IMPORT_FILE_TEMPLATE_AP)

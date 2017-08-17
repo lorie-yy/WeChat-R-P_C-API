@@ -29,7 +29,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-default top-navbar" role="navigation">
+    <nav class="navbar navbar-default top-navbar" style="padding: 0 15px 0 0;" role="navigation">
         <div class="navbar-header">
             <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="index.html">
                 <img src="../../static/images/logo-w.png" />
@@ -45,7 +45,12 @@
                 </a>
             </li>
         </ul>
-        <ul class="nav navbar-top-links navbar-right">
+      <ul class="nav navbar-nav navbar-right">
+            <li>
+                 {% if is_superuser %}
+                    <a style="margin-top: 9px;height: 38px;padding-top: 7px;" class="btn btn-default btn-sm" href="/adminbd/download_license_client_file">下载License客户端文件</a>
+                {% endif %}
+            </li>
             <li>
                 <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
                     <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>
