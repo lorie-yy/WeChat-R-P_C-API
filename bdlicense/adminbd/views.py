@@ -512,7 +512,7 @@ class RegisterLicenseView(View):
                             license_status = 1
                         )
                         if charging_license.count() > 0:
-                            return JsonResponse({"result":2})
+                            return JsonResponse({"result":5})
                     elif license_type == "4":#analysis license
                         analysis_license = LicenseRecord.objects.filter(
                             cloudInfo_id = newlicenses[0].cloudInfo_id,
@@ -521,7 +521,7 @@ class RegisterLicenseView(View):
                             license_status = 1
                         )
                         if analysis_license.count() > 0:
-                            return JsonResponse({"result":2})
+                            return JsonResponse({"result":4})
 
                     cloud_id = newlicenses[0].cloudInfo.id
                     uu['license_type'] = license_type
@@ -530,11 +530,11 @@ class RegisterLicenseView(View):
                     return JsonResponse(uu)
                 else:
                     print "inactive license"
-                    uu['result'] = 1
+                    uu['result'] = 3
                     return JsonResponse(uu)
             else:
                 print "license invalid"
-                uu['result'] = 1
+                uu['result'] = 2
                 return JsonResponse(uu)
 
         else:
@@ -607,6 +607,8 @@ def handle_download_file(path,file_name):
 
 def download_license_file(request):
     cur_path=os.path.abspath('.')
+    print "os.path.abspath('.')",cur_path
+    #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
