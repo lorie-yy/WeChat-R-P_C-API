@@ -43,27 +43,35 @@
                     </a>
                 </li>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li>
-                    {% if is_superuser %}
-                        <a style="margin-top: 9px;height: 38px;padding-top: 7px;" class="btn btn-default btn-sm" href="/adminbd/download_license_client_file">下载License客户端文件</a>
-                    {% endif %}
-                </li>
-                <li>
-                    <a class="dropdown-button waves-effect waves-dark" href="#!" data-activates="dropdown1">
-                        <i class="fa fa-user fa-fw"></i> <b>{{ username }}</b> <i class="material-icons right">arrow_drop_down</i>
+            <   <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-download fa-fw"></i>
+                          <b>下载</b>
+                        <span class="caret"></span>
                     </a>
+                    <ul class="dropdown-menu">
+                          {% if is_superuser %}
+                        <li><a style="padding:21px 0 0 15px " href="/adminbd/download_license_client_file">License客户端文件</a></li>
+                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/download_license_usage_file">License帮助文档</a></li>
+                         {% endif %}
+                    </ul>
                 </li>
-            </ul>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-user fa-fw"></i>
+                        <b>{{ username }}</b>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a style="padding:21px 0 0 15px" href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
+                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
+                    </ul>
+                </li>
+           </ul>
         </div>
     </nav>
     <!-- Dropdown Structure -->
-    <ul id="dropdown1" class="dropdown-content">
-{#        <li><a href="#"><i class="fa fa-user fa-fw"></i> 个人信息</a></li>#}
-        <li><a href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
-{#        <li><a href="#"><i class="fa fa-gear fa-fw"></i>设置</a></li>#}
-        <li><a href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
-    </ul>
    <!--/. NAV TOP  -->
       <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
         <div class="sidebar-collapse">
