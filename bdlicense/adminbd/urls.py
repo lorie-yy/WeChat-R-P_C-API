@@ -17,6 +17,11 @@ urlpatterns = patterns(
     url(r'^license_login',views.license_login, name='license_login'),
     url(r'^license_logout',views.license_logout, name='license_logout'),
     url(r'^license_activate',views.ActivateLicenseView.as_view(), name='license_activate'),
+    url(r'^update_key_id',views.UpdateKeyIDView.as_view(), name='update_key_id'),
+    url(r'^license_register',views.RegisterLicenseView.as_view(), name='license_register'),
+    url(r'^register_result',views.RegisterResultView.as_view(), name='register_result'),
     url(r'^license_invalid',views.ValidateLicenseView.as_view(), name='license_invalid'),
     url(r'^user_invalid',views.ValidateUserView.as_view(), name='user_invalid'),
+    url(r'^download_license_client_file',views.download_license_file, name='download_license_client_file'),
+    url(r'^download_license_usage_file',views.download_license_usage_file, name='download_license_usage_file'),
 )

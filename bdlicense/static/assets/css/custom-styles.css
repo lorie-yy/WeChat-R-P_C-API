@@ -387,7 +387,6 @@ padding: 0px;
 .top-navbar .nav > li > a {position: relative;display: block;padding: 17px;color: #484848;margin: 0px;}
 .top-navbar .nav > li > a:hover, .top-navbar .nav > li > a:focus {text-decoration: none;color: #f44336 !important;background: transparent;}
 .top-navbar .dropdown-menu{
-min-width: 230px;
 border-radius: 0 0 4px 4px;
 border: 0;}
 .top-navbar .dropdown-menu > li > a:hover, .top-navbar .dropdown-menu > li > a:focus{

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 class LicenseType(models.Model):
     id = models.AutoField(primary_key=True)
-    type = models.CharField(max_length=100, null=False, blank=False)
+    type = models.CharField(max_length=100, null=False, blank=False)#0基本
     discription = models.CharField(max_length=255, default="")
 
 class LicenseParams(models.Model):
@@ -42,6 +42,7 @@ class LicenseRecord(models.Model):
     discription = models.CharField('云平台信息描述',max_length=255, default="")
     license_code = models.CharField(max_length=255, null=False, blank=False)
     license_status = models.IntegerField(choices=LicenseStatusChoices,verbose_name='license状态',default=0)#0:close;1:open
+    is_valid = models.IntegerField(null=True,default=1)#0:无效；1:有效,2:已注册
     licenseType= models.ForeignKey(LicenseType)
     licenseParam = models.ForeignKey(LicenseParams,default=None, null=True)
     cloudInfo = models.ForeignKey(CloudInformation)
