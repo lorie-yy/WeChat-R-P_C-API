@@ -7,8 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicenseParams
 from datetime import datetime
+import os.path
 
 # Create your views here.
+
+
+IMPORT_FILE_PATH = "static/download_file/"
+IMPORT_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
+IMPORT_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
+
 #主页
 class IndexView(View):
     def get(self, request):
@@ -672,11 +679,6 @@ class ValidateUserView(View):
             uu['res'] = result
             return JsonResponse(uu)
 
-IMPORT_FILE_PATH = "adminbd/templates/download_file/"
-IMPORT_FILE_LICENSE_CLIENT_FILE = "bdls.tar.gz"
-IMPORT_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
-
-import os.path
 def handle_download_file(path,file_name):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -699,7 +701,7 @@ def download_license_file(request):
     response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_CLIENT_FILE
     return response
 
-def download_license_usage_file(request):
+def download_hlep_usage_file(request):
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_USAGE_FILE)
