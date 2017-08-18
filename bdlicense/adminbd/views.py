@@ -7,8 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicenseParams
 from datetime import datetime
+import os.path
 
 # Create your views here.
+
+
+DOWNLOAD_FILE_PATH = "static/download_file/"
+DOWNLOAD_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
+DOWNLOAD_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
+
 #主页
 class IndexView(View):
     def get(self, request):
@@ -473,93 +480,6 @@ class ValidateLicenseView(View):
             result['res'] = 0 # invalid license
             return JsonResponse(result)
 
-class RegisterLicenseView111(View):
-    def get(self,request):
-        print "in register view"
-        result = {}
-        params = request.GET.copy()
-        license_code = params['license_code']
-        newlicense = LicenseRecord.objects.get(license_code=license_code)
-
-        if newlicense.is_valid == 1:
-            if newlicense.license_status == 1:
-                #prepare response params
-                result['cloud_id'] = newlicense.cloudInfo_id
-                result['cloud_type'] = newlicense.licenseType.type
-                result['usb_key_hardwareId'] = newlicense.key_id
-                result['license_key'] = license_code
-
-                expire_time = newlicense.expire_time
-                str_expire_time = expire_time.strftime('%Y-%m-%d')#expire_time format string
-                result['license_expire_time'] = str_expire_time
-
-                #get all the licenses by the newlicense on the same cloud
-                print "new license cloud id",newlicense.cloudInfo_id
-                licenses = LicenseRecord.objects.filter(cloudInfo_id=newlicense.cloudInfo_id)
-                print "licenses.count():",licenses.count()
-                if licenses.count() > 0:
-                    for license in licenses:
-                        if license.licenseType.type == newlicense.licenseType.type:#repeat register license
-                            if license.licenseType.type == "1" and license.is_valid:
-                                print "same type license and is basic license"
-                                print license.licenseType.type
-                                print "license is_valid"
-                                print license.is_valid
-                                license.is_valid = 0
-                                license.save()
-                                print license.is_valid
-                                result["is_odd"] = 0
-
-                                #prepare licenseparams response
-                                maxAPs = newlicense.licenseParam.maxAPs
-                                maxACs = newlicense.licenseParam.maxACs
-                                maxUsers = newlicense.licenseParam.maxUsers
-                                result['max_ap_allowed'] = maxAPs
-                                result['max_ac_allowed'] = maxACs
-                                result['max_user_allowed'] = maxUsers
-
-                                result['result'] = True
-                                return JsonResponse(result)
-                            elif license.licenseType.type == "2":
-                                print "charging license"
-                                result['charging'] = True
-                                return JsonResponse(result)
-                            elif license.licenseType.type == "4":
-                                result['analysis'] = True
-                                return JsonResponse(result)
-                        else:#new license
-                            print "new license and never register"
-                            if newlicense.licenseType.type == "1":
-                                print "new license and never register basic license"
-                                maxAPs = newlicense.licenseParam.maxAPs
-                                maxACs = newlicense.licenseParam.maxACs
-                                maxUsers = newlicense.licenseParam.maxUsers
-                                result['max_ap_allowed'] = maxAPs
-                                result['max_ac_allowed'] = maxACs
-                                result['max_user_allowed'] = maxUsers
-                                result['result'] = True
-                                return JsonResponse(result)
-                            elif newlicense.licenseType.type == "2":
-                                print "new license and never register and charging license"
-                                result['charging'] = True
-                                return JsonResponse(result)
-                            elif newlicense.licenseType.type == "4":
-                                print "new license and never register and analysis license"
-                                result['analysis'] = True
-                                return JsonResponse(result)
-                else:
-                    print "new license and never register"
-                    result['result'] = True
-                    return JsonResponse(result)
-            else:
-                #license not activated
-                result['result'] = 2
-                return JsonResponse(result)
-        else:
-            #license invalid
-            result['result'] = 1
-            return JsonResponse(result)
-
 class RegisterLicenseView(View):
     def get(self,request):
         print "in register view"
@@ -592,7 +512,7 @@ class RegisterLicenseView(View):
                             license_status = 1
                         )
                         if charging_license.count() > 0:
-                            return JsonResponse({"result":2})
+                            return JsonResponse({"result":5})
                     elif license_type == "4":#analysis license
                         analysis_license = LicenseRecord.objects.filter(
                             cloudInfo_id = newlicenses[0].cloudInfo_id,
@@ -601,7 +521,7 @@ class RegisterLicenseView(View):
                             license_status = 1
                         )
                         if analysis_license.count() > 0:
-                            return JsonResponse({"result":2})
+                            return JsonResponse({"result":4})
 
                     cloud_id = newlicenses[0].cloudInfo.id
                     uu['license_type'] = license_type
@@ -610,11 +530,11 @@ class RegisterLicenseView(View):
                     return JsonResponse(uu)
                 else:
                     print "inactive license"
-                    uu['result'] = 1
+                    uu['result'] = 3
                     return JsonResponse(uu)
             else:
                 print "license invalid"
-                uu['result'] = 1
+                uu['result'] = 2
                 return JsonResponse(uu)
 
         else:
@@ -672,11 +592,6 @@ class ValidateUserView(View):
             uu['res'] = result
             return JsonResponse(uu)
 
-IMPORT_FILE_PATH = "adminbd/templates/download_file/"
-IMPORT_FILE_LICENSE_CLIENT_FILE = "bdls.tar.gz"
-IMPORT_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
-
-import os.path
 def handle_download_file(path,file_name):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -692,18 +607,18 @@ def handle_download_file(path,file_name):
 
 def download_license_file(request):
     cur_path=os.path.abspath('.')
-    target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_CLIENT_FILE)
+    print "os.path.abspath('.')",cur_path
+    #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
+    target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
-    # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
-    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_CLIENT_FILE
+    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
     return response
 
-def download_license_usage_file(request):
+def download_hlep_usage_file(request):
     cur_path=os.path.abspath('.')
-    target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_USAGE_FILE)
+    target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
-    # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
-    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_USAGE_FILE
+    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
