@@ -23,4 +23,5 @@ urlpatterns = patterns(
     url(r'^license_invalid',views.ValidateLicenseView.as_view(), name='license_invalid'),
     url(r'^user_invalid',views.ValidateUserView.as_view(), name='user_invalid'),
     url(r'^download_license_client_file',views.download_license_file, name='download_license_client_file'),
+    url(r'^download_license_usage_file',views.download_license_usage_file, name='download_license_usage_file'),
 )

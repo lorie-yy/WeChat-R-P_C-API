@@ -673,7 +673,8 @@ class ValidateUserView(View):
             return JsonResponse(uu)
 
 IMPORT_FILE_PATH = "adminbd/templates/download_file/"
-IMPORT_FILE_TEMPLATE_AP = "bdls.tar.gz"
+IMPORT_FILE_LICENSE_CLIENT_FILE = "bdls.tar.gz"
+IMPORT_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
 
 import os.path
 def handle_download_file(path,file_name):
@@ -692,8 +693,17 @@ def handle_download_file(path,file_name):
 def download_license_file(request):
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_TEMPLATE_AP)
+    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_CLIENT_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
     # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
-    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_TEMPLATE_AP
+    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_CLIENT_FILE
+    return response
+
+def download_license_usage_file(request):
+    cur_path=os.path.abspath('.')
+    target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
+    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_USAGE_FILE)
+    response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
+    # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
+    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_USAGE_FILE
     return response
