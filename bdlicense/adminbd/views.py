@@ -12,9 +12,9 @@ import os.path
 # Create your views here.
 
 
-IMPORT_FILE_PATH = "static/download_file/"
-IMPORT_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
-IMPORT_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
+DOWNLOAD_FILE_PATH = "static/download_file/"
+DOWNLOAD_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
+DOWNLOAD_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
 
 #主页
 class IndexView(View):
@@ -607,18 +607,18 @@ def handle_download_file(path,file_name):
 
 def download_license_file(request):
     cur_path=os.path.abspath('.')
-    target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_CLIENT_FILE)
+    target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
     # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
-    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_CLIENT_FILE
+    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
     return response
 
 def download_hlep_usage_file(request):
     cur_path=os.path.abspath('.')
-    target_path=os.path.join(cur_path, IMPORT_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,IMPORT_FILE_LICENSE_USAGE_FILE)
+    target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
     # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
-    response["Content-Disposition"]="attachment; filename=%s" %IMPORT_FILE_LICENSE_USAGE_FILE
+    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
