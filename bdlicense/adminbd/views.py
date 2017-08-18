@@ -610,7 +610,6 @@ def download_license_file(request):
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
-    # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
     return response
 
@@ -619,6 +618,5 @@ def download_hlep_usage_file(request):
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
-    # response['Content-Disposition'] = "attachment; filename=ap_import_template.xls"
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
