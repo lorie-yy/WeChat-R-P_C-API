@@ -179,6 +179,7 @@
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
+    <script src="../../static/assets/js/easydialog.min.js"></script>
 
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
@@ -193,36 +194,38 @@
             licenseParamsID =$.trim($('#funcSet').val());
             cloud_info =$.trim($('#cloud_info').val());
             license_time =$.trim($('#license_time').val());
+            var btnSn=function() {};
             if(!licenseCode ){
-                alert('请输入license code');
+                AlarmWarning("请输入license code!",btnSn);
             }else if(!cloud_info){
-                alert('请选择对应云平台');
+                AlarmWarning("请选择对应云平台!",btnSn);
             }else if(!licenseType){
-                alert('请选择license类型');
-
+                AlarmWarning("请选择license类型!",btnSn);
             }else if (licenseType == "1" && !licenseParamsID ){
-                alert('请选择配置类型');
+                AlarmWarning("请选择配置类型!",btnSn);
             }else if(!license_time){
-                alert('请选择license有效时间');
+                AlarmWarning("请选择license有效时间!",btnSn);
             }
             else{
+                var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
                     data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,license_time:license_time, license_type:licenseType,licensePID:licenseParamsID,csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 1){
-                            alert('license添加成功！');
-                            window.location.href = '/adminbd/add_license';
+                            var btnSn=function(e) {
+                                window.location.href = '/adminbd/index';
+                            };
+                            SuccessWarning("license添加成功",btnSn);
                         }else if(data.res == 2){
-                            alert('license code 已存在！');
-                            window.location.href = '/adminbd/add_license';
+                            ErrorWarning("license code 已存在！",btnFn);
                         }else{
-                            alert('license添加失败！');
+                            ErrorWarning("license添加失败!",btnFn);
                         }
                     },
                    error:function(){
-                        alert('服务器错误！');
+                        ErrorWarning("服务器错误！",btnFn);
                    }
             })
             }

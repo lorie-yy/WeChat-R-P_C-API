@@ -171,6 +171,7 @@
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
+    <script src="../../static/assets/js/easydialog.min.js"></script>
 
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
@@ -194,16 +195,17 @@
                 }
         });
     });
+        var btnFn=function() {};
         var user_name,sel_cloud,pwd1,pwd2,super_user;
         $("#submit").click(function(){
             user_name =$.trim($("input[name='user_name']").val());
             sel_cloud =$.trim($("#example-onDeselectAll").val());
             super_user =$.trim($("#super_user").val());
             if(!user_name){
-                alert('请输入云平台管理员名称');
+                AlarmWarning("请输入云平台管理员名称!",btnFn);
             }
             else if(!sel_cloud){
-                alert('请选择云平台');
+                AlarmWarning("请选择云平台!",btnFn);
             }
               else{
                query()
@@ -216,18 +218,20 @@
                 data:{user_name:user_name, super_user:super_user,sel_cloud:sel_cloud,csrfmiddlewaretoken:'{{ csrf_token }}'},
                 type:"POST",
                 success:function(data) {
+                    var btnSn=function() {
+                        window.location.href = '/adminbd/user_list';
+                    };
                     if(data.res == 1){
-                        alert('添加成功');
-                        window.location.href = '/adminbd/add_user';
+                        SuccessWarning("添加成功!",btnSn);
                     }else if(data.res == 2 ){
-                        alert('用户名已存在');
+                        ErrorWarning("用户名已存在!",btnFn);
                         window.location.href = '/adminbd/add_user';
                     }else{
-                       alert('添加失败');
+                        ErrorWarning("添加失败!",btnFn);
                     }
                 },
                 error:function() {
-                    alert('服务器错误');
+                    ErrorWarning("服务器错误!",btnFn);
                 }
             })
         }
