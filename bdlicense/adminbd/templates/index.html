@@ -18,6 +18,7 @@
     <link href="../../static/assets/js/morris/morris-0.4.3.min.css" rel="stylesheet" />
     <!-- Custom Styles-->
     <link href="../../static/assets/css/custom-styles.css" rel="stylesheet" />
+    <link href="../../static/assets/css/easydialog.css" rel="stylesheet" />
     <!-- Google Fonts-->
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
@@ -149,6 +150,7 @@
                                 <th>最大用户数</th>
                                 <th>购买时间</th>
                                 <th>过期时间</th>
+                                <th>重置license</th>
 
                             </tr>
                         </thead>
@@ -189,6 +191,9 @@
                                 {% endif %}
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
+                                    <td>
+                                        <button class="btn btn-success"  onclick="resetLicense({{ license.id }})">重置</button>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
@@ -222,6 +227,9 @@
                                     {% endif %}
                                         <td>{{ license.build_time }}</td>
                                         <td>{{ license.expire_time }}</td>
+                                        <td>
+                                            <button class="btn btn-success" onclick="resetLicense({{ license.id }})">重置</button>
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             {% endfor %}
@@ -248,6 +256,7 @@
     <script src="../../static/assets/js/morris/morris.js"></script>
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
+     <script type="text/javascript" src="/static/assets/js/easydialog.min.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
@@ -256,6 +265,40 @@
         function selectCloud(){
             var cloud_id = $('#cloud_info option:selected').val();
             window.location.href = "/adminbd?cloud_id="+cloud_id;
+        }
+
+        function resetLicense(license_id){
+{#            alert('11111111111');#}
+{#            easyDialog.open({#}
+{#                container : {#}
+{#                    header : '重置',#}
+{#                    content : '确认重置该License吗',#}
+{#                    yesFn : btnSn,#}
+{#                    noFn : false#}
+{#                },#}
+{#                    fixed : false#}
+{#                });#}
+{#            var btnSn = function( e ){#}
+            alert("确认重置该License吗");
+            $.ajax({
+                    url:"/adminbd/reset_license",
+                    data:{license_id:license_id},
+                    type:"GET",
+                    success:function(data) {
+                        if(data.result == 0){
+                            alert('license重置成功！');
+                            window.location.href = '/adminbd/index';
+                        }else{
+                            alert('license重置失败！');
+                        }
+                    },
+                   error:function(){
+                        alert('服务器错误！');
+                   }
+                })
+{#            };#}
+
+
         }
     </script>
 </body>
