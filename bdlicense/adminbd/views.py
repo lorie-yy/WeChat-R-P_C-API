@@ -486,9 +486,16 @@ class RegisterLicenseView(View):
         uu = {}
         params = request.GET.copy()
         license_code = params['license_code']
+        cloud_id = request.GET.get('cloud_id','')
+
         newlicenses = LicenseRecord.objects.filter(license_code=license_code)
         if newlicenses:
             print "license exists"
+            if cloud_id:
+                if newlicenses[0].cloudInfo_id != int(cloud_id):
+                    print "the same license register in diff cloud"
+                    uu['result'] = 6
+                    return JsonResponse(uu)
             if newlicenses[0].is_valid == 1:
                 print "license valid"
                 if newlicenses[0].license_status == 1:
@@ -523,15 +530,23 @@ class RegisterLicenseView(View):
                         if analysis_license.count() > 0:
                             return JsonResponse({"result":4})
 
-                    cloud_id = newlicenses[0].cloudInfo.id
+                    new_cloud_id = newlicenses[0].cloudInfo.id
                     uu['license_type'] = license_type
-                    uu['cloud_id'] = cloud_id
+                    uu['cloud_id'] = new_cloud_id
                     uu['result'] = 0
                     return JsonResponse(uu)
                 else:
                     print "inactive license"
                     uu['result'] = 3
                     return JsonResponse(uu)
+            elif newlicenses[0].is_valid == 2:
+                print "license is in using"
+                license_type = newlicenses[0].licenseType.type
+                new_cloud_id = newlicenses[0].cloudInfo.id
+                uu['license_type'] = license_type
+                uu['cloud_id'] = new_cloud_id
+                uu['result'] = 7
+                return JsonResponse(uu)
             else:
                 print "license invalid"
                 uu['result'] = 2
@@ -592,6 +607,57 @@ class ValidateUserView(View):
             uu['res'] = result
             return JsonResponse(uu)
 
+class LicenseResetView(View):
+    def get(self,request):
+        print "in license reset"
+        params = request.GET.copy()
+        license_id = params['license_id']
+        licenses = LicenseRecord.objects.filter(id=int(license_id))
+        if licenses:
+            licenses.update(is_reset=0,is_valid=1)
+            return JsonResponse({"result":0})
+        else:
+            return JsonResponse({"result":1})
+
+class LicenseResetResultView(View):
+    def get(self,request):
+        print "in license reset view"
+        params = request.GET.copy()
+        # print params
+        licenses = eval(params['license_info'])
+
+        resultList = []
+        for license in licenses:
+            uu ={}
+            print "in for licenses"
+            license_code = license['license_key']
+            cloud_id = license['cloud_id']
+            license_type = license['license_type']
+            print "license_code:",license_code
+            licenseObj = LicenseRecord.objects.filter(license_code=license_code)
+            if licenseObj:
+                if licenseObj[0].cloudInfo_id != int(cloud_id):
+                    # uu['license_key'] = license_code
+                    # uu['cloud_id'] = cloud_id
+                    # uu['license_type'] = license_type
+                    uu['result'] = 1
+                elif licenseObj[0].is_reset == 0:
+                    # uu['license_key'] = license_code
+                    # uu['cloud_id'] = cloud_id
+                    # uu['license_type'] = license_type
+                    uu['result'] = 2
+                else:
+                    # uu['license_key'] = license_code
+                    # uu['cloud_id'] = cloud_id
+                    # uu['license_type'] = license_type
+                    uu['result'] = 3
+                uu['license_key'] = license_code
+                uu['cloud_id'] = cloud_id
+                uu['license_type'] = license_type
+                resultList.append(uu)
+                print "license_info:",resultList
+        return JsonResponse({"license_info":resultList})
+
 def handle_download_file(path,file_name):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -611,7 +677,7 @@ def download_license_file(request):
     #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
-    response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
+    response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
     return response
 

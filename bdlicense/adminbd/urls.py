@@ -22,6 +22,8 @@ urlpatterns = patterns(
     url(r'^register_result',views.RegisterResultView.as_view(), name='register_result'),
     url(r'^license_invalid',views.ValidateLicenseView.as_view(), name='license_invalid'),
     url(r'^user_invalid',views.ValidateUserView.as_view(), name='user_invalid'),
+    url(r'^reset_license',views.LicenseResetView.as_view(), name='reset_license'),
+    url(r'^license_reset_result',views.LicenseResetResultView.as_view(), name='license_reset_result'),
     url(r'^download_license_client_file',views.download_license_file, name='download_license_client_file'),
     url(r'^download_license_usage_file',views.download_hlep_usage_file, name='download_license_usage_file'),
 )
