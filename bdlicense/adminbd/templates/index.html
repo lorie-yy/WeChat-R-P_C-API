@@ -135,7 +135,7 @@
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
 
                     </div>
-                    <table class="table table-striped">
+                    <table class="table table-striped table-condensed table-hover">
                         <thead>
                             <tr>
                                 <th>云平台</th>
@@ -191,7 +191,7 @@
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
                                     <td>
-                                        <button class="btn btn-success"  onclick="resetLicense({{ license.id }})">重置</button>
+                                        <button class="btn btn-sm btn-success"  onclick="resetLicense({{ license.id }})" style="height: 28px">重置</button>
                                     </td>
                                 </tr>
                             {% endfor %}
