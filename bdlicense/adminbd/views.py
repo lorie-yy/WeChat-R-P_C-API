@@ -400,7 +400,7 @@ class ActivateLicenseView(View):
     def get(self,request):
         print "in activate view"
         result = {}
-        # key_id = request.GET.get('key_id')
+        key_id = request.GET.get('key_id')
         license_code = request.GET.get('license_code')
         try:
             # licenseRecord = LicenseRecord.objects.get(key_id=key_id,license_code=license_code)
@@ -408,6 +408,10 @@ class ActivateLicenseView(View):
 
             if licenseRecord:
                 print "licenseRecord is exist by this license_code"
+
+                if licenseRecord.key_id and licenseRecord.key_id != key_id:
+                    result['result'] = False
+                    return JsonResponse(result)
 
                 #prepare response params
                 if licenseRecord.licenseType.type == "1":
@@ -487,73 +491,93 @@ class RegisterLicenseView(View):
         params = request.GET.copy()
         license_code = params['license_code']
         cloud_id = request.GET.get('cloud_id','')
-
-        newlicenses = LicenseRecord.objects.filter(license_code=license_code)
-        if newlicenses:
-            print "license exists"
+        licenses = LicenseRecord.objects.filter(license_code=license_code)
+        if licenses:
+            license_type = licenses[0].licenseType.type
+            new_cloud_id = licenses[0].cloudInfo.id
             if cloud_id:
-                if newlicenses[0].cloudInfo_id != int(cloud_id):
-                    print "the same license register in diff cloud"
+                print "已注册过的云平台"
+                if licenses[0].cloudInfo_id != int(cloud_id):
+                    print "license的云平台和正在注册的云平台不相符"
                     uu['result'] = 6
                     return JsonResponse(uu)
-            if newlicenses[0].is_valid == 1:
-                print "license valid"
-                if newlicenses[0].license_status == 1:
-                    print "active license"
-                    license_type = newlicenses[0].licenseType.type
-                    if license_type == "1":#basic license and Expansion
-                        basic_license = LicenseRecord.objects.filter(
-                            cloudInfo_id = newlicenses[0].cloudInfo_id,
-                            is_valid=2,
-                            licenseType_id=1,
-                            license_status = 1
-                        )
-                        if basic_license.count() > 0:
-                            basic_license.update(is_valid=0)
-                        # newlicenses.update(is_valid=2)
-                    elif license_type == "2":#charging license
-                        charging_license = LicenseRecord.objects.filter(
-                            cloudInfo_id = newlicenses[0].cloudInfo_id,
-                            is_valid=2,
-                            licenseType_id=2,
-                            license_status = 1
-                        )
-                        if charging_license.count() > 0:
-                            return JsonResponse({"result":5})
-                    elif license_type == "4":#analysis license
-                        analysis_license = LicenseRecord.objects.filter(
-                            cloudInfo_id = newlicenses[0].cloudInfo_id,
-                            is_valid=2,
-                            licenseType_id=3,
-                            license_status = 1
-                        )
-                        if analysis_license.count() > 0:
-                            return JsonResponse({"result":4})
-
-                    new_cloud_id = newlicenses[0].cloudInfo.id
-                    uu['license_type'] = license_type
-                    uu['cloud_id'] = new_cloud_id
-                    uu['result'] = 0
-                    return JsonResponse(uu)
                 else:
-                    print "inactive license"
+                    print "该license属于该云平台"
+                    if licenses[0].license_status == 1:
+                        print "激活的license"
+                        if licenses[0].is_valid == 0:
+                            print "无效的license"
+                            uu['result'] = 2
+                            return JsonResponse(uu)
+                        elif licenses[0].is_valid == 2:
+                            uu['license_type'] = license_type
+                            uu['cloud_id'] = new_cloud_id
+                            uu['result'] = 0
+                            return JsonResponse(uu)
+                        else:
+                            if license_type == "1":
+                                print "有效license--基本版本---扩容"
+                                basic_license = LicenseRecord.objects.filter(
+                                    cloudInfo_id = licenses[0].cloudInfo_id,
+                                    is_valid=2,
+                                    licenseType_id=1,
+                                    license_status = 1
+                                )
+                                if basic_license.count() > 0:
+                                    basic_license.update(is_valid=0)
+
+                            elif license_type == "2":
+                                print "有效license--计费版本版本"
+                                charging_license = LicenseRecord.objects.filter(
+                                    cloudInfo_id = licenses[0].cloudInfo_id,
+                                    is_valid=2,
+                                    licenseType_id=2,
+                                    license_status = 1
+                                )
+                                if charging_license.count() > 0:
+                                    return JsonResponse({"result":5})
+                            elif license_type == "4":
+                                print "有效license--大数据版本"
+                                analysis_license = LicenseRecord.objects.filter(
+                                    cloudInfo_id = licenses[0].cloudInfo_id,
+                                    is_valid=2,
+                                    licenseType_id=3,
+                                    license_status = 1
+                                )
+                                if analysis_license.count() > 0:
+                                    return JsonResponse({"result":4})
+                            uu['license_type'] = license_type
+                            uu['cloud_id'] = new_cloud_id
+                            uu['result'] = 0
+                            return JsonResponse(uu)
+                    else:
+                        print "未激活的license"
+                        uu['result'] = 3
+                        return JsonResponse(uu)
+            else:
+                print "未注册过的云平台，新的云平台"
+                if licenses[0].license_status == 1:
+                    print "激活的license"
+                    if licenses[0].is_valid == 0:
+                        print "无效的license"
+                        uu['result'] = 2
+                        return JsonResponse(uu)
+                    elif licenses[0].is_valid == 2:
+                        print "该license已注册--同一个license在不同的云平台注册"
+                        uu['result'] = 6
+                        return JsonResponse(uu)
+                    else:
+                        print "正常注册"
+                        uu['license_type'] = license_type
+                        uu['cloud_id'] = new_cloud_id
+                        uu['result'] = 0
+                        return JsonResponse(uu)
+                else:
+                    print "未激活的license"
                     uu['result'] = 3
                     return JsonResponse(uu)
-            elif newlicenses[0].is_valid == 2:
-                print "license is in using"
-                license_type = newlicenses[0].licenseType.type
-                new_cloud_id = newlicenses[0].cloudInfo.id
-                uu['license_type'] = license_type
-                uu['cloud_id'] = new_cloud_id
-                uu['result'] = 7
-                return JsonResponse(uu)
-            else:
-                print "license invalid"
-                uu['result'] = 2
-                return JsonResponse(uu)
-
         else:
-            print "license dont exist"
+            print "不存在的license code"
             uu['result'] = 1
             return JsonResponse(uu)
 
