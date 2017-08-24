@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate
 from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicenseParams
 from datetime import datetime
 import os.path
+import logging
 
 # Create your views here.
 
@@ -484,6 +485,15 @@ class ValidateLicenseView(View):
             result['res'] = 0 # invalid license
             return JsonResponse(result)
 
+# 随机生成16位的随机数
+import random
+import string
+import time
+def getRandom16Num():
+    timestamp = str(int(time.time()))
+    nonce = ''.join(random.sample(string.digits,8))
+    return  timestamp+nonce
+
 class RegisterLicenseView(View):
     def get(self,request):
         print "in register view"
@@ -513,6 +523,9 @@ class RegisterLicenseView(View):
                             uu['license_type'] = license_type
                             uu['cloud_id'] = new_cloud_id
                             uu['result'] = 0
+                            random_num = getRandom16Num()
+                            licenses.update(random_num=random_num)
+                            uu['random_num'] = random_num
                             return JsonResponse(uu)
                         else:
                             if license_type == "1":
@@ -549,6 +562,9 @@ class RegisterLicenseView(View):
                             uu['license_type'] = license_type
                             uu['cloud_id'] = new_cloud_id
                             uu['result'] = 0
+                            random_num = getRandom16Num()
+                            licenses.update(random_num=random_num)
+                            uu['random_num'] = random_num
                             return JsonResponse(uu)
                     else:
                         print "未激活的license"
@@ -571,6 +587,9 @@ class RegisterLicenseView(View):
                         uu['license_type'] = license_type
                         uu['cloud_id'] = new_cloud_id
                         uu['result'] = 0
+                        random_num = getRandom16Num()
+                        licenses.update(random_num=random_num)
+                        uu['random_num'] = random_num
                         return JsonResponse(uu)
                 else:
                     print "未激活的license"
@@ -657,23 +676,15 @@ class LicenseResetResultView(View):
             license_code = license['license_key']
             cloud_id = license['cloud_id']
             license_type = license['license_type']
+            random_num = license['random_num']
             print "license_code:",license_code
             licenseObj = LicenseRecord.objects.filter(license_code=license_code)
             if licenseObj:
                 if licenseObj[0].cloudInfo_id != int(cloud_id):
-                    # uu['license_key'] = license_code
-                    # uu['cloud_id'] = cloud_id
-                    # uu['license_type'] = license_type
                     uu['result'] = 1
-                elif licenseObj[0].is_reset == 0:
-                    # uu['license_key'] = license_code
-                    # uu['cloud_id'] = cloud_id
-                    # uu['license_type'] = license_type
+                elif licenseObj[0].is_reset == 0 and licenseObj[0].random_num != random_num:
                     uu['result'] = 2
                 else:
-                    # uu['license_key'] = license_code
-                    # uu['cloud_id'] = cloud_id
-                    # uu['license_type'] = license_type
                     uu['result'] = 3
                 uu['license_key'] = license_code
                 uu['cloud_id'] = cloud_id
