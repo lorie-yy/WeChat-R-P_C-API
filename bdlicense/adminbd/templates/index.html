@@ -18,7 +18,6 @@
     <link href="../../static/assets/js/morris/morris-0.4.3.min.css" rel="stylesheet" />
     <!-- Custom Styles-->
     <link href="../../static/assets/css/custom-styles.css" rel="stylesheet" />
-    <link href="../../static/assets/css/easydialog.css" rel="stylesheet" />
     <!-- Google Fonts-->
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
@@ -136,7 +135,7 @@
                     <div class="clearfix col-md-2 col-md-offset-10" style="margin-top: 13px;">
 
                     </div>
-                    <table class="table table-striped">
+                    <table class="table table-striped table-condensed table-hover">
                         <thead>
                             <tr>
                                 <th>云平台</th>
@@ -192,7 +191,7 @@
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
                                     <td>
-                                        <button class="btn btn-success"  onclick="resetLicense({{ license.id }})">重置</button>
+                                        <button class="btn btn-sm btn-danger" {% if license.is_valid  == 0 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -258,6 +257,7 @@
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
      <script type="text/javascript" src="/static/assets/js/easydialog.min.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
+    <script src="../../static/assets/js/easydialog.min.js"></script>
     <!-- Custom Js -->
     <script src="../../static/assets/js/custom-scripts.js"></script>
 
@@ -268,37 +268,25 @@
         }
 
         function resetLicense(license_id){
-{#            alert('11111111111');#}
-{#            easyDialog.open({#}
-{#                container : {#}
-{#                    header : '重置',#}
-{#                    content : '确认重置该License吗',#}
-{#                    yesFn : btnSn,#}
-{#                    noFn : false#}
-{#                },#}
-{#                    fixed : false#}
-{#                });#}
-{#            var btnSn = function( e ){#}
-            alert("确认重置该License吗");
-            $.ajax({
-                    url:"/adminbd/reset_license",
-                    data:{license_id:license_id},
-                    type:"GET",
-                    success:function(data) {
-                        if(data.result == 0){
-                            alert('license重置成功！');
-                            window.location.href = '/adminbd/index';
-                        }else{
-                            alert('license重置失败！');
-                        }
-                    },
-                   error:function(){
-                        alert('服务器错误！');
-                   }
-                })
-{#            };#}
-
-
+            var btnSn = function(e){
+                $.ajax({
+                        url:"/adminbd/reset_license",
+                        data:{license_id:license_id},
+                        type:"GET",
+                        success:function(data) {
+                            if(data.result == 0){
+                                SuccessWarning("license重置成功！",reloadPage);
+                            }else{
+                                ErrorWarning("license重置失败！",reloadPage);
+                            }
+                        },
+                       error:function(){
+                           ErrorWarning("服务器错误！",reloadPage);
+                       }
+                });
+            };
+            ConfirmWarning("确认","确认重置该License吗?"+
+                    "</br><strong style='color:red;'>注意：重置后，原注册的云平台将不能正常运行！</strong>",btnSn);
         }
     </script>
 </body>

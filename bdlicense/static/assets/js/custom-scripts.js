@@ -232,5 +232,51 @@
     mainApp.initFunction();
 
 	$(".dropdown-button").dropdown();
-	
 }(jQuery));
+
+//弹窗
+function ErrorWarning(msg, togopagefun){
+    easyDialog.open({
+        container : {
+            header : "操作失败",
+            content : msg,
+            yesFn : togopagefun
+        }
+    });
+    $('#easyDialogYesBtn').focus()
+}
+function SuccessWarning(msg, togopagefun){
+    easyDialog.open({
+        container : {
+            header : "操作成功",
+            content : msg,
+            yesFn : togopagefun
+        }
+    });
+    $('#easyDialogYesBtn').focus()
+}
+function AlarmWarning(msg, togopagefun){
+    easyDialog.open({
+        container : {
+            header : "告警",
+            content : msg,
+            yesFn : togopagefun
+        }
+    });
+    $('#easyDialogYesBtn').focus()
+}
+function ConfirmWarning(head,msg, togopagefun){
+    easyDialog.open({
+        container : {
+            header : head,
+            content : msg,
+            yesFn : togopagefun,
+            noFn : true}
+        //fixed : false
+        //overlay : false
+    });
+    $('#easyDialogYesBtn').focus()
+}
+function reloadPage(){
+    window.location.reload()
+}
