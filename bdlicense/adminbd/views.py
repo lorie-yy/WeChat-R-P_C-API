@@ -9,6 +9,9 @@ from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicensePar
 from datetime import datetime
 import os.path
 import logging
+import random
+import string
+import time
 
 # Create your views here.
 
@@ -486,13 +489,11 @@ class ValidateLicenseView(View):
             return JsonResponse(result)
 
 # 随机生成16位的随机数
-import random
-import string
-import time
+
 def getRandom16Num():
     timestamp = str(int(time.time()))
-    nonce = ''.join(random.sample(string.digits,8))
-    return  timestamp+nonce
+    nonce = ''.join(random.sample(string.digits,6))
+    return  (timestamp+nonce)
 
 class RegisterLicenseView(View):
     def get(self,request):
