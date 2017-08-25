@@ -227,7 +227,6 @@
         var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time;
         license_num =$.trim($('#fun_num').val());
         $('.fun_addm').eq(0).click(function(e){
-            e.stopPropagation();
             license_num =$.trim($('#fun_num').val());
             if(license_num==1){
                 return ;
@@ -235,7 +234,6 @@
             $('#fun_num').val(--license_num);
         });
         $('.fun_addm').eq(1).click(function(e){
-            e.stopPropagation();
             license_num =$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
@@ -246,6 +244,7 @@
             licenseParamsID =$.trim($('#funcSet').val());
             cloud_info =$.trim($('#cloud_info').val());
             license_time =$.trim($('#license_time').val());
+            license_num =$.trim($('#fun_num').val());
             var btnSn=function() {};
             if(!licenseCode ){
                 AlarmWarning("请输入license code!",btnSn);

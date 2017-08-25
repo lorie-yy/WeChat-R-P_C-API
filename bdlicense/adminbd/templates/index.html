@@ -180,9 +180,9 @@
                                         </td>
                                     {% endif %}
                                 {% if license.licenseParam.maxAPs %}
-                                    <td>{{ license.licenseParam.maxAPs }}</td>
-                                    <td>{{ license.licenseParam.maxACs }}</td>
-                                    <td>{{ license.licenseParam.maxUsers }}</td>
+                                    <td>{% widthratio license.licenseParam.maxAPs 1 license.counts %}</td>
+                                    <td>{% widthratio license.licenseParam.maxACs 1 license.counts %}</td>
+                                    <td>{% widthratio license.licenseParam.maxUsers 1 license.counts %}</td>
                                 {% else %}
                                     <td>无</td>
                                     <td>无</td>
@@ -191,7 +191,7 @@
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-danger" {% if license.is_valid  == 0 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                        <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -200,7 +200,6 @@
                                 {% for license in lic %}
                                         <tr>
                                         <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></td>
-        {#                                <th>{{ license.id }}</th>#}
                                         {% if license.key_id %}
                                             <td>{{ license.key_id }}</td>
                                         {% else %}
@@ -216,9 +215,9 @@
                                             </td>
                                         {% endif %}
                                     {% if license.licenseParam.maxAPs %}
-                                        <td>{{ license.licenseParam.maxAPs }}</td>
-                                        <td>{{ license.licenseParam.maxACs }}</td>
-                                        <td>{{ license.licenseParam.maxUsers }}</td>
+                                        <td>{% widthratio license.licenseParam.maxAPs 1 license.counts %}</td>
+                                        <td>{% widthratio license.licenseParam.maxACs 1 license.counts %}</td>
+                                        <td>{% widthratio license.licenseParam.maxUsers 1 license.counts %}</td>
                                     {% else %}
                                         <td>无</td>
                                         <td>无</td>
@@ -227,7 +226,7 @@
                                         <td>{{ license.build_time }}</td>
                                         <td>{{ license.expire_time }}</td>
                                         <td>
-                                            <button class="btn btn-success" onclick="resetLicense({{ license.id }})">重置</button>
+                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                         </td>
                                     </tr>
                                 {% endfor %}
