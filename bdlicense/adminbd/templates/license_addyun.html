@@ -152,7 +152,7 @@
 
                         <div class="form-group">
                             <button id="submit" class="btn btn-success" style="margin-left:50px;">提交</button>
-                            <a style="margin-bottom: 10px;margin-right:150px;" href="/adminbd/license_yun" class="btn btn-gray btn-single pull-right" type="reset">返回</a>
+                            <a style="margin-bottom: 10px;margin-right:50px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
                         </div>
 
                     </div>
@@ -171,13 +171,14 @@
     <!-- Metis Menu Js -->
     <script src="../../static/assets/js/jquery.metisMenu.js"></script>
     <script src="../../static/assets/js/morris/raphael-2.1.0.min.js"></script>
-{#    <script src="../../static/assets/js/morris/morris.js"></script>#}
+    <script src="../../static/assets/js/morris/morris.js"></script>
 	<script src="../../static/assets/js/easypiechart.js"></script>
 	<script src="../../static/assets/js/easypiechart-data.js"></script>
     <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
+    <script src="../../static/assets/js/easydialog.min.js"></script>
 
     <!-- Custom Js -->
-{#    <script src="../../static/assets/js/custom-scripts.js"></script>#}
+    <script src="../../static/assets/js/custom-scripts.js"></script>
 
     <script>
         var cloud_name,cloud_user, install_add, cloud_buyer, contacts, phone;
@@ -188,22 +189,25 @@
             cloud_buyer =$.trim($("input[name='cloud_buyer']").val());
             contacts =$.trim($("input[name='contacts']").val());
             phone =$.trim($("input[name='phone']").val());
+            var btnSn=function() {};
+
             if(!cloud_name){
-                alert('请输入云平台名称');
+                AlarmWarning("请输入云平台名称",btnSn);
             }else if(!install_add){
-                alert('请输入云平台安装地址');
+                AlarmWarning("请输入云平台安装地址",btnSn);
             }else if(!cloud_buyer){
-                alert('请输入购买方名称');
+                AlarmWarning("请输入购买方名称",btnSn);
             }else if(!contacts){
-                alert('请输入联系人');
+                AlarmWarning("请输入联系人",btnSn);
             }else if(!phone){
-                alert('请输入联系电话');
+                AlarmWarning("请输入联系电话",btnSn);
             }
             else{
                query()
             }
         });
 
+        var btnFn=function(e) {};
         function query(){
             $.ajax({
                 url:"/adminbd/add_cloud",
@@ -211,15 +215,17 @@
                 phone:phone,csrfmiddlewaretoken:'{{ csrf_token }}'},
                 type:"POST",
                 success:function(data) {
+                    var btnSn=function(e) {
+                        window.location.href = '/adminbd/license_yun';
+                    };
                     if(data.res == 1){
-                        alert('添加成功');
-                        window.location.href = '/adminbd/add_cloud';
+                        SuccessWarning("添加成功",btnSn);
                     }else{
-                       alert('添加失败');
+                        ErrorWarning("添加失败",btnFn);
                     }
                 },
                 error:function() {
-                    alert('服务器错误');
+                    ErrorWarning("服务器错误",btnFn);
                 }
             })
         }
