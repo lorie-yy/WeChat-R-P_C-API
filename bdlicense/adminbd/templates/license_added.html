@@ -25,6 +25,35 @@
     <style>
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
+        #fun_all{
+            width: 139px;
+            height: 34px;
+            line-height: 34px;
+            text-align: center;
+            top:0;
+            right: -122px;
+            position: absolute;
+        }
+        #fun_num{
+            width: 34px;
+            padding: 4px 12px;
+            text-align: center;
+            position: relative;
+            top: -1px;
+            border: none;
+        }
+        .fun_addm{
+            display: inline-block;
+            width: 34px;
+            height: 34px;
+            border-radius: 4px;
+            border: solid 1px lightgray;
+            cursor: pointer;
+            background-color: #fff;
+        }
+        .fun_addm:hover{
+            background-color: lightgray;
+        }
     </style>
 </head>
 <body>
@@ -132,14 +161,23 @@
                             </div>
                         </div>
                         <div style="display: none" class="form-group" id="setting">
-                             <label class="col-sm-3 control-label" for="acc" >License配置</label>
-                             <div class="col-sm-4">
+                             <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
+                             <div class="col-sm-4" style="position: relative;">
                                  <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
                                         <option value="" disabled="" selected="">选择配置类型</option>
                                      {% for  licenseParam in licenseParams%}
                                         <option value="{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
                                      {% endfor %}
                                  </select>
+
+
+                             <div id="fun_all">
+                                 <button class="fun_addm">-</button>
+                                 <input type="text" id="fun_num" value="1"/>
+                                 <button class="fun_addm">+</button>
+                             </div>
+
+
                              </div>
                         </div>
                         <div class="form-group">
@@ -186,7 +224,21 @@
 
 
     <script>
-        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_time;
+        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time;
+        license_num =$.trim($('#fun_num').val());
+        $('.fun_addm').eq(0).click(function(e){
+            e.stopPropagation();
+            license_num =$.trim($('#fun_num').val());
+            if(license_num==1){
+                return ;
+            }
+            $('#fun_num').val(--license_num);
+        });
+        $('.fun_addm').eq(1).click(function(e){
+            e.stopPropagation();
+            license_num =$.trim($('#fun_num').val());
+            $('#fun_num').val(++license_num);
+        });
         $("#submit").click(function(){
             keyid =$.trim($("input[name='key_id']").val());
             licenseCode =$.trim($("input[name='license_code']").val());
@@ -210,7 +262,7 @@
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
-                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,license_time:license_time, license_type:licenseType,licensePID:licenseParamsID,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,counts:license_num,license_time:license_time, license_type:licenseType,licensePID:licenseParamsID,csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 1){
