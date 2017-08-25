@@ -45,7 +45,7 @@ class LicenseRecord(models.Model):
     counts = models.IntegerField(null=True,default=1)
     is_valid = models.IntegerField(null=True,default=1)#0:无效；1:有效,2:已注册
     is_reset = models.IntegerField(null=True,default=1)#0:重置的license；1:未重置过
-    random_num = models.CharField(null=True,default='')#license对应的随机数
+    random_num = models.CharField(max_length=16,null=True,default='')#license对应的随机数
     licenseType= models.ForeignKey(LicenseType)
     licenseParam = models.ForeignKey(LicenseParams,default=None, null=True)
     cloudInfo = models.ForeignKey(CloudInformation)
