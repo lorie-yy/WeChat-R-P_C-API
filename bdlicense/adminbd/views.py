@@ -436,6 +436,7 @@ class ActivateLicenseView(View):
             result['result'] = True #validate successfully
             return JsonResponse(result)
         else:
+            print "无效的license code"
             result['result'] = False
             return JsonResponse(result)
 
