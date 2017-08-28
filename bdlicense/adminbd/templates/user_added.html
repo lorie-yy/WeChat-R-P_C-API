@@ -59,19 +59,21 @@
             </li>
         </ul>
            <ul class="nav navbar-nav navbar-right">
-                <li class="dropdown">
+                {% if is_superuser %}
+               <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="fa fa-download fa-fw"></i>
                           <b>下载</b>
                         <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
-                          {% if is_superuser %}
+
                         <li><a style="padding:21px 0 0 15px " href="/adminbd/download_license_client_file">License客户端文件</a></li>
                         <li><a style="padding:21px 0 15px 15px" href="/adminbd/download_license_usage_file">License帮助文档</a></li>
-                         {% endif %}
+
                     </ul>
                 </li>
+               {% endif %}
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="fa fa-user fa-fw"></i>
