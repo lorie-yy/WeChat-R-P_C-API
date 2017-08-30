@@ -402,15 +402,15 @@ class ActivateLicenseView(View):
         licenseRecordObj = LicenseRecord.objects.filter(key_id=key_id)
 
         if licenseRecordObj.count() > 0 and licenseRecordObj[0].license_code != license_code:
-            print "该key_id对应license已经被激活，不能重复激活"
-            result['result'] = False
+            print "该key已经被其他code激活"
+            result['result'] = 2
             return JsonResponse(result)
 
         if licenseRecords.count() >0:
             licenseRecord = licenseRecords[0]
             if licenseRecord.key_id and licenseRecord.key_id != key_id:
                 print "该code已经激活license，不能重复使用"
-                result['result'] = False
+                result['result'] = 3
                 return JsonResponse(result)
 
             #prepare response params
@@ -433,11 +433,11 @@ class ActivateLicenseView(View):
             str_expire_time = expire_time.strftime('%Y-%m-%d')
             result['license_expire_time'] = str_expire_time
 
-            result['result'] = True #validate successfully
+            result['result'] = 0 #validate successfully
             return JsonResponse(result)
         else:
             print "无效的license code"
-            result['result'] = False
+            result['result'] = 1
             return JsonResponse(result)
 
 class ModifyPasswordView(View):
