@@ -95,17 +95,11 @@ class UserIndexView(View):
         context = {}
         if is_superuser:
             userSets = User.objects.all()
-            # userList = []
-            # for userSet in userSets:
-            #     userClouds = userSet.cloudinformation_set.all()
-            #     userList.append(userClouds)
-            # context['userList'] = userList
             context['userSets'] = userSets
         else:
             print "not superuser,no right to display the user list"
             return HttpResponse("No Right")
 
-        # context['userSets'] = userSets
         context['username'] = username
         context['is_superuser'] = is_superuser
         return render(request, 'user_list.html',context)
@@ -169,7 +163,6 @@ class AddLicenseView(View):
         # add new LicenseRecord
         try:
             license = LicenseRecord()
-            # license.key_id = key_id
             license.license_code = license_code
             license.licenseType_id = int(license_type)
             license.cloudInfo_id = cloud_info
@@ -197,8 +190,6 @@ class AddCloudView(View):
 
         is_superuser = request.session.get('is_superuser')
         context = {}
-        # cloudInfos = CloudInformation.objects.all()
-        # context['cloudInfos'] = cloudInfos
         cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
@@ -242,7 +233,6 @@ class AddCloudView(View):
         result = 0
         uu = {'res':result}
         return JsonResponse(uu)
-        # return HttpResponseRedirect('add_cloud')
 
 class AddUserView(View):
     def get(self,request):
@@ -254,8 +244,6 @@ class AddUserView(View):
         context = {}
         cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
-        # cloudUsers = User.objects.all()
-        # context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
 
@@ -371,8 +359,6 @@ def license_logout(request):
         if username is False:
             return render(request, 'license_login.html')
 
-        # user=User.objects.get(username=username)
-        # user.save()
         request.session.flush()
         return HttpResponseRedirect('license_login')
 
@@ -402,7 +388,7 @@ class ActivateLicenseView(View):
         licenseRecordObj = LicenseRecord.objects.filter(key_id=key_id)
 
         if licenseRecordObj.count() > 0 and licenseRecordObj[0].license_code != license_code:
-            print "该key已经被其他code激活"
+            print "该key已经被 %s 激活" % licenseRecordObj[0].license_code
             result['result'] = 2
             return JsonResponse(result)
 
@@ -423,7 +409,6 @@ class ActivateLicenseView(View):
                 maxACs = 0
                 maxUsers = 0
             expire_time = licenseRecord.expire_time
-            # result['usb_key_hardwareId'] = key_id
             result['license_key'] = license_code
             result['max_ap_allowed'] = maxAPs
             result['max_ac_allowed'] = maxACs
