@@ -388,7 +388,7 @@ class ActivateLicenseView(View):
         licenseRecordObj = LicenseRecord.objects.filter(key_id=key_id)
 
         if licenseRecordObj.count() > 0 and licenseRecordObj[0].license_code != license_code:
-            print "该key已经被 %s 激活" % licenseRecordObj[0].license_code
+            print "该key已经被 %s 激活" % str(licenseRecordObj[0].license_code)
             result['result'] = 2
             return JsonResponse(result)
 
