@@ -167,7 +167,11 @@
                                  <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
                                         <option value="" disabled="" selected="">选择配置类型</option>
                                      {% for  licenseParam in licenseParams%}
-                                        <option value="{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
+                                         {% if licenseParam.id == 4 and username != "root" %}
+                                             <option value="{{ licenseParam.id }}" style="display: none">{{ licenseParam.cloudRankName }}</option>
+                                         {% else %}
+                                             <option value="{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
+                                         {% endif %}
                                      {% endfor %}
                                  </select>
 
