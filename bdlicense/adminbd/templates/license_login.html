@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -21,14 +21,14 @@
             <form id="ff" action="" onsubmit="return false" >
                 <label class="login-input">
                     <span class="login-user-ico"></span>
-                    <input class="input-user" type="text" name=""  required placeholder="用户名" />
+                    <input class="input-user" type="text" name=""  required placeholder="用户名" id="username"/>
                 </label>
                 <label class="login-input">
                     <span class="login-password-ico"></span>
-                    <input class="input-password" type="password" name="" required placeholder="密码" />
+                    <input class="input-password" type="password" name="" required placeholder="密码" id="pwd"/>
                 </label>
                 <label class="login-checkbox compare_button">
-                    <input  type="checkbox" value=""  checked id="compare_39680" class="checkbox-input" name="">
+                    <input  type="checkbox" value="" id="compare_39680" class="checkbox-input" name="">
                     <label class="checkboxcss" for="compare_39680"></label>
                     <span>记住密码</span>
                 </label>
@@ -38,6 +38,35 @@
     </div>
 </div>
 <script>
+{#    记住密码  #}
+    $(document).ready(function(){
+        if(!window.localStorage){
+            alert("您当前浏览器暂不支持密码存储功能，请尽快更新！");
+        }else{
+            var strName = localStorage.getItem('keyName');
+            var strPwd = localStorage.getItem('keyPwd');
+            if(strName){
+                $('#username').val(strName);
+            }if(strPwd){
+                $('#pwd').val(strPwd);
+            }
+            $(".login-submit").click(
+                function loginBtn_click(){
+                    var strName = $('#username').val();
+                    var strPwd = $('#pwd').val();
+                    localStorage.setItem('keyName',strName);
+                    if($('#compare_39680').is(':checked')){
+                        localStorage.setItem('keyPwd',strPwd);
+                    }else{
+                        localStorage.removeItem('keyPwd');
+                    }
+                    return strPwd;
+                }
+            )
+        }
+    });
+
+
     var inputUser, inputPassword;
     $(".login-submit").click(function(){
          inputUser =$.trim($(".input-user").val());
