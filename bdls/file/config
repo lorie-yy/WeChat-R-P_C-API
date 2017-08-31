@@ -1,5 +1,5 @@
 [config]
-host = 192.168.119.27
+host = 120.55.166.243
 port = 8000
 user = root
 passwd = 

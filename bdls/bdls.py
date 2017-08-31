@@ -19,10 +19,15 @@ from collections import OrderedDict
 import urllib, httplib
 import urllib2
 import json
+import commands
 import ConfigParser
 
 from Tkinter import *
 import tkMessageBox
+
+if os.geteuid() != 0:
+    print 'No authority, use sudo'
+    sys.exit(1)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # sys.path.append(os.path.join(BASE_DIR))
@@ -53,6 +58,7 @@ class LicenseManager:
         self.user_passwd = ''
         self.port = login_info.get('port', '8000')
 
+        self.RemoveContent()
         self.InitSystem()
 
         self.frame = Frame(self.master)
@@ -74,13 +80,29 @@ class LicenseManager:
         self.text.configure(state=DISABLED)
 
     def InitSystem(self):
-        key_dir = "/etc/keyinfo"
-        cmd = "rm -rf"
-        if os.path.exists(key_dir):
-            print os.system("rm -rf %s" % (key_dir))
+        try:
+            cmd = "ps -ef | grep %s | grep -v '$0' | grep -v 'grep' | awk '{print $2}'" % ('usbdetection')
+            aa = commands.getoutput(cmd)
+            usb_ids =  str(aa).split()
+
+            if len(usb_ids) == 1:
+                return
+            elif len(usb_ids) > 1:
+                for pid in usb_ids:
+                    if int(pid) > 100:
+                        cmd = "kill -9 %s" % (str(pid))
+                        os.system(cmd)
+        except:
+            print "usbdetection error"
 
         PRO_DIR = os.path.join(BASE_DIR, 'script/usbdetection &')
         os.system(PRO_DIR)
+
+    def RemoveContent(self):
+        key_dir = "/etc/keyinfo/content"
+
+        if os.path.exists(key_dir):
+            print os.system("rm %s" % (key_dir))
 
     def SetupMenu(self):
         self.setframe = LabelFrame(self.master, text=u"配置信息",width=100, height=260)
@@ -215,11 +237,17 @@ class LicenseManager:
             self.show_info(msg)
             return
 
+        self.InitSystem()
+
         KEY_INFO = self.getDataFromKey()
         self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
         if self.key_id == "":
-            self.writeMessage(u'[错误] 没有读取到USB Key信息，请检查USB Key是否插好')
-            return
+            time.sleep(3)
+            KEY_INFO = LicenseLib.getUsbKeyContent()
+            self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
+            if self.key_id == "":
+                self.writeMessage(u'[错误] 没有读取到USB Key信息，请检查USB Key是否插好')
+                return
 
         self.keyEntry.configure(state=NORMAL)
         self.keyEntry.delete('0', END)
@@ -260,19 +288,36 @@ class LicenseManager:
            self.max_user = info_dict.get('max_user_allowed', '')
            self.expire_time = info_dict.get('license_expire_time', '')
 
-           print info_dict
            if self.expire_time is None:
                self.expire_time = ""
 
-           if not info_dict.get('result', False):
+           result = info_dict.get('result',100)
+           if result == 100:
+               msg = u"License服务器故障"
+               self.writeMessage(msg)
+               self.show_info(msg)
+               return
+           elif result == 1:
                msg = u"无效的License Code"
                self.writeMessage(msg)
                self.show_info(msg)
                return
+           elif result == 2:
+               msg = u"该USB KEY已经注册"
+               self.writeMessage(msg)
+               self.show_info(msg)
+               return
+           elif result == 3:
+               msg = u"该License Code已经激活"
+               self.writeMessage(msg)
+               self.show_info(msg)
+               return
+
            self.writeMessage(u'License Code 验证成功')
            self.license_valid = True
 
        except Exception, e:
+           print e
            msg = u"License 服务器访问错误"
            self.writeMessage(msg)
            self.show_info(msg)
@@ -300,7 +345,6 @@ class LicenseManager:
             self.show_info(msg)
             return
         self.writeMessage(u'开始写入USB Key ...')
-        time.sleep(1)
 
         rst = LicenseLib.writeUsbKeyContent(params)
         if rst:
@@ -309,27 +353,29 @@ class LicenseManager:
         else:
             msg = u"USB Key写入失败"
 
+        self.RemoveContent()
+        time.sleep(1)
+
         self.getDataFromKey(flg=2)
 
         self.writeMessage(msg)
         self.show_info(msg)
 
-
-
     def getDataFromKey(self,flg=1):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         PRO_DIR = os.path.join(BASE_DIR, 'script/usbread&')
         os.system(PRO_DIR)
-
-        time.sleep(0.2)
+        time.sleep(3)
 
         KEY_INFO = LicenseLib.getUsbKeyContent()
+        _usb_key_hardwareId = KEY_INFO.get('usb_key_hardwareId', "")
 
-        if KEY_INFO.get('usb_key_hardwareId', "") != "":
+        if _usb_key_hardwareId != "":
+
             if flg == 1:
                  msg = u"原始 USB Key 信息:\n\t\t"
             else:
-                 msg = u"当前 USB Key 信息:\n\t\t"
+                 msg = u"激活License后 USB Key 信息:\n\t\t"
 
             space_str = '\t----------\t'
             msg = msg + space_str + "[ID]:\t%s" % (KEY_INFO.get('usb_key_hardwareId', "")) + space_str + '\n\t\t'
@@ -357,9 +403,9 @@ class LicenseLib():
         except Exception,e:
             print e
             usbFileContent={
-            "max_ap_allowed": 512,
-            "max_ac_allowed": 128,
-            "max_user_allowed":10000,
+            "max_ap_allowed": 0,
+            "max_ac_allowed": 0,
+            "max_user_allowed":0,
             "license_expire_time": "2018-10-01",
             "license_valid_mask": "",
             "license_key": "",
@@ -383,6 +429,8 @@ class LicenseLib():
             is_usb_key_present = True
         else:
             print "USB key file is expired, please insert the USB key"
+
+        hardwareId ="default licence key"
 
         f = open("/etc/keyinfo/content", "rb")
 
@@ -456,12 +504,12 @@ class LicenseLib():
             print e
             f.close()
             is_license_valid = False
-            Max_AP_Allowed = 512
-            Max_AC_Allowed = 128
-            Max_User_Allowed = 10000
+            Max_AP_Allowed = 0
+            Max_AC_Allowed = 0
+            Max_User_Allowed = 0
             License_Expire_Time = "2018-10-01"
             License_Valid_Mask =""
-            License_Key ="default licence key"
+            License_Key ="00000000"
             License_Feature_String=""
             License_Generate_Time=""
             license_file_lastUpdateTime = timestampInFile
