@@ -28,7 +28,7 @@
                     <input class="input-password" type="password" name="" required placeholder="密码" id="pwd"/>
                 </label>
                 <label class="login-checkbox compare_button">
-                    <input  type="checkbox" value="" id="compare_39680" class="checkbox-input" name="">
+                    <input  type="checkbox" value="" id="compare_39680" checked class="checkbox-input" name="">
                     <label class="checkboxcss" for="compare_39680"></label>
                     <span>记住密码</span>
                 </label>
@@ -81,10 +81,11 @@
 
     });
 
-     $("body").keydown(function() {
+     $("body").keydown(function(e) {
         inputUser =$.trim($(".input-user").val());
         inputPassword =$.trim($(".input-password").val());
-        if (event.keyCode == "13") {//keyCode=13是回车键
+        var key = window.event ? e.keyCode : e.which;
+        if (key == "13") {//keyCode=13是回车键
             if(!inputUser){
                 alert('请输入用户名');
             }else if(!inputPassword){

@@ -60,7 +60,7 @@ class IndexView(View):
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
-
+        print "is_superuser=",is_superuser
         return render(request, 'index.html',context)
 #主页yun
 class IndexViewYun(View):
@@ -246,7 +246,7 @@ class AddUserView(View):
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
-
+        print "is_superuser=",is_superuser
         return render(request, 'user_added.html',context)
 
     def post(self,request):
@@ -258,6 +258,8 @@ class AddUserView(View):
         print params
         user_name = params['user_name']
         sel_cloud = params['sel_cloud']
+        contactor = params['first_name']
+        phone = params['phone']
         cloud_id_list = sel_cloud.split(',')
         super_user = params['super_user']
 
@@ -280,6 +282,10 @@ class AddUserView(View):
             user.is_staff = 1
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+            if contactor:
+                user.first_name = contactor
+            if phone:
+                user.email = phone
             #add cloud admin
             if cloud_id_list:
                 for cloud_id in cloud_id_list:
@@ -626,8 +632,8 @@ class ValidateUserView(View):
 
         user_pass = authenticate(username=username,password=pwd)
         if user_pass:
-            if user_pass.is_superuser:
-                print "user passed and is superuser"
+            if user_pass.is_superuser > 0:
+                print "user passed and is_superuser=",user_pass.is_superuser
                 result = 1
                 uu['res'] = result
                 return JsonResponse(uu)
