@@ -18,7 +18,7 @@ import time
 
 DOWNLOAD_FILE_PATH = "static/download_file/"
 DOWNLOAD_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
-DOWNLOAD_FILE_LICENSE_USAGE_FILE = "shop_shopadmin.sql"
+DOWNLOAD_FILE_LICENSE_USAGE_FILE = "私有云License管理手册.docx"
 
 #主页
 class IndexView(View):
