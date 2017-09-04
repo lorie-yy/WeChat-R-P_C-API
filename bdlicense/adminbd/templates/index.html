@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <title>License管理平台</title>
     <link rel="shortcut icon" href="../../static/images/titleBD.ico" type="image/x-icon"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{#    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">#}
 	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
     <!-- Bootstrap Styles-->
     <link href="../../static/css/bootstrap.css" rel="stylesheet" />
@@ -18,7 +18,7 @@
     <!-- Custom Styles-->
     <link href="../../static/assets/css/custom-styles.css" rel="stylesheet" />
     <!-- Google Fonts-->
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+{#    <link href='../../static/css/google-font.css' rel='stylesheet' type='text/css' />#}
     <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
 <style>
         .table>thead>tr>th{
@@ -45,9 +45,9 @@
             <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="/adminbd/index.html">
                 <img src="../../static/images/logo-w.png" />
             </a>
-            <div id="sideNav" class="" href="">
-                <i class="material-icons dp48">toc</i>
-            </div>
+{#            <div id="sideNav" class="" href="">#}
+{#                <i class="material-icons dp48">toc</i>#}
+{#            </div>#}
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-left">
@@ -58,7 +58,7 @@
                 </li>
             </ul>
            <ul class="nav navbar-nav navbar-right">
-               {% if is_superuser %}
+               {% if is_superuser != 0%}
                <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="fa fa-download fa-fw"></i>
@@ -99,7 +99,8 @@
                 <li>
                     <a class="active-menu waves-effect waves-dark" href="/adminbd/index.html"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
-                {% if is_superuser %}
+{#            {{ is_superuser }}#}
+                {% if is_superuser == 1 %}
                     <li>
                         <a class="waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-user"></i> 用户列表</a>
                     </li>
@@ -141,7 +142,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                    {% if is_superuser %}
+                    {% if is_superuser  == 1%}
                         <div class="col-sm-2 right">
                              <a href="/adminbd/add_license" class="btn  btn btn-turquoise text-right">
                                  <span class="fa fa-plus-square"></span>  添加 LICENSE
@@ -167,7 +168,9 @@
                                 <th>最大用户数</th>
                                 <th>购买时间</th>
                                 <th>过期时间</th>
-                                <th>重置license</th>
+                                {% if is_superuser == 1 %}
+                                    <th>重置license</th>
+                                {% endif %}
 
                             </tr>
                         </thead>
@@ -208,9 +211,11 @@
                                 {% endif %}
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
-                                    </td>
+                                    {% if is_superuser == 1 %}
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                        </td>
+                                    {% endif %}
                                 </tr>
                             {% endfor %}
                         {% else %}
@@ -218,6 +223,13 @@
                                 {% for license in lic %}
                                         <tr>
                                         <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></td>
+                                        {% if license.is_valid  == 1%}
+                                            <td>有效</td>
+                                        {% elif license.is_valid  == 2 %}
+                                            <td>已注册</td>
+                                            {% else %}
+                                            <td>无效</td>
+                                        {% endif %}
                                         {% if license.key_id %}
                                             <td>{{ license.key_id }}</td>
                                         {% else %}
@@ -225,6 +237,7 @@
                                         {% endif %}
                                         <td>{{ license.licenseType.discription }}</td>
                                         <td>{{ license.license_code }}</td>
+{#                                        {{ license.license_status }}#}
                                         {% if license.license_status == 1%}
                                             <td>已激活</td>
                                         {% else %}
@@ -243,9 +256,11 @@
                                     {% endif %}
                                         <td>{{ license.build_time }}</td>
                                         <td>{{ license.expire_time }}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
-                                        </td>
+                                        {% if is_superuser == 1 %}
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                            </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                             {% endfor %}
