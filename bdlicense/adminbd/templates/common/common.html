@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <title>登录器管理后台</title>
+    <title>license管理平台</title>
 
     {% load i18n %}
     {% load staticfiles %}
@@ -118,6 +115,14 @@
     <!-- Dropdown Structure -->
 
    <!--/. NAV TOP  -->
+    <script>
+        //menu
+        $('.sidebar-collapse .nav li').click(function(){
+            console.log("444444444")
+            $(this).addClass('active');
+            //$(this).siblings('li').removeClass('active')
+        });
+    </script>
       <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">

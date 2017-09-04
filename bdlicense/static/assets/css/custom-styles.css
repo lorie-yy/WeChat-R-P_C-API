@@ -415,6 +415,17 @@ font-size: 13px;
 line-height: 21px;
 padding-top: 4px;
 }
+.sidebar-collapse .nav li a:hover{
+    background-color: #233342 !important;
+    color: #fff !important;
+}
+
+.sidebar-collapse .nav li.active a {
+    background-color: #233342 !important;
+    color: #fff !important;
+}
+.sidebar-collapse .nav li.active i{color: #f44336 !important;}
+
 .active-menu, .active-menu i {
     background-color: #233342 !important;
     color: #fff !important;
