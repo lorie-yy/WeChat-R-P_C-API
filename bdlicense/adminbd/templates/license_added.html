@@ -1,26 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <title>License管理平台</title>
-    <link rel="shortcut icon" href="../../static/images/titleBD.ico" type="image/x-icon"/>
-{#	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">#}
-	<link rel="stylesheet" href="../../static/assets/materialize/css/materialize.min.css" media="screen,projection" />
-    <!-- Bootstrap Styles-->
-    <link href="../../static/css/bootstrap.css" rel="stylesheet" />
-    <!-- FontAwesome Styles-->
-    <link href="../../static/assets/css/font-awesome.css" rel="stylesheet" />
-      <!-- Morris Chart Styles-->
-    <link href="../../static/assets/js/morris/morris-0.4.3.min.css" rel="stylesheet" />
-    <!-- Custom Styles-->
-    <link href="../../static/assets/css/custom-styles.css" rel="stylesheet" />
-    <!-- Google Fonts-->
-{#    <link href='../../static/css/google-font.css' rel='stylesheet' type='text/css' />#}
-    <link rel="stylesheet" href="../../static/assets/js/Lightweight-Chart/cssCharts.css">
-
+{% extends "common/common.html" %}
+    {% block page-inner %}
     <style>
         .form-group input{height: 2rem;padding: 0.5rem 1rem 0rem 1rem;}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
@@ -54,82 +33,12 @@
             background-color: lightgray;
         }
     </style>
-</head>
-<body>
-    <nav class="navbar navbar-default top-navbar" style="padding: 0 15px 0 0;" role="navigation">
-        <div class="navbar-header">
-            <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="index.html">
-                <img src="../../static/images/logo-w.png" />
-            </a>
-{#            <div id="sideNav" href="">#}
-{#                <i class="material-icons dp48">toc</i>#}
-{#            </div>#}
-        </div>
-        <ul class="nav navbar-left">
-            <li>
-                <a href="/adminbd/index.html" style="padding-top: 20px;">
-                   <b style="font-size:15px"> License管理平台</b>
-                </a>
-            </li>
-        </ul>
-          <ul class="nav navbar-nav navbar-right">
-              {% if is_superuser %}
-              <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-download fa-fw"></i>
-                          <b>下载</b>
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-
-                        <li><a style="padding:21px 0 0 15px " href="/adminbd/download_license_client_file">License客户端文件</a></li>
-                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/download_license_usage_file">License帮助文档</a></li>
-
-                    </ul>
-                </li>
-              {% endif %}
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-user fa-fw"></i>
-                        <b>{{ username }}</b>
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a style="padding:21px 0 0 15px" href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
-                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
-                    </ul>
-                </li>
-           </ul>
-    </nav>
-    <!-- Dropdown Structure -->
-   <!--/. NAV TOP  -->
-    <nav class="navbar-default navbar-side" role="navigation"  style="height: 85%;">
-        <div class="sidebar-collapse">
-            <ul class="nav" id="main-menu">
-                 <li>
-                    <a class="waves-effect waves-dark" href="/adminbd/license_yun.html"><i class="fa fa-indent"></i> 云平台列表</a>
-                </li>
-                <li>
-                    <a class="active-menu waves-effect waves-dark" href="index.html"><i class="fa fa-dashboard"></i> License列表</a>
-                </li>
-                <li>
-                    <a class="waves-effect waves-dark" href="/adminbd/user_list.html"><i class="fa fa-user"></i> 用户列表</a>
-                </li>
-            </ul>
-              <ul class="copyright" style="position: absolute;left: 0;bottom: 20px;z-index:100;">
-                <li style="font-size: 12px;">
-                    上海博达通信数据有限公司版权所有©2017
-                </li>
-            </ul>
-        </div>
-    </nav>
-  <!-- /. NAV SIDE  -->
-    <div id="page-wrapper" class="page-wrapper" style="top: 60px;">
-   <div class="header" style="opacity: 0; padding-bottom:3px;"></div>
-
-    <div id="page-inner">
-        <div class="row">
-            <div class="col-md-12">
+        <div class="panel">
+                <div class="panel-heading">
+                    <h3>添加license</h3>
+                    <hr/>
+                </div>
+                <div class="panel-body">
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
                     <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
@@ -199,36 +108,19 @@
                         </div>
                         <div class="form-group">
                             <a id="submit" class="btn btn-success" style="margin-left:50px;">提交</a>
-                            <a style="margin-bottom: 10px;margin-right:50px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
+                            <a style="margin-right:50px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
                         </div>
 
                     </div>
                 </form>
             </div>
         </div>
-    </div>
-</div>
-  <!-- /. WRAPPER  -->
-    <!-- JS Scripts-->
-    <!-- jQuery Js -->
-    <script src="../../static/js/jquery.3.2.1.js"></script>
-	<!-- Bootstrap Js -->
-    <script src="../../static/assets/js/bootstrap.min.js"></script>
-	<script src="../../static/assets/materialize/js/materialize.min.js"></script>
-    <!-- Metis Menu Js -->
-    <script src="../../static/assets/js/jquery.metisMenu.js"></script>
-    <script src="../../static/assets/js/morris/raphael-2.1.0.min.js"></script>
-    <script src="../../static/assets/js/morris/morris.js"></script>
-	<script src="../../static/assets/js/easypiechart.js"></script>
-	<script src="../../static/assets/js/easypiechart-data.js"></script>
-    <script src="../../static/assets/js/Lightweight-Chart/jquery.chart.js"></script>
-    <script src="../../static/assets/js/easydialog.min.js"></script>
-
-    <!-- Custom Js -->
-    <script src="../../static/assets/js/custom-scripts.js"></script>
+{#    </div>#}
+{#</div>#}
 
 
     <script>
+    $(document).ready(function(){
         var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time;
         license_num =$.trim($('#fun_num').val());
         $('.fun_addm').eq(0).click(function(e){
@@ -287,6 +179,8 @@
             }
         });
 
+    });
+
         function func(){
             //获取被选中的option标签
             var vs = $('#license_type option:selected').val();
@@ -299,6 +193,6 @@
         }
 
     </script>
-  <script src="../../static/js/ie.js"></script>
-</body>
-</html>
+
+
+    {% endblock %}
