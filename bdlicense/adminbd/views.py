@@ -275,17 +275,19 @@ class AddUserView(View):
             user = User.objects.create_user(username=user_name,password="123456")
             print "create new user and inital pwd is 123456"
             print user
-            if super_user == 0:
-                user.is_superuser = 0
-            else:
+            if super_user == 1:
+                user.user_level = 1
                 user.is_superuser = 1
+            else:
+                user.user_level = super_user
+                user.is_superuser = 0
             user.is_staff = 1
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
             if contactor:
-                user.first_name = contactor
+                user.contacts = contactor
             if phone:
-                user.email = phone
+                user.phone_num = phone
             #add cloud admin
             if cloud_id_list:
                 for cloud_id in cloud_id_list:
