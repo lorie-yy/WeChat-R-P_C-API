@@ -522,16 +522,14 @@ margin: 8px 0;
     cursor:pointer;
     border-radius: 0;
     width: 14px;
-    font-size: 44px;
+    font-size: 15px;
     line-height: 33px;
-    margin: 7px 0 0 13px;
+    margin: 14px 0 0 20px;
     background: #ffffff;
     width: 34px;
     height: 34px;
     text-align: center;
     line-height: 34px;
-    padding-top: 5px;
-    margin-top: 14px;
     border-radius: 50%;
 }
 ul.dropdown-menu.dropdown-messages li a div {
