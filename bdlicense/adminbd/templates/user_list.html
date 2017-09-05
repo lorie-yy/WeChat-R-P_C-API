@@ -30,7 +30,7 @@
                             <tr>
                                 <th>编号</th>
                                 <th>用户名</th>
-                                <th>是否为超级用户</th>
+                                <th>管理员等级</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -40,10 +40,12 @@
                                      <tr>
                                         <td>{{ user.id }}</td>
                                         <td>{{ user.username }}</td>
-                                         {% if user.is_superuser %}
-                                            <td>是</td>
+                                         {% if user.is_superuser == 0%}
+                                            <td>销售用户</td>
+                                         {% elif user.is_superuser == 1 %}
+                                             <td>超级用户</td>
                                          {% else %}
-                                             <td>否</td>
+                                              <td>工厂用户</td>
                                          {% endif %}
                                         <td>
 {#                                            <div class="btn-group">#}
@@ -70,8 +72,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
     <script>
         function selectCloud(){

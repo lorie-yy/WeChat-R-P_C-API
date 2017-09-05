@@ -39,7 +39,9 @@
                                 <th>最大用户数</th>
                                 <th>购买时间</th>
                                 <th>过期时间</th>
-                                <th>重置license</th>
+                                {% if is_superuser == 1 %}
+                                    <th>重置license</th>
+                                {% endif %}
 
                             </tr>
                         </thead>
@@ -80,9 +82,11 @@
                                 {% endif %}
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
-                                    </td>
+                                    {% if is_superuser == 1 %}
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                        </td>
+                                    {% endif %}
                                 </tr>
                             {% endfor %}
                         {% else %}
@@ -90,6 +94,13 @@
                                 {% for license in lic %}
                                         <tr>
                                         <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></td>
+                                        {% if license.is_valid  == 1%}
+                                            <td>有效</td>
+                                        {% elif license.is_valid  == 2 %}
+                                            <td>已注册</td>
+                                            {% else %}
+                                            <td>无效</td>
+                                        {% endif %}
                                         {% if license.key_id %}
                                             <td>{{ license.key_id }}</td>
                                         {% else %}
@@ -97,6 +108,7 @@
                                         {% endif %}
                                         <td>{{ license.licenseType.discription }}</td>
                                         <td>{{ license.license_code }}</td>
+{#                                        {{ license.license_status }}#}
                                         {% if license.license_status == 1%}
                                             <td>已激活</td>
                                         {% else %}
@@ -115,9 +127,11 @@
                                     {% endif %}
                                         <td>{{ license.build_time }}</td>
                                         <td>{{ license.expire_time }}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
-                                        </td>
+                                        {% if is_superuser == 1 %}
+                                            <td>
+                                                <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                            </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                             {% endfor %}
