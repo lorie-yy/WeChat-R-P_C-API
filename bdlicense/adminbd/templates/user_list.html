@@ -14,7 +14,7 @@
         <div class="panel">
                 <div class="panel-heading">
                     <h3>用户列表</h3>
-                    {% if is_superuser %}
+                    {% if is_superuser == 1 %}
                         <div class="col-sm-2 right">
                              <a href="/adminbd/add_user" class="btn btn btn-turquoise text-right" style="float: right;margin-top:-30px">
                                  <span class="fa fa-plus-square"></span> 添加管理员
