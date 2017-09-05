@@ -173,10 +173,16 @@ font-weight:bold;background: #FFFFFF;
 font-size: 16px;
 text-shadow: none;}
 .panel-heading {
-  /* padding: 15px 15px 0px; */
+   padding: 15px 15px 0;
   border-bottom: 1px solid transparent;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
+}
+.panel{
+    padding: 0 20px;
+}
+.panel-body{
+    padding: 0 15px 20px;
 }
 .jumbotron{
 padding:20px;
@@ -409,6 +415,17 @@ font-size: 13px;
 line-height: 21px;
 padding-top: 4px;
 }
+.sidebar-collapse .nav li a:hover{
+    background-color: #233342 !important;
+    color: #fff !important;
+}
+
+.sidebar-collapse .nav li.active a {
+    background-color: #233342 !important;
+    color: #fff !important;
+}
+.sidebar-collapse .nav li.active i{color: #f44336 !important;}
+
 .active-menu, .active-menu i {
     background-color: #233342 !important;
     color: #fff !important;
@@ -505,16 +522,14 @@ margin: 8px 0;
     cursor:pointer;
     border-radius: 0;
     width: 14px;
-    font-size: 44px;
+    font-size: 15px;
     line-height: 33px;
-    margin: 7px 0 0 13px;
+    margin: 14px 0 0 20px;
     background: #ffffff;
     width: 34px;
     height: 34px;
     text-align: center;
     line-height: 34px;
-    padding-top: 5px;
-    margin-top: 14px;
     border-radius: 50%;
 }
 ul.dropdown-menu.dropdown-messages li a div {
