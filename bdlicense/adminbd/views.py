@@ -30,6 +30,7 @@ class IndexView(View):
 
         cloud_id = request.GET.get('cloud_id')
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         context = {}
         print "cloud_id",cloud_id
 
@@ -60,6 +61,7 @@ class IndexView(View):
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
         print "is_superuser=",is_superuser
         return render(request, 'index.html',context)
 #主页yun
@@ -70,6 +72,7 @@ class IndexViewYun(View):
         if not username:
             return render(request,'license_login.html')
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         context = {}
         if is_superuser:
             cloudInfos = CloudInformation.objects.all()
@@ -81,6 +84,7 @@ class IndexViewYun(View):
 
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
         return render(request, 'license_yun.html',context)
 
 #用户主页
@@ -92,6 +96,7 @@ class UserIndexView(View):
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         context = {}
         if is_superuser:
             userSets = User.objects.all()
@@ -102,12 +107,14 @@ class UserIndexView(View):
 
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
         return render(request, 'user_list.html',context)
 
 class AddLicenseView(View):
     def get(self,request):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         if not username:
             return render(request,'license_login.html')
         print "in add license get func"
@@ -123,6 +130,7 @@ class AddLicenseView(View):
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
 
         return render(request, 'license_added.html',context)
 
@@ -189,11 +197,13 @@ class AddCloudView(View):
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         context = {}
         cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
 
         return render(request, 'license_addyun.html',context)
 
@@ -241,11 +251,13 @@ class AddUserView(View):
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         context = {}
         cloudInfos = CloudInformation.objects.all()
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
         print "is_superuser=",is_superuser
         return render(request, 'user_added.html',context)
 
@@ -276,11 +288,10 @@ class AddUserView(View):
             print "create new user and inital pwd is 123456"
             print user
             if super_user == 1:
-                user.user_level = 1
                 user.is_superuser = 1
             else:
-                user.user_level = super_user
                 user.is_superuser = 0
+            user.user_level = super_user
             user.is_staff = 1
             user.is_active = 1
             user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
@@ -318,6 +329,7 @@ class UserCloudView(View):
 
         user_id = request.GET.get('id')
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         context = {}
 
         if user_id:
@@ -328,6 +340,7 @@ class UserCloudView(View):
 
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
 
         return render(request, 'cloud_user.html',context)
 
@@ -354,6 +367,7 @@ def license_login(request):
         if user_pass:
             request.session['username'] = user_name
             request.session['is_superuser'] = user_pass.is_superuser
+            request.session['user_level'] = user_pass.user_level
             result['res'] = 1
             return JsonResponse(result)
         else:
@@ -437,11 +451,13 @@ class ModifyPasswordView(View):
     def get(self,request):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
         if not username:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
         context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
         return render(request,'modify_password.html',context)
     def post(self,request):
         param = request.POST.copy()
@@ -634,13 +650,13 @@ class ValidateUserView(View):
 
         user_pass = authenticate(username=username,password=pwd)
         if user_pass:
-            if user_pass.is_superuser > 0:
-                print "user passed and is_superuser=",user_pass.is_superuser
+            if user_pass.user_level > 0:
+                print "user passed and have active right"
                 result = 1
                 uu['res'] = result
                 return JsonResponse(uu)
             else:
-                print "user passed but not superuser"
+                print "user passed but not have right"
                 result = 2
                 uu['res'] = result
                 return JsonResponse(uu)
@@ -709,6 +725,9 @@ def handle_download_file(path,file_name):
     return down_data
 
 def download_license_file(request):
+    user_name = request.session.get('username','')
+    if not user_name:
+            return render(request, 'license_login.html')
     cur_path=os.path.abspath('.')
     print "os.path.abspath('.')",cur_path
     #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
@@ -719,6 +738,9 @@ def download_license_file(request):
     return response
 
 def download_hlep_usage_file(request):
+    user_name = request.session.get('username','')
+    if not user_name:
+            return render(request, 'license_login.html')
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)

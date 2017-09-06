@@ -14,7 +14,7 @@
         <div class="panel">
                 <div class="panel-heading">
                     <h3>用户列表</h3>
-                    {% if is_superuser == 1 %}
+                    {% if is_superuser %}
                         <div class="col-sm-2 right">
                              <a href="/adminbd/add_user" class="btn btn btn-turquoise text-right" style="float: right;margin-top:-30px">
                                  <span class="fa fa-plus-square"></span> 添加管理员
@@ -39,9 +39,9 @@
                                      <tr>
                                         <td>{{ user.id }}</td>
                                         <td>{{ user.username }}</td>
-                                         {% if user.is_superuser == 0 %}
+                                         {% if user.user_level == 0 %}
                                             <td>销售用户</td>
-                                         {% elif user.is_superuser == 1 %}
+                                         {% elif user.user_level == 1 %}
                                              <td>超级用户</td>
                                          {% else %}
                                               <td>工厂用户</td>
@@ -64,7 +64,7 @@
                                      </tr>
                             {% endfor %}
                         {% else %}
-                            <th>暂无权限查看用户列表，请联系超级用户</th>
+                            <th>暂无权限查看用户列表，请联系超级管理员</th>
                         {% endif %}
                         </tbody>
                     </table>

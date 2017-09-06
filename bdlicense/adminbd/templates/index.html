@@ -3,7 +3,7 @@
         <div class="panel">
                 <div class="panel-heading">
                     <h3>license列表</h3>
-                    {% if is_superuser == 1 %}
+                    {% if is_superuser %}
                          <a href="/adminbd/add_license" class="btn  btn btn-turquoise text-right" style="float: right;margin-top:-30px">
                              <span class="fa fa-plus-square"></span>添加LICENSE
                          </a>
@@ -33,7 +33,7 @@
                                 <th>最大用户数</th>
                                 <th>购买时间</th>
                                 <th>过期时间</th>
-                                {% if is_superuser == 1 %}
+                                {% if is_superuser %}
                                     <th>重置license</th>
                                 {% endif %}
 
@@ -76,7 +76,7 @@
                                 {% endif %}
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
-                                    {% if is_superuser == 1 %}
+                                    {% if is_superuser %}
                                         <td>
                                             <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                         </td>
@@ -121,7 +121,7 @@
                                     {% endif %}
                                         <td>{{ license.build_time }}</td>
                                         <td>{{ license.expire_time }}</td>
-                                        {% if is_superuser == 1 %}
+                                        {% if is_superuser %}
                                             <td>
                                                 <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                             </td>
