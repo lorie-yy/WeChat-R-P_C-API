@@ -43,5 +43,9 @@
             var cloud_id = $('#cloud_info option:selected').val();
             window.location.href = "/adminbd?cloud_id="+cloud_id;
         }
+        var page=true;
+           if(page){
+               $("#index_Icon").css('color','red');
+        }
     </script>
     {% endblock %}

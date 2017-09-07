@@ -1,4 +1,9 @@
 {% extends "common/common.html" %}
+<style>
+    .active-menu i {
+{#        color: #f44336 !important;#}
+    }
+</style>
     {% block page-inner %}
         <div class="panel">
                 <div class="panel-heading">
@@ -11,8 +16,8 @@
                     <hr/>
                 </div>
                 <div class="panel-body">
-                        <div class="col-sm-4 left" style="padding: 0">
-                            <select onchange="selectCloud()" class="form-control" id="cloud_info" name="cloud_info" >
+                        <div style="padding: 0;margin-bottom: 10px">
+                            <select onchange="selectCloud()" class="form-control" id="cloud_info" name="cloud_info" style="width: 260px;">
                                 <option value="" disabled="" selected="">选择license对应云平台</option>
                                 {% for cloudInfo in cloudInfos %}
                                     <option id="bao-month" value="{{ cloudInfo.id }}" {% ifequal cloud_id  cloudInfo.id %}selected{% endifequal %}>{{ cloudInfo.cloudName }}</option>
@@ -43,7 +48,7 @@
                         {% if is_superuser %}
                             {% for license in licenses %}
                                 <tr>
-                                    <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></td>
+                                    <td><span style="cursor: pointer;color: #00C853" {% comment %} onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>{{ license.cloudInfo.cloudName }}</span></td>
                                     {% if license.is_valid  == 1%}
                                         <td>有效</td>
                                     {% elif license.is_valid  == 2 %}
@@ -87,7 +92,7 @@
                             {% for lic in licenses %}
                                 {% for license in lic %}
                                         <tr>
-                                        <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >{{ license.cloudInfo.cloudName }}</span></td>
+                                        <td><span style="cursor: pointer;color: #00C853" {% comment %}onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>{{ license.cloudInfo.cloudName }}</span></td>
                                         {% if license.is_valid  == 1%}
                                             <td>有效</td>
                                         {% elif license.is_valid  == 2 %}
@@ -137,6 +142,10 @@
 
 
     <script>
+        var cloud_id = $('#cloud_info option:selected').val();
+        if(cloud_id){
+            $("#index_Icon").css('color','red');
+        }
         function selectCloud(){
             var cloud_id = $('#cloud_info option:selected').val();
             window.location.href = "/adminbd?cloud_id="+cloud_id;

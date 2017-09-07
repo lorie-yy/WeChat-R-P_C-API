@@ -48,34 +48,44 @@
 <style>
         .table>thead>tr>th{
             font-weight: bold;
-            white-space: nowrap;
-        }
-        .table>tbody>tr>td{
-            white-space: nowrap;
             vertical-align: middle;
-            font-size: 14px;
         }
-        @media (min-width: 992px){
-            .col-md-12 {
-                width: auto;
+        .table>thead>tr>th{
+            min-width: 45px;
+        }
+        @media(max-width:992px) {
+            .table>thead>tr>th{
+                border-bottom: 1px solid #ddd;
             }
+         }
+        .table>tbody>tr>td{
+            vertical-align: middle;
+            max-width: 119px;
+            font-size: 14px;
         }
         .dropdown:hover .fa-download, .dropdown:hover .fa-user{
             color: #ee6e73;
         }
     </style>
 </head>
-<body style="position: relative">
+<body style="position: relative;min-width: 500px;;">
     <nav class="navbar navbar-default top-navbar"  role="navigation">
         <div class="navbar-header">
-            <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837" href="/adminbd/index.html">
+            <a class="navbar-brand waves-effect waves-dark" style="background:#1f2837;" href="/adminbd/index.html">
                 <img src="../../static/images/logo-w.png" />
             </a>
+            <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#xzy" style="z-index: 999;position: absolute;right: 1%;">
+                <span class="sr-only">导航栏</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <div class="collapse navbar-collapse" id="xzy">
             <div id="sideNav">
                 <i class="fa fa-bars"></i>
             </div>
-        </div>
-        <div class="collapse navbar-collapse">
             <ul class="nav navbar-left">
                 <li>
                     <a href="/adminbd/index.html" style="padding-top: 20px;">
@@ -85,7 +95,7 @@
             </ul>
            <ul class="nav navbar-nav navbar-right">
                {% if user_level > 0 %}
-               <li class="dropdown">
+               <li class="dropdown" style="display: block;">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="fa fa-download fa-fw"></i>
                           <b>下载</b>
@@ -115,30 +125,14 @@
     </nav>
     <!-- Dropdown Structure -->
 
-   <!--/. NAV TOP  -->
-    <script>
-{#        //menu#}
-        $(document).ready(function(){
-            var urlstr = location.href;
-            //alert(urlstr);
-            var urlstatus=false;
-            $(".sidebar-collapse a").each(function () {
-                if ((urlstr + '/').indexOf($(this).attr('href')) > -1&&$(this).attr('href')!='') {
-                    $(this).addClass('active-menu'); urlstatus = true;
-                } else {
-                    $(this).removeClass('active-menu');
-                }
-            });
-        })
-    </script>
-    <nav class="navbar-default navbar-side" role="navigation" style="height: 85%;">
+    <nav class="navbar-default navbar-side" role="navigation" style="height: 88%;">
         <div class="sidebar-collapse">
             <ul class="nav" id="main-menu">
                 <li {% if location.href == '/license_yun' %}class="active"{% endif %}>
                     <a class="waves-effect waves-dark" href="/adminbd/license_yun"><i class="fa fa-indent"></i> 云平台列表</a>
                 </li>
                 <li>
-                    <a class="waves-effect waves-dark" href="/adminbd/index"><i class="fa fa-dashboard"></i> License列表</a>
+                    <a class="waves-effect waves-dark" href="/adminbd/index"><i class="fa fa-dashboard" id="index_Icon"></i> License列表</a>
                 </li>
                 {% if is_superuser %}
                     <li>
@@ -154,6 +148,23 @@
 
         </div>
     </nav>
+    <!--/. NAV TOP  -->
+    <script>
+{#        //menu#}
+        $(document).ready(function(){
+            var urlstr = location.href;
+            //alert(urlstr);
+            var urlstatus=false;
+            $(".sidebar-collapse a").each(function () {
+                if ((urlstr + '/').indexOf($(this).attr('href')) > -1&&$(this).attr('href')!='') {
+                    $(this).addClass('active-menu'); urlstatus = true;
+                } else {
+                    $(this).removeClass('active-menu');
+                }
+            });
+        })
+    </script>
+
     <!-- /. NAV SIDE  -->
     <div id="page-wrapper" class="page-wrapper">
        <div class="header" style="opacity: 0;padding-bottom:7px;"></div>

@@ -96,7 +96,10 @@
                query()
             }
         });
-
+        var page=true;
+        if(page){
+            $("#index_Icon").css('color','red');
+        }
         var btnFn=function(e) {};
         function query(){
             $.ajax({
