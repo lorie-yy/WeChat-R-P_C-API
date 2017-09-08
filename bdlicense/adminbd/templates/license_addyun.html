@@ -72,6 +72,7 @@
 
     <script>
         var cloud_name,cloud_user, install_add, cloud_buyer, contacts, phone;
+        $(".fa-indent").css('color','#f44336');
         $("#submit").click(function(){
             cloud_name =$.trim($("input[name='cloud_name']").val());
             cloud_user =$.trim($("#cloud_user").val());
@@ -96,10 +97,6 @@
                query()
             }
         });
-        var page=true;
-        if(page){
-            $("#index_Icon").css('color','red');
-        }
         var btnFn=function(e) {};
         function query(){
             $.ajax({
