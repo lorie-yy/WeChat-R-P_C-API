@@ -120,8 +120,8 @@ class AddLicenseView(View):
         print "in add license get func"
 
         context = {}
-        licenseTypes = LicenseType.objects.all()
-        context['licenseTypes'] = licenseTypes
+        # licenseTypes = LicenseType.objects.all()
+        # context['licenseTypes'] = licenseTypes
 
         licenseParams = LicenseParams.objects.all()
         context['licenseParams'] = licenseParams
@@ -153,6 +153,8 @@ class AddLicenseView(View):
         # counts = request.POST.get('counts',10)
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
+        print "data_license=",data_license
+        print "charging_license=",charging_license
         if counts <= 0:
             counts = 1
         uu = {}
@@ -180,11 +182,13 @@ class AddLicenseView(View):
             licenseType.save()
             if data_license:
                 value = int(licenseType.type) | int(data_license)
+                print "value=",value
                 licenseType.type = value
                 licenseType.save()
             if charging_license:
                 value = int(licenseType.type) | int(charging_license)
                 licenseType.type = value
+                print "value=",value
                 licenseType.save()
 
             license = LicenseRecord()
@@ -650,6 +654,7 @@ class RegisterLicenseView(View):
                             uu['result'] = 2
                             return JsonResponse(uu)
                         elif licenses[0].is_valid == 2:
+                            print "有效license在该云平台再一次注册（包括增值版本）"
                             uu['license_type'] = license_type
                             uu['cloud_id'] = new_cloud_id
                             uu['result'] = 0
@@ -657,6 +662,9 @@ class RegisterLicenseView(View):
                             licenses.update(random_num=random_num)
                             uu['random_num'] = random_num
                             return JsonResponse(uu)
+                        else:
+                            print "license.is_valid not eq 0 or 2,this is impossible"
+                            return HttpResponse("server error")
                     else:
                         print "未激活的license"
                         uu['result'] = 3
