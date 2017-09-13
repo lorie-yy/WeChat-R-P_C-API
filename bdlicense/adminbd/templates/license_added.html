@@ -119,7 +119,7 @@
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label" >License功能</label>
-                            <label class="check_add"><input type="checkbox" value="1" id="shu_ju">大数据</label>
+                            <label class="check_add"><input type="checkbox" value="4" id="shu_ju">大数据</label>
                             <label class="check_add"><input type="checkbox" value="2" id="ji_fei">计费</label>
                         </div>
 
@@ -160,8 +160,16 @@
             cloud_info =$.trim($('#cloud_info').val());
             license_time =$.trim($('#license_time').val());
             license_num =$.trim($('#fun_num').val());
-            shu_ju =$.trim($('#shu_ju').val());
-            ji_fei =$.trim($('#ji_fei').val());
+            if($("#shu_ju").is(":checked")){
+                shu_ju=$("#shu_ju").val();
+            }else{
+                shu_ju="";
+            }
+            if($("#ji_fei").is(":checked")){
+                ji_fei=$("#ji_fei").val();
+            }else{
+                ji_fei="";
+            }
             var btnSn=function() {};
             if(!licenseCode ){
                 AlarmWarning("请输入license code!",btnSn);
@@ -176,7 +184,7 @@
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
-                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,counts:license_num,license_time:license_time,licensePID:licenseParamsID,shu_ju:shu_ju,ji_fei:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,counts:license_num,license_time:license_time,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 1){
