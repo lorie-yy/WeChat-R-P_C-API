@@ -1,0 +1,186 @@
+{% extends "common/common.html" %}
+
+    {% block page-inner %}
+        <div class="panel">
+                <div class="panel-heading">
+                    <h3>license列表</h3>
+
+                    <hr/>
+                </div>
+                <div class="panel-body">
+                    <div id="show_license">
+                        <table class="table table-striped table-condensed table-hover responsive-table">
+                        <thead>
+                            <tr>
+                                <th>云平台</th>
+                                <th>是否有效</th>
+                                <th>KEY_ID</th>
+                                <th>版本类型</th>
+                                <th>Code</th>
+                                <th>状态</th>
+                                <th>最大AP数</th>
+                                <th>最大AC数</th>
+                                <th>最大用户数</th>
+                                <th>购买时间</th>
+                                <th>过期时间</th>
+                                {% if is_superuser %}
+                                    <th>编辑license</th>
+                                {% endif %}
+
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 15px;">
+
+
+                                <tr>
+                                    <td><span style="cursor: pointer;color: #00C853" {% comment %} onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>{{ license.cloudInfo.cloudName }}</span></td>
+                                    {% if license.is_valid  == 1%}
+                                        <td>有效</td>
+                                    {% elif license.is_valid  == 2 %}
+                                        <td>已注册</td>
+                                        {% else %}
+                                        <td>无效</td>
+                                    {% endif %}
+                                    {% if license.key_id %}
+                                        <td>{{ license.key_id }}</td>
+                                    {% else %}
+                                        <td>暂无</td>
+                                    {% endif %}
+                                    <td>{{ license.licenseType.discription }}</td>
+                                    <td>{{ license.license_code }}</td>
+                                    {% if license.license_status == 1%}
+                                        <td>已激活</td>
+                                    {% else %}
+                                        <td>
+                                            未激活
+                                        </td>
+                                    {% endif %}
+                                {% if license.licenseParam.maxAPs %}
+                                    <td>{% widthratio license.licenseParam.maxAPs 1 license.counts %}</td>
+                                    <td>{% widthratio license.licenseParam.maxACs 1 license.counts %}</td>
+                                    <td>{% widthratio license.licenseParam.maxUsers 1 license.counts %}</td>
+                                {% else %}
+                                    <td>无</td>
+                                    <td>无</td>
+                                    <td>无</td>
+                                {% endif %}
+                                    <td>{{ license.build_time }}</td>
+                                    <td>{{ license.expire_time }}</td>
+
+                                        <td>
+                                            <button class="btn btn-sm btn-danger"  onclick="editLicense()" style="height: 28px;border-color: transparent">编辑</button>
+                                        </td>
+
+                                </tr>
+
+                        </tbody>
+                    </table>
+                    </div>
+                    <div id="modify_license">
+                        <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" >云平台名称</label>
+                                    <div class="col-sm-4">
+                                        <input  type="text" class="form-control" name="yunname" id="yunname" value="{{ license.cloudInfo.cloudName }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" >Code</label>
+                                    <div class="col-sm-4">
+                                        <input  type="text" class="form-control" name="yuncode" id="yuncode" value="{{ license.license_code }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" >KEY_ID</label>
+                                    <div class="col-sm-4">
+                                        <input  type="text" class="form-control" name="key_id" id="key_id" value="{{ license.key_id }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" for="licenseType">license Type</label>
+                                    <div class="col-sm-4">
+                                        <input required="required" type="text" class="form-control" name="licenseType" id="licenseType" value="{{ license.licenseType.type }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" for="is_valid">是否有效</label>
+                                    <div class="col-sm-4">
+                                        <input  type="text" class="form-control" name="is_valid" id="is_valid" value="{{ license.is_valid }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" for="license_status">状态</label>
+                                    <div class="col-sm-4">
+                                        <input  type="text" class="form-control" name="license_status" id="license_status" value="{{ license.license_status }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" for="is_reset">是否重置</label>
+                                    <div class="col-sm-4">
+                                        <input required="required" type="text" class="form-control" name="is_reset" id="is_reset" value="{{ license.is_reset }}">
+                                    </div>
+                                </div>
+                        </form>
+                                <div class="form-group">
+                                    <section class="user-timeline-stories">
+                                         <input type="button" onclick="savepanel()" id="savepanel"  class="btn btn-success pull-right" style="cursor: pointer;float: right;margin-right:50px" value="保存平台设置"/>
+                                    </section>
+                                </div>
+
+
+
+                    </div>
+                </div>
+        </div>
+
+
+    <script>
+        $('#show_license').show();
+        $('#modify_license').hide();
+        function editLicense(){
+            $('#show_license').hide();
+            $('#modify_license').show();
+        }
+        function savepanel(){
+                var yunname =$.trim($("input[name='yunname']").val());
+                var yuncode =$.trim($("input[name='yuncode']").val());
+                var key_id =$.trim($("input[name='key_id']").val());
+                var build_time =$.trim($("input[name='build_time']").val());
+                var license_status =$.trim($("input[name='license_status']").val());
+                var expire_time =$.trim($("input[name='expire_time']").val());
+                var is_valid =$.trim($("input[name='is_valid']").val());
+                var licenseType =$.trim($("input[name='licenseType']").val());
+                var is_reset =$.trim($("input[name='is_reset']").val());
+                $.ajax({
+                        url:"/adminbd/modify_license",
+                        data:{
+                                csrfmiddlewaretoken:'{{ csrf_token }}',
+                                yuncode:yuncode,
+                                key_id:key_id,
+                                build_time:build_time,
+                                is_valid:is_valid,
+                                expire_time:expire_time,
+                                license_status:license_status,
+                                is_reset:is_reset,
+                                licenseType:licenseType,
+                                yunname:yunname
+                        },
+                        type:"POST",
+                        success:function(data) {
+                            if(data.result == 0){
+                                SuccessWarning("编辑成功！",reloadPage);
+                            }else{
+                                ErrorWarning("编辑失败！",reloadPage);
+                            }
+                        },
+                       error:function(){
+                           ErrorWarning("服务器错误！",reloadPage);
+                       }
+                });
+
+
+        }
+    </script>
+
+
+    {% endblock %}

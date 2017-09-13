@@ -747,3 +747,35 @@ def download_hlep_usage_file(request):
     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
+
+#编辑license
+class Modify_license(View):
+    def get(self,request):
+        username = request.GET.get('username')
+        pwd = request.GET.get('pwd')
+        key_id = request.GET.get('key_id')
+        if username == 'bdyun' and pwd == 'bdyun':
+            license = LicenseRecord.objects.filter(key_id = key_id)[0]
+            return render(request, 'edit_license.html',{'license':license})
+    def post(self,request):
+        yuncode=request.POST.get("yuncode")
+        key_id=request.POST.get("key_id")
+        build_time=request.POST.get("build_time")
+        is_valid=request.POST.get("is_valid")
+        is_reset=request.POST.get("is_reset")
+        expire_time=request.POST.get("expire_time")
+        license_status=request.POST.get("license_status")
+        yunname=request.POST.get("yunname")
+        licenseType=request.POST.get("licenseType")
+        try:
+            license = LicenseRecord.objects.filter(key_id = key_id)
+            license.update(
+                license_status=license_status,
+                is_valid=is_valid,
+                is_reset=is_reset
+            )
+        except Exception,e:
+            print e
+            return JsonResponse({"result":1})
+        else:
+            return JsonResponse({"result":0})
