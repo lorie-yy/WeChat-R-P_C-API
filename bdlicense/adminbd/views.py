@@ -109,7 +109,7 @@ class UserIndexView(View):
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         return render(request, 'user_list.html',context)
-#添加license post方法需要改
+
 class AddLicenseView(View):
     def get(self,request):
         username = request.session.get('username')
@@ -143,22 +143,24 @@ class AddLicenseView(View):
         params = request.POST.copy()
         print params
         license_code = params['license_code']
-        # license_type = params['license_type']
         licensePid = params['licensePID']
         cloud_info = params['cloud_info']
         license_time = params['license_time']
         counts = params['counts']
-        # data_license = params['data_license']
-        # charging_license = params['charging_license']
-        # counts = request.POST.get('counts',10)
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
         print "data_license=",data_license
         print "charging_license=",charging_license
-        if counts <= 0:
-            counts = 1
         uu = {}
-
+        #one cloud has only one valid license
+        if cloud_info:
+            cloudObj = CloudInformation.objects.get(id=int(cloud_info))
+            licenseRecords = cloudObj.licenserecord_set.all()
+            if licenseRecords.count() > 0:
+                if licenseRecords[0].is_valid != 0:
+                    result = 3
+                    uu = {'res':result}
+                    return JsonResponse(uu)
         #license_code is not unique
         licenseRecordObj = LicenseRecord.objects.filter(license_code=license_code)
         if licenseRecordObj.count() > 0:
@@ -210,6 +212,124 @@ class AddLicenseView(View):
         uu = {'res':result}
         return JsonResponse(uu)
 
+class EditLicenseView(View):
+    def get(self,request):
+        username = request.session.get('username')
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        if not username:
+            return render(request,'license_login.html')
+        print "in edit license get func"
+
+        license_id = request.GET.get('id',None)
+        print "license_id=",license_id
+        context = {}
+        if license_id is not None:
+            licenseRecord = LicenseRecord.objects.get(id=int(license_id))
+            licenseParam_id = licenseRecord.licenseParam_id
+            if int(licenseRecord.licenseType.type) & 4:
+                context['data_id'] = 4
+                print "计费版本"
+            if int(licenseRecord.licenseType.type) & 2:
+                context['charging_id'] = 2
+                print "大数据版本"
+            context['licenseRecord'] = licenseRecord
+            context['licenseParam_id'] = licenseParam_id
+            context['counts'] = licenseRecord.counts
+            # print "expire_time=",licenseRecord.expire_time,type(licenseRecord.expire_time)
+            # future_year = licenseRecord.expire_time.year
+            # now_year = datetime.now().year
+            # valid_year = future_year-now_year
+            # context['valid_year'] = int(valid_year)
+            # print "valid_year=",int(valid_year)
+        licenseParams = LicenseParams.objects.all()
+        context['licenseParams'] = licenseParams
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+
+
+        return render(request, 'license_edit.html',context)
+
+    def post(self,request):
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        print "in edit license post func"
+        params = request.POST.copy()
+        print params
+        licensePid = params['licensePID']
+        license_id = params['license_id']
+        counts = params['counts']
+        data_license = request.POST.get('data_license','')
+        charging_license = request.POST.get('charging_license','')
+        print "data_license=",data_license
+        print "charging_license=",charging_license
+        # print "license_id=",license_id
+        # print "licensePid=",licensePid
+        # print "counts=",counts
+        uu = {}
+        #one cloud has only one valid license
+        try:
+            licenseObj = LicenseRecord.objects.filter(id=int(license_id))
+            if licenseObj.count() > 0:
+                licenseObj.update(licenseParam_id=int(licensePid),counts=counts)
+                type_id = licenseObj[0].licenseType.id
+                typeObj = LicenseType.objects.filter(id=type_id)
+                if data_license != "":
+                    if charging_license != "":
+                        value = 7
+                    else:
+                        value = 5
+                else:
+                    if charging_license != "":
+                        value = 3
+                    else:
+                        value = 1
+                typeObj.update(type=value)
+
+                # if data_license != "":
+                #     data_value = int(data_license) | int(licenseObj[0].licenseType.type)
+                # else:
+                #     data_value = int(licenseObj[0].licenseType.type) ^ 4
+                # typeObj.update(type=data_value)
+                # print "after update data_value=",data_value
+                # print "update data license successfully"
+
+                # if charging_license != "":
+                #     charging_value = int(charging_license) | int(licenseObj[0].licenseType.type)
+                # else:
+                #     charging_value = int(licenseObj[0].licenseType.type) ^ 2
+                # print "before update charging_value=",charging_value
+                # typeObj.update(type=charging_value)
+                # print "after update charging_value=",charging_value
+                # print "update charging license successfully"
+
+                result = 0
+                uu = {'res':result}
+                return JsonResponse(uu)
+        except Exception,e:
+            print e
+        result = 1
+        uu = {'res':result}
+        return JsonResponse(uu)
+
+def editlicense(type_license,licenseObj):
+    value = 1
+    if type_license != "":
+        value = int(type_license) | int(licenseObj[0].licenseType.type)
+        print "add fun"
+    else:
+        if type_license == "data_license":
+            value = int(licenseObj[0].licenseType.type) & 4
+            print "dec data fun"
+        elif type_license == "charging_license":
+            value = int(licenseObj[0].licenseType.type) & 2
+            print "dec charging fun"
+    print "value=",value
+    return value
 
 class AddCloudView(View):
     def get(self,request):
@@ -241,7 +361,11 @@ class AddCloudView(View):
         cloud_buyer = params['cloud_buyer']
         contacts = params['contacts']
         phone = params['phone']
-
+        clouds = CloudInformation.objects.filter(cloudName=cloud_name)
+        if clouds.count() > 0:
+            result = 2
+            uu = {'res':result}
+            return JsonResponse(uu)
         uu = {}
         try:
             cloudinfo = CloudInformation()
@@ -637,10 +761,20 @@ class RegisterLicenseView(View):
         cloud_id = request.GET.get('cloud_id','')
         licenses = LicenseRecord.objects.filter(license_code=license_code)
         if licenses:
+            cur_time = datetime.now()
+            ex_time = licenses[0].expire_time.replace(tzinfo=None)
+            if cur_time > ex_time:
+                licenses.update(is_valid=0)
+                print "无效的license---已过期"
+                uu['result'] = 2
+                return JsonResponse(uu)
+
             license_type = licenses[0].licenseType.type
             new_cloud_id = licenses[0].cloudInfo.id
             if cloud_id:
                 print "已注册过的云平台"
+                print licenses[0].cloudInfo_id
+                print int(cloud_id)
                 if licenses[0].cloudInfo_id != int(cloud_id):
                     print "license的云平台和正在注册的云平台不相符"
                     uu['result'] = 6
@@ -661,10 +795,14 @@ class RegisterLicenseView(View):
                             random_num = getRandom16Num()
                             licenses.update(random_num=random_num)
                             uu['random_num'] = random_num
+                            uu['max_aps'] = licenses[0].licenseParam.maxAPs
+                            uu['max_acs'] = licenses[0].licenseParam.maxACs
+                            uu['max_users'] = licenses[0].licenseParam.maxUsers
                             return JsonResponse(uu)
                         else:
                             print "license.is_valid not eq 0 or 2,this is impossible"
-                            return HttpResponse("server error")
+                            uu['result'] = 9
+                            return JsonResponse(uu)
                     else:
                         print "未激活的license"
                         uu['result'] = 3
@@ -689,6 +827,9 @@ class RegisterLicenseView(View):
                         random_num = getRandom16Num()
                         licenses.update(random_num=random_num)
                         uu['random_num'] = random_num
+                        uu['max_aps'] = licenses[0].licenseParam.maxAPs
+                        uu['max_acs'] = licenses[0].licenseParam.maxACs
+                        uu['max_users'] = licenses[0].licenseParam.maxUsers
                         return JsonResponse(uu)
                 else:
                     print "未激活的license"

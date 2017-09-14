@@ -41,7 +41,9 @@
                                 {% if is_superuser %}
                                     <th>重置license</th>
                                 {% endif %}
-
+                                {% if is_superuser and username == "root"%}
+                                    <th>修改</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
@@ -86,6 +88,11 @@
                                             <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                         </td>
                                     {% endif %}
+                                {% if is_superuser and username == "root"%}
+                                        <td>
+                                            <a title="修改" href="{% url 'adminbd:edit_license' %}?id={{ license.id}}" class="btn btn-white btn-sm btn-icon icon-left">修改</a>
+                                        </td>
+                                {% endif %}
                                 </tr>
                             {% endfor %}
                         {% else %}
@@ -129,6 +136,11 @@
                                         {% if is_superuser %}
                                             <td>
                                                 <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                            </td>
+                                        {% endif %}
+                                        {% if is_superuser and username == "root"%}
+                                            <td>
+                                                <a title="修改" href="{% url 'adminbd:edit_license' %}?id={{ license.id}}" class="btn btn-white btn-sm btn-icon icon-left">修改</a>
                                             </td>
                                         {% endif %}
                                     </tr>
