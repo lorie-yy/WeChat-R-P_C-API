@@ -110,7 +110,10 @@
                     };
                     if(data.res == 1){
                         SuccessWarning("添加成功",btnSn);
-                    }else{
+                    }else if(data.res == 2){
+                        SuccessWarning("重复的云平台名称！！",btnSn);
+                    }
+                    else{
                         ErrorWarning("添加失败",btnFn);
                     }
                 },
