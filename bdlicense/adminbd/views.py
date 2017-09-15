@@ -12,7 +12,8 @@ import logging
 import random
 import string
 import time
-
+from django.utils import timezone
+import pytz
 # Create your views here.
 
 
@@ -374,6 +375,8 @@ class AddCloudView(View):
             cloudinfo.buyer = cloud_buyer
             cloudinfo.contacts = contacts
             cloudinfo.phone = phone
+            cloud_num = genLicenseCode()
+            cloudinfo.cloudNum = cloud_num
             cloudinfo.save()
             if cloud_user_id:
                 userObj = User.objects.get(id=int(cloud_user_id))
@@ -645,6 +648,13 @@ def getRandom16Num():
     nonce = ''.join(random.sample(string.digits,6))
     return  (timestamp+nonce)
 
+#license code 生成
+def genLicenseCode():
+    timestamp = str(int(time.time()))
+    nonce = ''.join(random.sample(string.digits,6))
+    code = "BUSS"+timestamp+nonce
+    return code
+
 class RegisterLicenseView111(View):
     def get(self,request):
         print "in register view"
@@ -759,6 +769,9 @@ class RegisterLicenseView(View):
         params = request.GET.copy()
         license_code = params['license_code']
         cloud_id = request.GET.get('cloud_id','')
+        if cloud_id[:4] == 'TEMP':
+            #先体验试用版，现在注册正式版本，将cloud_id置为空
+            cloud_id = ''
         licenses = LicenseRecord.objects.filter(license_code=license_code)
         if licenses:
             cur_time = datetime.now()
@@ -866,6 +879,75 @@ class RegisterResultView(View):
             print "Register failed"
             return HttpResponse("1")
 
+class TrialRegisterLicenseView(View):
+    def get(self,request):
+        print "in Trial register view"
+        params = request.GET.copy()
+        print params,type(params)
+        license_expire_time = params['license_expire_time']
+        print "license_expire_time",license_expire_time,type(license_expire_time)
+        max_ap_allowed = params['max_ap_allowed']
+        max_ac_allowed = params['max_ac_allowed']
+        license_type = params['license_type']
+        max_user_allowed = params['max_user_allowed']
+        license_key = params['license_key']
+        cloud_num = params['cloud_id']
+        # print "max_ap_allowed",max_ap_allowed
+        # print "max_ac_allowed",max_ac_allowed
+        # print "max_user_allowed",max_user_allowed
+        # print "license_expire_time",license_expire_time
+        # print "license_key",license_key
+        # print "license_type",license_type
+        # print "cloud_id",cloud_id
+        uu ={}
+
+        repeatCloudObj = CloudInformation.objects.filter(cloudNum=cloud_num)
+        if repeatCloudObj.count() > 0 :
+            repeatLicenseObj = LicenseRecord.objects.filter(cloudInfo_id=repeatCloudObj[0].id)
+            if repeatLicenseObj.count() > 0:
+                print "重复试用版"
+                result = 1
+                uu['result'] = result
+                return JsonResponse(uu)
+        try:
+            paramsObj = LicenseParams()
+            paramsObj.maxACs = max_ac_allowed
+            paramsObj.maxAPs = max_ap_allowed
+            paramsObj.maxUsers = max_user_allowed
+            print "paramsObj"
+            paramsObj.save()
+
+            typeObj = LicenseType(type=license_type)
+            print "typeObj"
+            typeObj.save()
+
+            cloudObj = CloudInformation(cloudNum=cloud_num)
+            print "cloudObj"
+            cloudObj.save()
+
+            licenseObj = LicenseRecord()
+            licenseObj.license_code = license_key
+            licenseObj.licenseType_id = typeObj.id
+            # expire_time = datetime.strptime(license_expire_time,"%Y-%m-%d %H:%M:%S")
+            # print "expire_time",expire_time,type(expire_time)
+            # datetime.strftime()
+            licenseObj.expire_time = license_expire_time
+            # print "license_expire_time",license_expire_time
+            licenseObj.license_status = 1
+            licenseObj.is_valid = 2
+            licenseObj.cloudInfo_id = cloudObj.id
+            licenseObj.licenseParam_id = paramsObj.id
+            licenseObj.save()
+            result = 0
+            uu['result'] = result
+            return JsonResponse(uu)
+        except Exception,e:
+            print e
+
+        result = 1
+        uu['result'] = result
+        return JsonResponse(uu)
+
 class ValidateUserView(View):
     def get(self,request):
         print "in validate user view"
@@ -910,7 +992,7 @@ class LicenseResetView(View):
             return JsonResponse({"result":0})
         else:
             return JsonResponse({"result":1})
-
+#检测license是否有效（云平台一直发请求）
 class LicenseResetResultView(View):
     def get(self,request):
         print "in license reset view"
@@ -929,7 +1011,16 @@ class LicenseResetResultView(View):
             print "license_code:",license_code
             licenseObj = LicenseRecord.objects.filter(license_code=license_code)
             if licenseObj:
-                if licenseObj[0].cloudInfo_id != int(cloud_id):
+                if cloud_id[:4] == 'TEMP':
+                    #先体验试用版，现在注册正式版本，将cloud_id置为空
+                    # cloud_id = ''
+                    cur_time = datetime.now()
+                    ex_time = licenseObj[0].expire_time.replace(tzinfo=None)
+                    if cur_time > ex_time:
+                        licenses.update(is_valid=0)
+                        print "试用版license---已过期"
+                        uu['result'] = 2
+                elif licenseObj[0].cloudInfo_id != int(cloud_id):
                     uu['result'] = 1
                 elif licenseObj[0].is_reset == 0 and licenseObj[0].random_num != random_num:#重置判断
                     uu['result'] = 2

@@ -41,7 +41,7 @@
                                 {% if is_superuser %}
                                     <th>重置license</th>
                                 {% endif %}
-                                {% if is_superuser and username == "root"%}
+                                {% if is_superuser and username == "root" %}
                                     <th>修改</th>
                                 {% endif %}
                             </tr>
@@ -50,7 +50,15 @@
                         {% if is_superuser %}
                             {% for license in licenses %}
                                 <tr>
-                                    <td><span style="cursor: pointer;color: #00C853" {% comment %} onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>{{ license.cloudInfo.cloudName }}</span></td>
+                                {% if  license.cloudInfo.cloudName%}
+                                    <td>
+                                        <span style="cursor: pointer;color: #00C853" {% comment %} onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>
+                                            {{ license.cloudInfo.cloudName }}
+                                        </span>
+                                    </td>
+                                {% else %}
+                                    <td>暂无</td>
+                                {% endif %}
                                     {% if license.is_valid  == 1%}
                                         <td>有效</td>
                                     {% elif license.is_valid  == 2 %}
@@ -99,7 +107,15 @@
                             {% for lic in licenses %}
                                 {% for license in lic %}
                                         <tr>
-                                        <td><span style="cursor: pointer;color: #00C853" {% comment %}onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>{{ license.cloudInfo.cloudName }}</span></td>
+                                        {% if license.cloudInfo.cloudName %}
+                                            <td>
+                                                <span style="cursor: pointer;color: #00C853" {% comment %}onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %}>
+                                                {{ license.cloudInfo.cloudName }}
+                                                </span>
+                                            </td>
+                                        {% else %}
+                                            <td>暂无</td>
+                                        {% endif %}
                                         {% if license.is_valid  == 1%}
                                             <td>有效</td>
                                         {% elif license.is_valid  == 2 %}

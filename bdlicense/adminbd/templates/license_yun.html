@@ -14,7 +14,7 @@
                     <table class="table table-striped table-condensed table-hover">
                         <thead >
                             <tr>
-                                <th>ID</th>
+                                <th>云平台编号</th>
                                 <th>云平台名称</th>
                                 <th>购买者</th>
                                 <th>购买时间</th>
@@ -26,13 +26,38 @@
                         <tbody style="font-size: 15px;">
                         {% for cloudInfo in cloudInfos %}
                             <tr>
-                                <td>{{ cloudInfo.id }}</td>
-                                <td><span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ cloudInfo.id }}'" >{{ cloudInfo.cloudName }}</span></td>
-                                <td>{{ cloudInfo.buyer }}</td>
+                                <td>{{ cloudInfo.cloudNum }}</td>
+                                {% if cloudInfo.cloudName %}
+                                    <td>
+                                        <span style="cursor: pointer;color: #00C853"  style="" onclick="window.location.href='/adminbd?cloud_id={{ cloudInfo.id }}'" >
+                                            {{ cloudInfo.cloudName }}
+                                        </span>
+                                    </td>
+                                {% else %}
+                                    <td>试用版license</td>
+                                {% endif %}
+                                {% if cloudInfo.buyer %}
+                                    <td>{{ cloudInfo.buyer }}</td>
+                                {% else %}
+                                    <td>暂无</td>
+                                {% endif %}
                                 <td>{{ cloudInfo.buyTime }}</td>
-                                <td>{{ cloudInfo.installAddress }}</td>
-                                <td>{{ cloudInfo.contacts }}</td>
-                                <td>{{ cloudInfo.phone }}</td>
+                                {% if cloudInfo.installAddress %}
+                                    <td>{{ cloudInfo.installAddress }}</td>
+                                {% else %}
+                                    <td>暂无</td>
+                                {% endif %}
+                                {% if cloudInfo.installAddress %}
+                                    <td>{{ cloudInfo.contacts }}</td>
+                                {% else %}
+                                    <td>root</td>
+                                {% endif %}
+                                {% if cloudInfo.installAddress %}
+                                    <td>{{ cloudInfo.phone }}</td>
+                                {% else %}
+                                    <td>暂无</td>
+                                {% endif %}
+
                             </tr>
                         {% endfor %}
                         </tbody>

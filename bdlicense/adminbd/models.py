@@ -47,12 +47,13 @@ class LicenseParams(models.Model):
 class CloudInformation(models.Model):
     id = models.AutoField(primary_key=True)
     cloudUser = models.ManyToManyField(User,null=True)
-    cloudName = models.CharField('云平台名称',max_length=255,blank=False, null=False)
-    buyer = models.CharField('购买方',max_length=255)
+    cloudName = models.CharField('云平台名称',max_length=255,blank=False, default='')
+    buyer = models.CharField('购买方',max_length=255,blank=True, null=True)
     buyTime = models.DateTimeField('购买时间',auto_now_add=True)
-    installAddress = models.CharField('安装地址',max_length=255)
-    contacts = models.CharField('联系人',max_length=255)
-    phone = models.CharField('联系电话',max_length=255)
+    installAddress = models.CharField('安装地址',max_length=255,blank=True, null=True)
+    contacts = models.CharField('联系人',max_length=255,blank=True, null=True)
+    phone = models.CharField('联系电话',max_length=255,blank=True, null=True)
+    cloudNum = models.CharField('云平台编号',max_length=255,default='', blank=False)
 
     class Meta:
         verbose_name='云平台信息'
