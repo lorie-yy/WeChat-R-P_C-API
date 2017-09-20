@@ -103,7 +103,7 @@
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
-
+                            </div>
                             <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>
                         </div>
                         <div class="form-group">
@@ -180,16 +180,8 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-<<<<<<< HEAD
-        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei;
-        license_num =$.trim($('#fun_num').val());
-
-        $('.fun_addm').eq(0).click(function(e){
-=======
         var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,low=0,medium=0,high=0;
-{#        license_num =$.trim($('#fun_num').val());#}
         $('.fun_addm').eq(0).click(function(){
->>>>>>> master
             license_num =$.trim($('#fun_num').val());
             if(license_num==0){
                 return ;
@@ -252,7 +244,7 @@
                 AlarmWarning("请选择license有效时间!",btnSn);
             }
             else{
-                alert('low:'+low+'medium:'+medium+'high:'+high);
+{#                alert('low:'+low+'medium:'+medium+'high:'+high);#}
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
