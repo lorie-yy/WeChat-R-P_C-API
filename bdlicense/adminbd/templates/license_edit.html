@@ -4,21 +4,22 @@
         .form-group #license_code{height: 2rem;padding: 0.4rem 1rem 0rem 1rem;}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
         #fun_all{
-            width: 140px;
+            width: 280px;
             height: 34px;
             line-height: 34px;
             text-align: center;
-            top: -3px;;
-            right: -122px;
             position: absolute;
+            right: -262px;
+            top: 0;
         }
         #fun_num{
-            width: 34px;
-            padding: 4px 12px;
+            width: 57px;
             text-align: center;
             position: relative;
             top: -1px;
             border: none;
+            padding: 0;
+            margin: 0;
         }
         .fun_addm{
             display: inline-block;
@@ -31,6 +32,38 @@
         }
         .fun_addm:hover{
             background-color: lightgray;
+        }
+        .fun_addm:nth-child(4):hover{
+            background: dodgerblue;
+            color: #fff;
+        }
+        #content{
+            width: 400px;
+            height: 260px;
+            padding: 20px;
+            position: fixed;
+            top: 50%; left: 50%;
+            margin-left: -200px;
+            margin-top: -150px;
+            display: none;
+            background: floralwhite;
+            z-index: 99;
+            font-size: 15px;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: black 0px 0px 10px;
+            overflow: auto;
+        }
+        #cover{
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            background: black;
+            z-index: 66;
+            opacity: 0.5;
+            top: 0;
+            left: 0;
+            display: none;
         }
         .check_add{
             color: #555;
@@ -46,6 +79,7 @@
             top: 2px;
         }
     </style>
+        <div id="cover" style=""></div>
         <div class="panel">
                 <div class="panel-heading">
                     <h3>修改license</h3>
@@ -82,9 +116,9 @@
                                         <option value="" disabled="" selected="">选择配置类型</option>
                                      {% for  licenseParam in licenseParams%}
                                          {% if licenseParam.id == 4 and username != "root" %}
-                                             <option value="{{ licenseParam.id }}" style="display: none" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>
+                                             <option value="1{{ licenseParam.id }}" style="display: none" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>
                                          {% else %}
-                                             <option value="{{ licenseParam.id }}" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>
+                                             <option value="1{{ licenseParam.id }}" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>
                                          {% endif %}
                                      {% endfor %}
                                  </select>
@@ -93,8 +127,11 @@
                                      <button class="fun_addm">-</button>
                                      <input type="text" id="fun_num" value="{{ counts }}"/>
                                      <button class="fun_addm">+</button>
+                                     <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
+                                     <button class="fun_addm" style="width: 75px;">配置说明</button>
+                                     <div id="content">aa</div>
                                  </div>
-
+                                <div id="article"></div>
                              </div>
                         </div>
 {#                        <div class="form-group">#}
@@ -131,7 +168,7 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var license_id, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei;
+        var license_id, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,low=0,medium=0,high=0;
         license_num =$.trim($('#fun_num').val());
         $('.fun_addm').eq(0).click(function(e){
             license_num =$.trim($('#fun_num').val());
@@ -144,6 +181,28 @@
             license_num =$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
+        $('.fun_addm').eq(2).click(function(){
+            if($("[value='11']").is(":selected")){
+                low =$.trim($('#fun_num').val());
+            }else if($("[value='12']").is(":selected")){
+                medium =$.trim($('#fun_num').val());
+            }else if($("[value='13']").is(":selected")){
+                high =$.trim($('#fun_num').val());
+            }
+            $("#article").text("低配："+low+"个 中配："+medium+"个 高配："+high+"个");
+{#            alert(low+"A"+medium+"B"+high+"C");#}
+        });
+
+        $('.fun_addm').eq(3).click(function(){
+            $("#content").fadeIn();
+            $("#cover").css('display','block');
+        });
+        $("#cover").click(function(){
+            if($("#content").css("display")=='block'){
+                $("#content").css('display','none');
+                $("#cover").css('display','none');
+            }
+        });
         $("#submit").click(function(){
 {#            keyid =$.trim($("input[name='key_id']").val());#}
 {#            licenseCode =$.trim($("input[name='license_code']").val());#}
@@ -151,7 +210,7 @@
             licenseParamsID =$.trim($('#funcSet').val());
             license_id =$.trim($('#license_id').val());
 {#            license_time =$.trim($('#license_time').val());#}
-            license_num =$.trim($('#fun_num').val());
+{#            license_num =$.trim($('#fun_num').val());#}
             if($("#shu_ju").is(":checked")){
                 shu_ju=$("#shu_ju").val();
             }else{
@@ -178,7 +237,7 @@
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/edit_license",
-                    data:{license_id:license_id,counts:license_num,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    data:{license_id:license_id,low:low,medium:medium,high:high,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 0){
