@@ -227,13 +227,13 @@ class AddLicenseView(View):
             license.mid_counts = mid_count
             license.high_counts = high_count
             license.save()
-            if low_count != 0:
+            if int(low_count) != 0:
                 lP = LicenseParams.objects.get(id=1)
                 license.licenseParam.add(lP)
-            if mid_count != 0:
+            if int(mid_count) != 0:
                 mP = LicenseParams.objects.get(id=2)
                 license.licenseParam.add(mP)
-            if high_count != 0:
+            if int(high_count) != 0:
                 hP = LicenseParams.objects.get(id=3)
                 license.licenseParam.add(hP)
 
