@@ -14,6 +14,7 @@ urlpatterns = patterns(
     url(r'^add_cloud',views.AddCloudView.as_view(), name='add_cloud'),
     url(r'^add_user',views.AddUserView.as_view(), name='add_user'),
     url(r'^user_cloud',views.UserCloudView.as_view(), name='user_cloud'),
+    url(r'^license_param',views.KeyParamsView.as_view(), name='license_param'),
     url(r'^modify_license',views.Modify_license.as_view(), name='modify_license'),
     url(r'^modify_password',views.ModifyPasswordView.as_view(), name='modify_password'),
     url(r'^license_login',views.license_login, name='license_login'),

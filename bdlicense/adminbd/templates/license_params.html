@@ -1,0 +1,46 @@
+{% extends "common/common.html" %}
+    {% block page-inner %}
+        <div class="panel">
+                <div class="panel-heading">
+                    <h3>license配置信息</h3>
+                    <hr/>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>license code</th>
+                                <th>License配置</th>
+                                <th>最大AP数</th>
+                                <th>最大AC数</th>
+                                <th>最大用户数</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 15px;">
+                        {{ code }}对应的license支持<span style="color:red">{{ aps }}</span>个AP,<span style="color:red">{{ acs }}</span>个AC授权
+                        {% if paramsObj %}
+                            {% for paramsOb in paramsObj %}
+                                <tr>
+                                    <td>{{ code }}</td>
+                                    <td>{{ paramsOb.cloudRankName }}</td>
+                                    <td>{{ paramsOb.maxAPs }}</td>
+                                    <td>{{ paramsOb.maxACs }}</td>
+                                    <td>{{ paramsOb.maxUsers }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <th>{{ code }}对应的license没有配置参数</th>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                    <a style="margin: 20px 0 20px 20px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
+                </div>
+        </div>
+
+    <script>
+        function selectCloud(){
+            var cloud_id = $('#cloud_info option:selected').val();
+            window.location.href = "/adminbd?cloud_id="+cloud_id;
+        }
+    </script>
+    {% endblock %}
