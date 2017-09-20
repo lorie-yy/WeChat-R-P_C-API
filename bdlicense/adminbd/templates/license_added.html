@@ -3,6 +3,12 @@
     <style>
         .form-group #license_code{height: 2rem;padding: 0.4rem 1rem 0rem 1rem;}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
+        .btn{
+            width: 50px;
+            height: 32px;
+            line-height: 30px;
+            padding: 0;
+        }
         #fun_all{
             width: 280px;
             height: 34px;
@@ -88,12 +94,17 @@
                 <div class="panel-body">
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
-                    <div class="form-horizontal" id="license_code" style="background-color: #fff;padding-bottom: 13px;">
+                    <div class="form-horizontal" style="background-color: #fff;padding-bottom: 13px;">
                         <div class="form-group" style="padding-top: 20px;">
+
                             <label class="col-sm-3 control-label" for="license_code" >license 码</label>
-                            <div class="col-sm-4">
-                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >
+                            <div class="col-sm-4" >
+                                <input placeholder="点击右侧按钮生成license码" value="" disabled style="padding-right:0;padding-left: 0; " required type="text" class="form-control create" name="license_code" id="license_code" >
+{#                            <div class="col-sm-4">#}
+{#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
+{#                            </div>#}
                             </div>
+                            <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
@@ -106,17 +117,6 @@
                                 </select>
                             </div>
                         </div>
-{#                        <div class="form-group">#}
-{#                            <label class="col-sm-3 control-label" for="license_type" >License类型</label>#}
-{#                            <div class="col-sm-4">#}
-{#                                <select onchange="func()" class="form-control" id="license_type" name="license_type" >#}
-{#                                    <option value="" disabled="" selected="">选择功能类型</option>#}
-{#                                    {% for licenseType in licenseTypes %}#}
-{#                                        <option id="bao-month" value="{{ licenseType.id }}">{{ licenseType.discription }}</option>#}
-{#                                    {% endfor %}#}
-{#                                </select>#}
-{#                            </div>#}
-{#                        </div>#}
                         <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
                              <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
                              <div class="col-sm-4" style="position: relative;">
@@ -153,7 +153,7 @@
                                         <option id="five" value="5">五年</option>
                                 </select>
                             </div>
-                        </div>
+                      </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label" >License功能</label>
                             <label class="check_add"><input type="checkbox" value="4" id="shu_ju">大数据</label>
@@ -169,15 +169,18 @@
                 </form>
             </div>
         </div>
-{#    </div>#}
-{#</div>#}
-
-
+        <script>
+            function proCode(){
+                $.get("{% url 'adminbd:add_license' %}",function(code){
+                    $(".create").val(code);
+                    $("#create").css("display","none");
+                })
+        }
+        </script>
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
         var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,low=0,medium=0,high=0;
-{#        license_num =$.trim($('#fun_num').val());#}
         $('.fun_addm').eq(0).click(function(){
             license_num =$.trim($('#fun_num').val());
             if(license_num==0){
@@ -232,7 +235,7 @@
             }
             var btnSn=function() {};
             if(!licenseCode ){
-                AlarmWarning("请输入license code!",btnSn);
+                AlarmWarning("请输入或生成license code!",btnSn);
             }else if(!cloud_info){
                 AlarmWarning("请选择对应云平台!",btnSn);
             }else if (!licenseParamsID ){
@@ -241,7 +244,7 @@
                 AlarmWarning("请选择license有效时间!",btnSn);
             }
             else{
-                alert('low:'+low+'medium:'+medium+'high:'+high);
+{#                alert('low:'+low+'medium:'+medium+'high:'+high);#}
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
@@ -250,7 +253,7 @@
                     success:function(data) {
                         if(data.res == 1){
                             var btnSn=function(e) {
-                                window.location.href = '/adminbd/index';
+                                window.location.href = '/adminbd/add_license';
                             };
                             SuccessWarning("license添加成功",btnSn);
                         }else if(data.res == 2){
