@@ -11,6 +11,7 @@
                             <tr>
                                 <th>license code</th>
                                 <th>License配置</th>
+                                <th>配置数量</th>
                                 <th>最大AP数</th>
                                 <th>最大AC数</th>
                                 <th>最大用户数</th>
@@ -23,6 +24,15 @@
                                 <tr>
                                     <td>{{ code }}</td>
                                     <td>{{ paramsOb.cloudRankName }}</td>
+                                    {% if paramsOb.id == 1 %}
+                                        <td>{{ low_count }}个</td>
+                                    {% elif paramsOb.id == 2 %}
+                                        <td>{{ mid_count }}个</td>
+                                    {% elif paramsOb.id == 3 %}
+                                        <td>{{ high_count }}个</td>
+                                    {% else %}
+                                        <td>暂无</td>
+                                    {% endif %}
                                     <td>{{ paramsOb.maxAPs }}</td>
                                     <td>{{ paramsOb.maxACs }}</td>
                                     <td>{{ paramsOb.maxUsers }}</td>

@@ -151,19 +151,16 @@ class AddLicenseView(View):
         params = request.POST.copy()
         print params
         license_code = params['license_code']
-        # licensePid = params['licensePID']
         cloud_info = params['cloud_info']
         license_time = params['license_time']
-        # counts = params['counts']
         low_count = request.POST.get('low',0)
         mid_count = request.POST.get('medium',0)
         high_count = request.POST.get('high',0)
-        # sel_params = request.POST.get('sel_params')
-        # sel_params_list = sel_params.split(',')
+        # print "low_count:"+low_count+"mid_count:"+mid_count+"high_count:"+high_count
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-        print "data_license=",data_license
-        print "charging_license=",charging_license
+        # print "data_license=",data_license
+        # print "charging_license=",charging_license
         uu = {}
         #one cloud has only one valid license
         if cloud_info:
@@ -212,17 +209,6 @@ class AddLicenseView(View):
             license.licenseType_id = licenseType.id
             license.cloudInfo_id = cloud_info
             license.expire_time = cur_time
-            # if licensePid:
-            #     license.licenseParam_id = int(licensePid)
-            #     license.counts = counts
-
-            # if sel_params_list:
-            #     for sel_param in sel_params_list:
-            #         if sel_param !=0
-            #         cloudObj = CloudInformation.objects.filter(id=int(cloud_id))
-            #         license.cloudinformation_set.add(cloudObj[0])
-            #         license.save()
-            # if low_count != 0:
             license.low_counts = low_count
             license.mid_counts = mid_count
             license.high_counts = high_count
@@ -267,19 +253,14 @@ class EditLicenseView(View):
             for param in params:
                 paramsIdList.append(param.id)
             context['paramsIdList'] = paramsIdList
-            if int(licenseRecord.licenseType.type) & 4:
-                context['data_id'] = 4
-                print "计费版本"
-            if int(licenseRecord.licenseType.type) & 2:
-                context['charging_id'] = 2
-                print "大数据版本"
+            context['license_id'] = license_id
+            # if int(licenseRecord.licenseType.type) & 4:
+            #     context['data_id'] = 4
+            #     print "计费版本"
+            # if int(licenseRecord.licenseType.type) & 2:
+            #     context['charging_id'] = 2
+            #     print "大数据版本"
             context['licenseRecord'] = licenseRecord
-            # print "expire_time=",licenseRecord.expire_time,type(licenseRecord.expire_time)
-            # future_year = licenseRecord.expire_time.year
-            # now_year = datetime.now().year
-            # valid_year = future_year-now_year
-            # context['valid_year'] = int(valid_year)
-            # print "valid_year=",int(valid_year)
         licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
         context['licenseParams'] = licenseParams
 
@@ -571,6 +552,9 @@ class KeyParamsView(View):
             context['acs'] = acs
             context['paramsObj'] = paramsObjs
             context['code'] = licenseObj.license_code
+            context['low_count'] = licenseObj.low_counts
+            context['mid_count'] = licenseObj.mid_counts
+            context['high_count'] = licenseObj.high_counts
 
         context['username'] = username
         context['is_superuser'] = is_superuser
