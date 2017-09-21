@@ -248,18 +248,26 @@ class EditLicenseView(View):
         context = {}
         if license_id is not None:
             licenseRecord = LicenseRecord.objects.get(id=int(license_id))
-            params = licenseRecord.licenseParam.all()
-            paramsIdList = []
-            for param in params:
-                paramsIdList.append(param.id)
-            context['paramsIdList'] = paramsIdList
-            context['license_id'] = license_id
-            # if int(licenseRecord.licenseType.type) & 4:
-            #     context['data_id'] = 4
-            #     print "计费版本"
-            # if int(licenseRecord.licenseType.type) & 2:
-            #     context['charging_id'] = 2
-            #     print "大数据版本"
+            paramsAll = licenseRecord.licenseParam.all()
+            # paramsIdList = []
+            # for param in paramsAll:
+            #     paramsIdList.append(param.id)
+            # context['paramsIdList'] = paramsIdList
+            # print "paramsIdList=",paramsIdList
+            # context['license_id'] = license_id
+            if paramsAll.count() > 0:
+                context['high'] = licenseRecord.high_counts
+                context['mid'] = licenseRecord.mid_counts
+                context['low'] = licenseRecord.low_counts
+                print context['high']
+                print context['mid']
+                print context['low']
+            if int(licenseRecord.licenseType.type) & 4:
+                context['data_id'] = 4
+                print "计费版本"
+            if int(licenseRecord.licenseType.type) & 2:
+                context['charging_id'] = 2
+                print "大数据版本"
             context['licenseRecord'] = licenseRecord
         licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
         context['licenseParams'] = licenseParams
@@ -279,22 +287,31 @@ class EditLicenseView(View):
         print "in edit license post func"
         params = request.POST.copy()
         print params
-        licensePid = params['licensePID']
         license_id = params['license_id']
-        counts = params['counts']
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-        print "data_license=",data_license
-        print "charging_license=",charging_license
-        # print "license_id=",license_id
-        # print "licensePid=",licensePid
-        # print "counts=",counts
+        low_count = request.POST.get('low',0)
+        mid_count = request.POST.get('medium',0)
+        high_count = request.POST.get('high',0)
+        print "--------"
+        print request.POST.get('low',0)
+        print request.POST.get('medium',0)
+        print request.POST.get('high',0)
         uu = {}
         #one cloud has only one valid license
         try:
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
             if licenseObj.count() > 0:
-                licenseObj.update(licenseParam_id=int(licensePid),counts=counts)
+                licenseObj.update(low_counts=low_count,mid_counts=mid_count,high_counts=high_count)
+                if int(low_count) != 0:
+                    lP = LicenseParams.objects.get(id=1)
+                    licenseObj[0].licenseParam.add(lP)
+                if int(mid_count) != 0:
+                    mP = LicenseParams.objects.get(id=2)
+                    licenseObj[0].licenseParam.add(mP)
+                if int(high_count) != 0:
+                    hP = LicenseParams.objects.get(id=3)
+                    licenseObj[0].licenseParam.add(hP)
                 type_id = licenseObj[0].licenseType.id
                 typeObj = LicenseType.objects.filter(id=type_id)
                 if data_license != "":
@@ -308,24 +325,6 @@ class EditLicenseView(View):
                     else:
                         value = 1
                 typeObj.update(type=value)
-
-                # if data_license != "":
-                #     data_value = int(data_license) | int(licenseObj[0].licenseType.type)
-                # else:
-                #     data_value = int(licenseObj[0].licenseType.type) ^ 4
-                # typeObj.update(type=data_value)
-                # print "after update data_value=",data_value
-                # print "update data license successfully"
-
-                # if charging_license != "":
-                #     charging_value = int(charging_license) | int(licenseObj[0].licenseType.type)
-                # else:
-                #     charging_value = int(licenseObj[0].licenseType.type) ^ 2
-                # print "before update charging_value=",charging_value
-                # typeObj.update(type=charging_value)
-                # print "after update charging_value=",charging_value
-                # print "update charging license successfully"
-
                 result = 0
                 uu = {'res':result}
                 return JsonResponse(uu)
@@ -641,12 +640,15 @@ class ActivateLicenseView(View):
 
             #prepare response params
             # if int(licenseRecord.licenseType.type) & 1:
-            maxAPs = licenseRecord.licenseParam.maxAPs * licenseRecord.counts
-            maxACs = licenseRecord.licenseParam.maxACs * licenseRecord.counts
-            maxUsers = licenseRecord.licenseParam.maxUsers  * licenseRecord.counts
-                # maxAPs = 288
-                # maxACs = 4
-                # maxUsers = 5760
+            # maxAPs = licenseRecord.licenseParam.maxAPs * licenseRecord.counts
+            # maxACs = licenseRecord.licenseParam.maxACs * licenseRecord.counts
+            # maxUsers = licenseRecord.licenseParam.maxUsers  * licenseRecord.counts
+            maxAPs = licenseRecord.low_counts*32+licenseRecord.mid_counts*128+licenseRecord.high_counts*1024
+            maxACs = licenseRecord.low_counts*1+licenseRecord.mid_counts*1+licenseRecord.high_counts*4
+            maxUsers = licenseRecord.low_counts*640+licenseRecord.mid_counts*2560+licenseRecord.high_counts*20480
+            # maxAPs = 288
+            # maxACs = 4
+            # maxUsers = 5760
             # else:
             #     maxAPs = 0
             #     maxACs = 0
@@ -854,7 +856,32 @@ class RegisterLicenseView(View):
                 print "无效的license---已过期"
                 uu['result'] = 2
                 return JsonResponse(uu)
-
+            paramsAll = licenses[0].licenseParam.all()
+            print "params.count()",paramsAll.count()
+            max_aps = 0
+            max_acs = 0
+            max_users = 0
+            for p in paramsAll:
+                print p
+                print p.id,type(p.id)
+                if int(p.id) == 1:
+                    max_aps += licenses[0].low_counts*p.maxAPs
+                    max_acs += licenses[0].low_counts*p.maxACs
+                    max_users += licenses[0].low_counts*p.maxUsers
+                    print max_aps
+                    print max_acs
+                    print max_users
+                elif (p.id) == 2:
+                    max_aps += licenses[0].mid_counts*p.maxAPs
+                    max_acs += licenses[0].mid_counts*p.maxACs
+                    max_users += licenses[0].mid_counts*p.maxUsers
+                elif (p.id) == 3:
+                    max_aps += licenses[0].high_counts*p.maxAPs
+                    max_acs += licenses[0].high_counts*p.maxACs
+                    max_users += licenses[0].high_counts*p.maxUsers
+            print "maxAPs=",max_aps
+            print "max_acs=",max_acs
+            print "max_users=",max_users
             license_type = licenses[0].licenseType.type
             new_cloud_id = licenses[0].cloudInfo.id
             if cloud_id:
@@ -881,9 +908,15 @@ class RegisterLicenseView(View):
                             random_num = getRandom16Num()
                             licenses.update(random_num=random_num)
                             uu['random_num'] = random_num
-                            uu['max_aps'] = licenses[0].licenseParam.maxAPs
-                            uu['max_acs'] = licenses[0].licenseParam.maxACs
-                            uu['max_users'] = licenses[0].licenseParam.maxUsers
+                            # uu['max_aps'] = licenses[0].licenseParam.maxAPs
+                            # uu['max_acs'] = licenses[0].licenseParam.maxACs
+                            # uu['max_users'] = licenses[0].licenseParam.maxUsers
+                            uu['max_aps'] = max_aps
+                            uu['max_acs'] = max_acs
+                            uu['max_users'] = max_users
+                            # uu['max_aps'] = licenses[0].low_counts*32+licenses[0].mid_counts*128+licenses[0].high_counts*1024
+                            # uu['max_acs'] = licenses[0].low_counts*1+licenses[0].mid_counts*1+licenses[0].high_counts*4
+                            # uu['max_users'] = licenses[0].low_counts*640+licenses[0].mid_counts*2560+licenses[0].high_counts*20480
                             return JsonResponse(uu)
                         else:
                             print "license.is_valid not eq 0 or 2,this is impossible"
@@ -913,9 +946,12 @@ class RegisterLicenseView(View):
                         random_num = getRandom16Num()
                         licenses.update(random_num=random_num)
                         uu['random_num'] = random_num
-                        uu['max_aps'] = licenses[0].licenseParam.maxAPs
-                        uu['max_acs'] = licenses[0].licenseParam.maxACs
-                        uu['max_users'] = licenses[0].licenseParam.maxUsers
+                        uu['max_aps'] = max_aps
+                        uu['max_acs'] = max_acs
+                        uu['max_users'] = max_users
+                        # uu['max_aps'] = licenses[0].low_counts*32+licenses[0].mid_counts*128+licenses[0].high_counts*1024
+                        # uu['max_acs'] = licenses[0].low_counts*1+licenses[0].mid_counts*1+licenses[0].high_counts*4
+                        # uu['max_users'] = licenses[0].low_counts*640+licenses[0].mid_counts*2560+licenses[0].high_counts*20480
                         return JsonResponse(uu)
                 else:
                     print "未激活的license"

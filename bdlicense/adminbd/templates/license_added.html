@@ -44,13 +44,12 @@
             color: #fff;
         }
         #content{
-            width: 400px;
-            height: 260px;
-            padding: 20px;
+            width: 230px;
+            height: 100px;
             position: fixed;
             top: 50%; left: 50%;
-            margin-left: -200px;
-            margin-top: -150px;
+            margin-left: -115px;
+            margin-top: -70px;
             display: none;
             background: floralwhite;
             z-index: 99;
@@ -59,6 +58,11 @@
             border-radius: 15px;
             box-shadow: black 0px 0px 10px;
             overflow: auto;
+        }
+        .alert{
+            text-align: center;
+            padding: 3px 0;
+            margin-bottom: 0;
         }
         #cover{
             width: 100%;
@@ -84,6 +88,23 @@
             position: relative;
             top: 2px;
         }
+
+    input::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+        color:    #909;
+        font-size: 13px;
+    }
+    input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+       color:    #909;
+       font-size: 13px;
+    }
+    input::-moz-placeholder { /* Mozilla Firefox 19+ */
+       color:    #909;
+       font-size: 13px;
+    }
+    input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+       color:    #909;
+       font-size: 13px;
+    }
     </style>
         <div id="cover" style=""></div>
         <div class="panel">
@@ -95,11 +116,11 @@
                 <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
                     <div class="form-horizontal" style="background-color: #fff;padding-bottom: 13px;">
-                        <div class="form-group" style="padding-top: 20px;">
+                        <div class="form-group" style="padding-top: 20px;margin-bottom: 0">
 
                             <label class="col-sm-3 control-label" for="license_code" >license 码</label>
                             <div class="col-sm-4" >
-                                <input placeholder="点击右侧按钮生成license码" value="" disabled style="padding-right:0;padding-left: 0; " required type="text" class="form-control create" name="license_code" id="license_code" >
+                                <input placeholder="没有Code? 点击右侧按钮生成license码" value=""  style="padding: 4px 0;" required type="text" class="create" name="license_code" id="license_code" >
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
@@ -123,9 +144,10 @@
                                  <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
                                         <option value="" disabled="" selected="">选择配置类型</option>
                                      {% for  licenseParam in licenseParams%}
-                                         {% if licenseParam.id == 4 and username != "root" %}
-                                             <option value="1{{ licenseParam.id }}" style="display: none">{{ licenseParam.cloudRankName }}</option>
-                                         {% else %}
+{#                                         {% if licenseParam.id == 4 and username != "root" %}#}
+{#                                             <option value="1{{ licenseParam.id }}" style="display: none">{{ licenseParam.cloudRankName }}</option>#}
+{#                                         {% else %}#}
+                                     {% if licenseParam.id != 4 %}
                                              <option value="1{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
                                          {% endif %}
                                      {% endfor %}
@@ -137,7 +159,11 @@
                                      <button class="fun_addm">+</button>
                                      <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
                                      <button class="fun_addm" style="width: 75px;">配置说明</button>
-                                     <div id="content">aa</div>
+                                     <div id="content">
+                                         <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
+                                         <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
+                                         <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
+                                     </div>
                                  </div>
                                 <div id="article"></div>
                              </div>

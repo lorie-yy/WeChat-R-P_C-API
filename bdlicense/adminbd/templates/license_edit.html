@@ -38,13 +38,12 @@
             color: #fff;
         }
         #content{
-            width: 400px;
-            height: 260px;
-            padding: 20px;
+            width: 230px;
+            height: 100px;
             position: fixed;
             top: 50%; left: 50%;
-            margin-left: -200px;
-            margin-top: -150px;
+            margin-left: -115px;
+            margin-top: -70px;
             display: none;
             background: floralwhite;
             z-index: 99;
@@ -53,6 +52,11 @@
             border-radius: 15px;
             box-shadow: black 0px 0px 10px;
             overflow: auto;
+        }
+        .alert{
+            text-align: center;
+            padding: 3px 0;
+            margin-bottom: 0;
         }
         #cover{
             width: 100%;
@@ -125,11 +129,15 @@
 {#                             license配置增减功能#}
                                  <div id="fun_all">
                                      <button class="fun_addm">-</button>
-                                     <input type="text" id="fun_num" value="{{ counts }}"/>
+                                     <input type="text" id="fun_num" value="0"/>
                                      <button class="fun_addm">+</button>
                                      <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
                                      <button class="fun_addm" style="width: 75px;">配置说明</button>
-                                     <div id="content">aa</div>
+                                     <div id="content">
+                                         <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
+                                         <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
+                                         <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
+                                     </div>
                                  </div>
                                 <div id="article"></div>
                              </div>
@@ -181,6 +189,9 @@
             license_num =$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
+        low = {{ low }};
+        medium = {{ mid }};
+        high = {{ high }};
         $('.fun_addm').eq(2).click(function(){
             if($("[value='11']").is(":selected")){
                 low =$.trim($('#fun_num').val());
@@ -189,9 +200,10 @@
             }else if($("[value='13']").is(":selected")){
                 high =$.trim($('#fun_num').val());
             }
-            $("#article").text("低配："+low+"个 中配："+medium+"个 高配："+high+"个");
+            $("#article").text("修改配置- "+"低配："+low+"个 中配："+medium+"个 高配："+high+"个");
 {#            alert(low+"A"+medium+"B"+high+"C");#}
         });
+        $("#article").text("原始配置- "+"低配："+ {{ low }} +"个 中配："+ {{ mid }} +"个 高配："+ {{ high }}+"个");
 
         $('.fun_addm').eq(3).click(function(){
             $("#content").fadeIn();

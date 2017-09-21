@@ -2,14 +2,14 @@
     {% block page-inner %}
         <div class="panel">
                 <div class="panel-heading">
-                    <h3>license配置信息</h3>
+                    <h3 style="font-weight: bold;height: 19px;">license配置信息</h3>
                     <hr/>
                 </div>
                 <div class="panel-body">
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>license code</th>
+                                <th>License code</th>
                                 <th>License配置</th>
                                 <th>配置数量</th>
                                 <th>最大AP数</th>
@@ -18,18 +18,20 @@
                             </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
-                        {{ code }}对应的license支持<span style="color:red">{{ aps }}</span>个AP,<span style="color:red">{{ acs }}</span>个AC授权
+                        <p class="alert alert-warning" style="padding: 7px;margin-bottom: 6px;">
+                            温馨提示：Code（<span style="font-weight: bold;color: red;">{{ code }}</span>）对应的License支持<span style="color:red;font-weight: bold;">{{ aps }}</span>个AP,<span style="color:red;font-weight: bold;">{{ acs }}</span>个AC授权
+                        </p>
                         {% if paramsObj %}
                             {% for paramsOb in paramsObj %}
                                 <tr>
                                     <td>{{ code }}</td>
                                     <td>{{ paramsOb.cloudRankName }}</td>
                                     {% if paramsOb.id == 1 %}
-                                        <td>{{ low_count }}个</td>
+                                        <td class="num1">{{ low_count }}个</td>
                                     {% elif paramsOb.id == 2 %}
-                                        <td>{{ mid_count }}个</td>
+                                        <td class="num2">{{ mid_count }}个</td>
                                     {% elif paramsOb.id == 3 %}
-                                        <td>{{ high_count }}个</td>
+                                        <td class="num3">{{ high_count }}个</td>
                                     {% else %}
                                         <td>暂无</td>
                                     {% endif %}
@@ -52,5 +54,15 @@
             var cloud_id = $('#cloud_info option:selected').val();
             window.location.href = "/adminbd?cloud_id="+cloud_id;
         }
+        if($(".num1").html()== "0个"){
+            $(".num1").parent('tr').css('display','none')
+        }
+        if($(".num2").html()== "0个"){
+            $(".num2").parent('tr').css('display','none')
+        }
+        if($(".num3").html()== "0个"){
+            $(".num3").parent('tr').css('display','none')
+        }
+
     </script>
     {% endblock %}
