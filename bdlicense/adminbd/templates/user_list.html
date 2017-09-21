@@ -36,19 +36,10 @@
                                               <td>工厂用户</td>
                                          {% endif %}
                                         <td>
-{#                                            <div class="btn-group">#}
-{#                                                <a href="{% url 'adminbd:add_user' %}?id={{ user.id }}"#}
-{#                                                   class="btn btn-white btn-sm btn-icon ">#}
-{#                                                    修改#}
-{#                                                </a>#}
-{#                                                <a href="javascript:void(0);" onclick="delAp({{ user.id }})"#}
-{#                                                   class="btn btn-white btn-sm btn-icon ">#}
-{#                                                   删除#}
-{#                                                </a>#}
-                                                <a href="{% url 'adminbd:user_cloud' %}?id={{ user.id }}"
-                                                    class="btn btn-white btn-sm btn-icon" style="height: 28px">
-                                                   查看关联云平台
-                                                </a>
+                                            <a href="{% url 'adminbd:user_cloud' %}?id={{ user.id }}"
+                                                class="btn btn-white btn-sm btn-icon" style="height: 28px">
+                                               查看关联云平台
+                                            </a>
                                         </td>
                                      </tr>
                             {% endfor %}

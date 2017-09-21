@@ -58,7 +58,11 @@ class IndexView(View):
                     licenseList.append(licenses)
                 context['licenses'] = licenseList
 
-        cloudInfos = CloudInformation.objects.exclude(cloudName = "")
+        if is_superuser:
+            cloudInfos = CloudInformation.objects.exclude(cloudName = "")
+        else:
+            user = User.objects.get(username=username)
+            cloudInfos = user.cloudinformation_set.exclude(cloudName = "")
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
