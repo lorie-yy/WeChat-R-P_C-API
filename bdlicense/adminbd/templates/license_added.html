@@ -44,12 +44,12 @@
             color: #fff;
         }
         #content{
-            width: 230px;
-            height: 100px;
+            width: 320px;
+            height: 178px;
             position: fixed;
             top: 50%; left: 50%;
-            margin-left: -115px;
-            margin-top: -70px;
+            margin-left: -160px;
+            margin-top: -109px;
             display: none;
             background: floralwhite;
             z-index: 99;
@@ -61,7 +61,7 @@
         }
         .alert{
             text-align: center;
-            padding: 3px 0;
+            padding: 10px 0;
             margin-bottom: 0;
         }
         #cover{
@@ -88,23 +88,22 @@
             position: relative;
             top: 2px;
         }
-
-    input::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-        color:    #909;
-        font-size: 13px;
-    }
-    input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-       color:    #909;
-       font-size: 13px;
-    }
-    input::-moz-placeholder { /* Mozilla Firefox 19+ */
-       color:    #909;
-       font-size: 13px;
-    }
-    input:-ms-input-placeholder { /* Internet Explorer 10-11 */
-       color:    #909;
-       font-size: 13px;
-    }
+        input::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+            color:    #909;
+            font-size: 13px;
+        }
+        input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+           color:    #909;
+           font-size: 13px;
+        }
+        input::-moz-placeholder { /* Mozilla Firefox 19+ */
+           color:    #909;
+           font-size: 13px;
+        }
+        input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+           color:    #909;
+           font-size: 13px;
+        }
     </style>
         <div id="cover" style=""></div>
         <div class="panel">
@@ -120,7 +119,7 @@
 
                             <label class="col-sm-3 control-label" for="license_code" >license 码</label>
                             <div class="col-sm-4" >
-                                <input placeholder="没有Code? 点击右侧按钮生成license码" value=""  style="padding: 4px 0;" required type="text" class="create" name="license_code" id="license_code" >
+                                <input placeholder="没有Code? 点击右侧按钮生成license码" value="" spellcheck="false" style="padding: 4px 0;" type="text" class="create" name="license_code" id="license_code" >
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
@@ -160,6 +159,7 @@
                                      <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
                                      <button class="fun_addm" style="width: 75px;">配置说明</button>
                                      <div id="content">
+                                         <p style="text-align: center;margin-bottom: 0;font-weight: bold;height: 35px;line-height: 35px;">配置说明</p>
                                          <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
                                          <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
                                          <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
@@ -200,6 +200,7 @@
                 $.get("{% url 'adminbd:add_license' %}",function(code){
                     $(".create").val(code);
                     $("#create").css("display","none");
+                    $("#license_code").attr("disabled","disabled").css('color','black');
                 })
         }
         </script>

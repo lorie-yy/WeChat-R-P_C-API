@@ -37,17 +37,19 @@ class IndexView(View):
 
         if cloud_id:
             cloudObj = CloudInformation.objects.get(id=cloud_id)
-            licenseRecords = cloudObj.licenserecord_set.all()
+
             if is_superuser:
+                licenseRecords = cloudObj.licenserecord_set.exclude(license_code__istartswith = "TEMP")
                 context['licenses'] = licenseRecords
             else:
+                licenseRecords = cloudObj.licenserecord_set.all()
                 licenseList = []
                 licenseList.append(licenseRecords)
                 context['licenses'] = licenseList
             context['cloud_id'] = int(cloud_id)
         else:
             if is_superuser:
-                LicenseRecords = LicenseRecord.objects.all()
+                LicenseRecords = LicenseRecord.objects.exclude(license_code__istartswith = "TEMP")
                 context['licenses'] = LicenseRecords
             else:
                 user = User.objects.get(username=username)
@@ -81,11 +83,11 @@ class IndexViewYun(View):
         context = {}
         if is_superuser:
             # cloudInfos = CloudInformation.objects.filter(cloudNum__istartswith = "BUSS")
-            cloudInfos = CloudInformation.objects.all()
+            cloudInfos = CloudInformation.objects.exclude(cloudName= "")
             context['cloudInfos'] = cloudInfos
         else:
             user = User.objects.get(username=username)
-            cloudInfos = user.cloudinformation_set.all()
+            cloudInfos = user.cloudinformation_set.exclude(cloudName = "")
             context['cloudInfos'] = cloudInfos
 
         context['username'] = username
@@ -1133,6 +1135,9 @@ class LicenseResetResultView(View):
                         licenseObj.update(is_valid=0)
                         print "试用版license---已过期"
                         uu['result'] = 2
+                    else:
+                        uu['result'] = 3
+
                 elif licenseObj[0].cloudInfo_id != int(cloud_id):
                     uu['result'] = 1
                 elif licenseObj[0].is_reset == 0 and licenseObj[0].random_num != random_num:#重置判断
