@@ -385,11 +385,11 @@ div#sideNav:hover {
 }
 .top-navbar .nav > li {
     position: relative;
-    display: inline-block;
+    display: block;
     margin: 0px;
     padding: 0px;
 }
-.top-navbar .nav > li > a {position: relative;display: block;padding: 17px;color: #484848;margin: 0px;}
+.top-navbar .nav > li > a {position: relative;display: block;height: 60px;padding: 19px;color: #484848;margin: 0px;}
 .top-navbar .nav > li > a:hover, .top-navbar .nav > li > a:focus {text-decoration: none;color: #f44336 !important;background: transparent;}
 .top-navbar .dropdown-menu{
     border-radius: 0 0 4px 4px;
@@ -605,11 +605,6 @@ padding: 16px 20px;
         display: none;
 	}
  }
-@media all and (max-width:786px) {
-    /*.navbar-side {*/
-        /*display: none;*/
-	/*}*/
-}
  @media(max-width:480px) {
      #page-wrapper {
         position: relative;
@@ -694,9 +689,6 @@ padding: 16px 20px;
 }
 .header .breadcrumb li a{
 	font-size: 13px;
-	font-size: 13px;
-	text-decoration: none;
-	color: #717171;
 	text-decoration: none;
 	color: #f44336;
 }
