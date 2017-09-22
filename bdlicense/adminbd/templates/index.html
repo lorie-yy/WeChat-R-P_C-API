@@ -1,9 +1,4 @@
 {% extends "common/common.html" %}
-<style>
-    .active-menu i {
-{#        color: #f44336 !important;#}
-    }
-</style>
     {% block page-inner %}
         <div class="panel">
                 <div class="panel-heading">
@@ -15,7 +10,7 @@
                     {% endif %}
                     <hr/>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body res_change">
                         <div style="padding: 0;margin-bottom: 10px">
                             <select onchange="selectCloud()" class="form-control" id="cloud_info" name="cloud_info" style="width: 260px;">
                                 <option value="" disabled="" selected="">选择license对应云平台</option>
@@ -39,7 +34,7 @@
                                 <th>购买时间</th>
                                 <th>过期时间</th>
                                 {% if is_superuser %}
-                                    <th>重置license</th>
+                                    <th>重置</th>
                                 {% endif %}
                                 {% if is_superuser and username == "root" %}
                                     <th>修改</th>
@@ -51,8 +46,8 @@
                             {% for license in licenses %}
                                 <tr>
                                 {% if  license.cloudInfo.cloudName%}
-                                    <td>
-                                        <span style="cursor: pointer;color: #00C853"  onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >
+                                    <td title="{{ license.cloudInfo.cloudName }}" {% comment %} style="cursor: pointer;color: #00C853;text-decoration: underline;font-weight: bold" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo_id }}'"{% endcomment %}>
+                                        <span>
                                             {{ license.cloudInfo.cloudName }}
                                         </span>
                                     </td>
@@ -72,8 +67,8 @@
                                         <td>暂无</td>
                                     {% endif %}
 {#                                    <td>{{ license.licenseType.discription }}</td>#}
-                                    <td>
-                                        <span style="cursor: pointer;color: #00C853" onclick="window.location.href='/adminbd/license_param?id={{ license.id }}'">
+                                    <td title="{{ license.license_code }}" style="cursor: pointer;color: #00C853;text-decoration: underline;font-weight: bold" onclick="window.location.href='/adminbd/license_param?id={{ license.id }}'" >
+                                        <span>
                                             {{ license.license_code }}
                                         </span>
 
@@ -89,7 +84,7 @@
                                     <td>{{ license.expire_time }}</td>
                                     {% if is_superuser %}
                                         <td>
-                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                            <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2  or license.cloudInfo.cloudName  == "" %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                         </td>
                                     {% endif %}
                                 {% if license.is_valid != 0 and username == "root"%}
@@ -97,7 +92,7 @@
                                             <a class="btn btn-sm btn-danger" {% if license.cloudInfo.cloudName  == "" %} disabled {% endif %}  title="修改" href="{% url 'adminbd:edit_license' %}?id={{ license.id}}" style="height: 28px;border-color: transparent">修改</a>
                                         </td>
                                     {% else %}
-                                    <td>
+                                        <td>
                                             <a class="btn btn-sm btn-danger" disabled {% if license.cloudInfo.cloudName  == "" %} disabled {% endif %}  title="修改" href="{% url 'adminbd:edit_license' %}?id={{ license.id}}" style="height: 28px;border-color: transparent">修改</a>
                                         </td>
                                 {% endif %}
@@ -108,8 +103,8 @@
                                 {% for license in lic %}
                                         <tr>
                                         {% if license.cloudInfo.cloudName %}
-                                            <td>
-                                                <span style="cursor: pointer;color: #00C853" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" >
+                                            <td title="{{ license.cloudInfo.cloudName }}">
+                                                <span {% comment %} style="cursor: pointer;color: #00C853" onclick="window.location.href='/adminbd?cloud_id={{ license.cloudInfo.id }}'" {% endcomment %} >
                                                 {{ license.cloudInfo.cloudName }}
                                                 </span>
                                             </td>
@@ -124,11 +119,16 @@
                                             <td>无效</td>
                                         {% endif %}
                                         {% if license.key_id %}
-                                            <td>{{ license.key_id }}</td>
+                                            <td title="{{ license.key_id }}">{{ license.key_id }}</td>
                                         {% else %}
                                             <td>暂无</td>
                                         {% endif %}
-                                        <td>{{ license.license_code }}</td>
+                                        <td title="{{ license.license_code }}" style="cursor: pointer;color: #00C853;text-decoration: underline;font-weight: bold" onclick="window.location.href='/adminbd/license_param?id={{ license.id }}'" >
+                                        <span>
+                                            {{ license.license_code }}
+                                        </span>
+
+                                    </td>
                                         {% if license.license_status == 1%}
                                             <td>已激活</td>
                                         {% else %}
@@ -140,13 +140,12 @@
                                         <td>{{ license.expire_time }}</td>
                                         {% if is_superuser %}
                                             <td>
-                                                <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2 %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
+                                                <button class="btn btn-sm btn-danger" {% if license.is_valid  != 2  or license.cloudInfo.cloudName  == "" %} disabled {% endif %} onclick="resetLicense({{ license.id }})" style="height: 28px;border-color: transparent">重置</button>
                                             </td>
                                         {% endif %}
                                         {% if license.is_valid != 0 and username == "root"%}
                                             <td>
-                                            <a class="btn btn-sm btn-danger" disabled  {% if license.cloudInfo.cloudName  == "" %} disabled {% endif %}  title="修改" href="{% url 'adminbd:edit_license' %}?id={{ license.id}}" style="height: 28px;border-color: transparent">修改</a>
-
+                                                <a class="btn btn-sm btn-danger" disabled  {% if license.cloudInfo.cloudName  == "" %} disabled {% endif %}  title="修改" href="{% url 'adminbd:edit_license' %}?id={{ license.id}}" style="height: 28px;border-color: transparent">修改</a>
                                             </td>
                                         {% endif %}
                                     </tr>
