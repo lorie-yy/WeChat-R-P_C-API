@@ -530,37 +530,39 @@ class KeyParamsView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         context = {}
-        if key_id is not None:
-            licenseObj = LicenseRecord.objects.get(id=key_id)
-            paramsObjs = licenseObj.licenseParam.all()
-            print "paramsObjs.counts",paramsObjs.count()
-            aps = 0
-            acs = 0
-            for paramsObj in paramsObjs:
-                if paramsObj.id == 1:
-                    print licenseObj.low_counts
-                    print paramsObj.maxAPs
-                    print paramsObj.maxAPs*licenseObj.low_counts
-                    aps += paramsObj.maxAPs*licenseObj.low_counts
-                    acs += paramsObj.maxACs*licenseObj.low_counts
-                    print "aps=",aps
-                    print "acs=",acs
-                elif paramsObj.id == 2:
-                    aps += paramsObj.maxAPs*licenseObj.mid_counts
-                    acs += paramsObj.maxACs*licenseObj.mid_counts
-                    print "aps=",aps
-                    print "acs=",acs
-                else:
-                    aps += paramsObj.maxAPs*licenseObj.high_counts
-                    acs += paramsObj.maxACs*licenseObj.high_counts
-            context['aps'] = aps
-            context['acs'] = acs
-            context['paramsObj'] = paramsObjs
-            context['code'] = licenseObj.license_code
-            context['low_count'] = licenseObj.low_counts
-            context['mid_count'] = licenseObj.mid_counts
-            context['high_count'] = licenseObj.high_counts
-
+        try:
+            if key_id is not None:
+                licenseObj = LicenseRecord.objects.get(id=key_id)
+                paramsObjs = licenseObj.licenseParam.all()
+                print "paramsObjs.counts",paramsObjs.count()
+                aps = 0
+                acs = 0
+                for paramsObj in paramsObjs:
+                    if paramsObj.id == 1:
+                        print licenseObj.low_counts
+                        print paramsObj.maxAPs
+                        print paramsObj.maxAPs*licenseObj.low_counts
+                        aps += paramsObj.maxAPs*licenseObj.low_counts
+                        acs += paramsObj.maxACs*licenseObj.low_counts
+                        print "aps=",aps
+                        print "acs=",acs
+                    elif paramsObj.id == 2:
+                        aps += paramsObj.maxAPs*licenseObj.mid_counts
+                        acs += paramsObj.maxACs*licenseObj.mid_counts
+                        print "aps=",aps
+                        print "acs=",acs
+                    else:
+                        aps += paramsObj.maxAPs*licenseObj.high_counts
+                        acs += paramsObj.maxACs*licenseObj.high_counts
+                context['aps'] = aps
+                context['acs'] = acs
+                context['paramsObj'] = paramsObjs
+                context['code'] = licenseObj.license_code
+                context['low_count'] = licenseObj.low_counts
+                context['mid_count'] = licenseObj.mid_counts
+                context['high_count'] = licenseObj.high_counts
+        except Exception,e:
+            print e
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
@@ -1174,6 +1176,8 @@ def download_license_file(request):
     print "os.path.abspath('.')",cur_path
     #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+    print "os.path.join(cur_path, DOWNLOAD_FILE_PATH)",target_path
+    # /home/Portal/bdlicense/bdlicense/static/download_file/
     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
     response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
