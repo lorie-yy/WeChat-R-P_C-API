@@ -21,6 +21,12 @@ DOWNLOAD_FILE_PATH = "static/download_file/"
 DOWNLOAD_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
 DOWNLOAD_FILE_LICENSE_USAGE_FILE = "私有云License管理手册.docx"
 
+
+def local2utc(local_st):
+    time_struct = time.mktime(local_st.timetuple())
+    utc_st = datetime.utcfromtimestamp(time_struct)
+    return utc_st
+
 #主页
 class IndexView(View):
     def get(self, request):
@@ -647,21 +653,12 @@ class ActivateLicenseView(View):
                 return JsonResponse(result)
 
             #prepare response params
-            # if int(licenseRecord.licenseType.type) & 1:
-            # maxAPs = licenseRecord.licenseParam.maxAPs * licenseRecord.counts
-            # maxACs = licenseRecord.licenseParam.maxACs * licenseRecord.counts
-            # maxUsers = licenseRecord.licenseParam.maxUsers  * licenseRecord.counts
             maxAPs = licenseRecord.low_counts*32+licenseRecord.mid_counts*128+licenseRecord.high_counts*1024
             maxACs = licenseRecord.low_counts*1+licenseRecord.mid_counts*1+licenseRecord.high_counts*4
             maxUsers = licenseRecord.low_counts*640+licenseRecord.mid_counts*2560+licenseRecord.high_counts*20480
-            # maxAPs = 288
-            # maxACs = 4
-            # maxUsers = 5760
-            # else:
-            #     maxAPs = 0
-            #     maxACs = 0
-            #     maxUsers = 0
+
             expire_time = licenseRecord.expire_time
+            print "激活license接口，返回过期时间：",expire_time
             result['license_key'] = license_code
             result['max_ap_allowed'] = maxAPs
             result['max_ac_allowed'] = maxACs
@@ -669,6 +666,7 @@ class ActivateLicenseView(View):
 
             #expire_time format string
             str_expire_time = expire_time.strftime('%Y-%m-%d')
+            print "格式化过期时间，返回字符串形式：",str_expire_time
             result['license_expire_time'] = str_expire_time
 
             result['result'] = 0 #validate successfully
@@ -738,113 +736,6 @@ def genLicenseCode(code_type):
     code = code_type+timestamp+nonce
     return code
 
-class RegisterLicenseView111(View):
-    def get(self,request):
-        print "in register view"
-        uu = {}
-        params = request.GET.copy()
-        license_code = params['license_code']
-        cloud_id = request.GET.get('cloud_id','')
-        licenses = LicenseRecord.objects.filter(license_code=license_code)
-        if licenses:
-            license_type = licenses[0].licenseType.type
-            new_cloud_id = licenses[0].cloudInfo.id
-            if cloud_id:
-                print "已注册过的云平台"
-                if licenses[0].cloudInfo_id != int(cloud_id):
-                    print "license的云平台和正在注册的云平台不相符"
-                    uu['result'] = 6
-                    return JsonResponse(uu)
-                else:
-                    print "该license属于该云平台"
-                    if licenses[0].license_status == 1:
-                        print "激活的license"
-                        if licenses[0].is_valid == 0:
-                            print "无效的license"
-                            uu['result'] = 2
-                            return JsonResponse(uu)
-                        elif licenses[0].is_valid == 2:
-                            uu['license_type'] = license_type
-                            uu['cloud_id'] = new_cloud_id
-                            uu['result'] = 0
-                            random_num = getRandom16Num()
-                            licenses.update(random_num=random_num)
-                            uu['random_num'] = random_num
-                            return JsonResponse(uu)
-                        else:
-                            # if license_type == "1":
-                            #     print "有效license--基本版本---扩容"
-                            #     basic_license = LicenseRecord.objects.filter(
-                            #         cloudInfo_id = licenses[0].cloudInfo_id,
-                            #         is_valid=2,
-                            #         licenseType_id=1,
-                            #         license_status = 1
-                            #     )
-                            #     if basic_license.count() > 0:
-                            #         basic_license.update(is_valid=0)
-
-                            # elif license_type == "2":
-                            if license_type == "2":
-                                print "有效license--计费版本版本"
-                                charging_license = LicenseRecord.objects.filter(
-                                    cloudInfo_id = licenses[0].cloudInfo_id,
-                                    is_valid=2,
-                                    licenseType_id=2,
-                                    license_status = 1
-                                )
-                                if charging_license.count() > 0:
-                                    return JsonResponse({"result":5})
-                            elif license_type == "4":
-                                print "有效license--大数据版本"
-                                analysis_license = LicenseRecord.objects.filter(
-                                    cloudInfo_id = licenses[0].cloudInfo_id,
-                                    is_valid=2,
-                                    licenseType_id=3,
-                                    license_status = 1
-                                )
-                                if analysis_license.count() > 0:
-                                    return JsonResponse({"result":4})
-                            uu['license_type'] = license_type
-                            uu['cloud_id'] = new_cloud_id
-                            uu['result'] = 0
-                            random_num = getRandom16Num()
-                            licenses.update(random_num=random_num)
-                            uu['random_num'] = random_num
-                            return JsonResponse(uu)
-                    else:
-                        print "未激活的license"
-                        uu['result'] = 3
-                        return JsonResponse(uu)
-            else:
-                print "未注册过的云平台，新的云平台"
-                if licenses[0].license_status == 1:
-                    print "激活的license"
-                    if licenses[0].is_valid == 0:
-                        print "无效的license"
-                        uu['result'] = 2
-                        return JsonResponse(uu)
-                    elif licenses[0].is_valid == 2:
-                        print "该license已注册--同一个license在不同的云平台注册"
-                        uu['result'] = 6
-                        return JsonResponse(uu)
-                    else:
-                        print "正常注册"
-                        uu['license_type'] = license_type
-                        uu['cloud_id'] = new_cloud_id
-                        uu['result'] = 0
-                        random_num = getRandom16Num()
-                        licenses.update(random_num=random_num)
-                        uu['random_num'] = random_num
-                        return JsonResponse(uu)
-                else:
-                    print "未激活的license"
-                    uu['result'] = 3
-                    return JsonResponse(uu)
-        else:
-            print "不存在的license code"
-            uu['result'] = 1
-            return JsonResponse(uu)
-
 class RegisterLicenseView(View):
     def get(self,request):
         print "in register view"
@@ -858,7 +749,12 @@ class RegisterLicenseView(View):
         licenses = LicenseRecord.objects.filter(license_code=license_code)
         if licenses:
             cur_time = datetime.now()
+            # print "本地时间",cur_time
+            cur_time = local2utc(cur_time)
+            # print "UTC时间",cur_time
             ex_time = licenses[0].expire_time.replace(tzinfo=None)
+            # print "数据库时间 tzinfo=None",ex_time
+            # print "数据库时间",licenses[0].expire_time
             if cur_time > ex_time:
                 licenses.update(is_valid=0)
                 print "无效的license---已过期"
@@ -916,9 +812,6 @@ class RegisterLicenseView(View):
                             random_num = getRandom16Num()
                             licenses.update(random_num=random_num)
                             uu['random_num'] = random_num
-                            # uu['max_aps'] = licenses[0].licenseParam.maxAPs
-                            # uu['max_acs'] = licenses[0].licenseParam.maxACs
-                            # uu['max_users'] = licenses[0].licenseParam.maxUsers
                             uu['max_aps'] = max_aps
                             uu['max_acs'] = max_acs
                             uu['max_users'] = max_users
@@ -1002,20 +895,13 @@ class TrialRegisterLicenseView(View):
         params = request.GET.copy()
         print params,type(params)
         license_expire_time = params['license_expire_time']
-        print "license_expire_time",license_expire_time,type(license_expire_time)
         max_ap_allowed = params['max_ap_allowed']
         max_ac_allowed = params['max_ac_allowed']
         license_type = params['license_type']
         max_user_allowed = params['max_user_allowed']
         license_key = params['license_key']
         cloud_num = params['cloud_id']
-        # print "max_ap_allowed",max_ap_allowed
-        # print "max_ac_allowed",max_ac_allowed
-        # print "max_user_allowed",max_user_allowed
-        # print "license_expire_time",license_expire_time
-        # print "license_key",license_key
-        # print "license_type",license_type
-        # print "cloud_id",cloud_id
+        print "云平台发送试用版license过期时间为：",license_expire_time
         uu ={}
 
         repeatCloudObj = CloudInformation.objects.filter(cloudNum=cloud_num)
@@ -1045,11 +931,7 @@ class TrialRegisterLicenseView(View):
             licenseObj = LicenseRecord()
             licenseObj.license_code = license_key
             licenseObj.licenseType_id = typeObj.id
-            # expire_time = datetime.strptime(license_expire_time,"%Y-%m-%d %H:%M:%S")
-            # print "expire_time",expire_time,type(expire_time)
-            # datetime.strftime()
             licenseObj.expire_time = license_expire_time
-            # print "license_expire_time",license_expire_time
             licenseObj.license_status = 1
             licenseObj.is_valid = 2
             licenseObj.cloudInfo_id = cloudObj.id
@@ -1130,8 +1012,8 @@ class LicenseResetResultView(View):
             if licenseObj:
                 if cloud_id[:4] == 'TEMP':
                     #先体验试用版，现在注册正式版本，将cloud_id置为空
-                    # cloud_id = ''
                     cur_time = datetime.now()
+                    cur_time = local2utc(cur_time)
                     ex_time = licenseObj[0].expire_time.replace(tzinfo=None)
                     if cur_time > ex_time:
                         licenseObj.update(is_valid=0)
