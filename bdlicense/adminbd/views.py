@@ -1035,6 +1035,13 @@ class LicenseResetResultView(View):
                 uu['license_type'] = license_type
                 resultList.append(uu)
                 print "license_info:",resultList
+            else:
+                uu['result'] = 5
+                uu['license_key'] = license_code
+                uu['cloud_id'] = cloud_id
+                uu['license_type'] = license_type
+                resultList.append(uu)
+                print "非code：license_info:",resultList
         return JsonResponse({"license_info":resultList})
 
 def handle_download_file(path,file_name):
