@@ -61,23 +61,21 @@ class LicenseManager:
         self.RemoveContent()
         self.InitSystem()
 
+        self.setframe = None
+        self.frame2 = None
+        self.frame3 = None
+
         self.frame = Frame(self.master)
-        self.frame.grid(row=0, column=6)
+        #self.frame.grid(row=0, column=0)
+        self.frame.pack(fill="both",padx=200)
         self.titleLabel = Label(self.frame)
         self.titleLabel['text'] =u'Bdyun License 激活工具'
         self.titleLabel["font"] = ("Arial", 20)
-        self.titleLabel.grid(row=1, column=0)
+        self.titleLabel.grid(row=1, column=0, sticky=SW)
 
         self.SetupMenu()
 
-        self.frame3 = LabelFrame(self.master, text=u"日志信息",width=600, height=50)
-        self.frame3.grid(row=10, column=6,padx=10, pady=5,ipadx=0)
-        self.text = Text(self.frame3,width=95,height=10)
-        scr=Scrollbar(self.frame3,orient =VERTICAL,command=self.text.yview)
-        scr.grid(row=11, column=6, sticky=NS)
-        self.text.grid(row=11, column=0)
-        self.text.config(yscrollcommand=scr.set,font=('Arial', 8, 'bold', 'italic'))
-        self.text.configure(state=DISABLED)
+
 
     def InitSystem(self):
         try:
@@ -105,21 +103,24 @@ class LicenseManager:
             print os.system("rm %s" % (key_dir))
 
     def SetupMenu(self):
-        self.setframe = LabelFrame(self.master, text=u"配置信息",width=100, height=260)
-        self.setframe.grid(row=2, column=6, padx=10, pady=5,ipadx=50)
+        self.CleanPlan()
+
+        self.setframe = LabelFrame(self.master, text=u"配置信息", height=300)
+        #self.setframe.grid(row=3, column=0,  columnspan=3, padx=10, pady=10,ipadx=50)
+        self.setframe.pack(fill="both",padx=20,pady=40,ipady=10)
 
         self.userLable = Label(self.setframe, text=u"用户名: ", width=30, anchor="e")
-        self.userLable.grid(row=3, column=0,ipady=25)
+        self.userLable.grid(row=0, column=0,ipady=25)
         self.userEntry = Entry(self.setframe,width=30)
         self.userEntry.insert(END, self.login_user)
-        self.userEntry.grid(row=3, column=1)
+        self.userEntry.grid(row=0, column=1, columnspan=2)
 
         self.passwdLable = Label(self.setframe, text=u"密码: ", width=30, anchor="e")
-        self.passwdLable.grid(row=4, column=0)
+        self.passwdLable.grid(row=2, column=0)
         self.passwdEntry = Entry(self.setframe,width=30)
         self.passwdEntry.insert(END, self.user_passwd)
         self.passwdEntry['show']='*'
-        self.passwdEntry.grid(row=4, column=1)
+        self.passwdEntry.grid(row=2, column=1)
 
         self.serverLable = Label(self.setframe, text=u"License 服务器地址: ",  width=30, anchor="e")
         self.serverLable.grid(row=5, column=0,pady=25)
@@ -133,20 +134,43 @@ class LicenseManager:
         self.getButton.grid(row=9, column=1, padx=30,pady=5, sticky=SW)
         self.submitButton = Button(self.setframe)
 
+    def CleanPlan(self):
+        if self.setframe is not None:
+            self.setframe.pack_forget()
+        if self.frame2 is not None:
+            self.frame2.pack_forget()
+        if self.frame3 is not None:
+            self.frame3.pack_forget()
+
     def LicenseMenu(self):
         if self.user_valid != 1:
             tkMessageBox.showinfo(u"告警", MSG['4'])
             return
-        self.setframe.grid_forget()
 
-        self.frame2 = LabelFrame(self.master, text=u"License 信息",width=100, height=260)
-        self.frame2.grid(row=2, column=6, padx=10, pady=5,ipadx=50)
+        #self.setframe.grid_forget()
+        self.CleanPlan()
+        self.frame2 = LabelFrame(self.master, text=u"License 信息", height=300)
+        # self.frame2.grid(row=2, column=6, padx=10, pady=5,ipadx=50)
+        self.frame2.pack(fill="both",padx=20,pady=20)
 
-        self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
-        self.oneLable.grid(row=3, column=0)
-        self.oneEntry = Entry(self.frame2,width=30)
-        self.oneEntry.insert(END, self.license_code)
-        self.oneEntry.grid(row=3, column=1)
+        if self.login_user == 'root':
+            self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
+            self.oneLable.grid(row=3, column=0)
+            self.oneEntry = Entry(self.frame2,width=30)
+            self.oneEntry.insert(END, self.license_code)
+            self.oneEntry.grid(row=3, column=1)
+        else:
+            self.workNoLable = Label(self.frame2, text=u"工单号: ", width=30, anchor="e")
+            self.workNoLable.grid(row=0, column=0)
+            self.workNoEntry = Entry(self.frame2,width=30)
+            self.workNoEntry.insert(END, self.license_code)
+            self.workNoEntry.grid(row=0, column=1)
+
+            self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
+            self.oneLable.grid(row=3, column=0)
+            self.oneEntry = Entry(self.frame2,width=30)
+            self.oneEntry.grid(row=3, column=1)
+            self.oneEntry.configure(state=DISABLED)
 
         self.keyLable = Label(self.frame2, text=u"KEY ID: ", width=30, anchor="e")
         self.keyLable.grid(row=4, column=0)
@@ -188,25 +212,38 @@ class LicenseManager:
         self.submitButton["command"] = self.writeToKey
         self.submitButton.grid(row=9, column=1,pady=5, sticky=N)
 
+        self.TextFrame()
+
+    def TextFrame(self):
+        self.frame3 = LabelFrame(self.master, text=u"日志信息",width=800, height=50)
+        #self.frame3.grid(row=10, column=6,padx=10, pady=5,ipadx=0)
+        self.frame3.pack(fill="both",padx=20,pady=20)
+        self.text = Text(self.frame3,width=126,height=10)
+        scr=Scrollbar(self.frame3,orient =VERTICAL,command=self.text.yview)
+        scr.grid(row=11, column=6, sticky=NS)
+        self.text.grid(row=11, column=0)
+        self.text.config(yscrollcommand=scr.set,font=('Arial', 8, 'bold', 'italic'))
+        self.text.configure(state=DISABLED)
+
     def getUserInfo(self):
-        info_dict = getLicenseUser(self.license_server, self.port, self.user_name,self.user_passwd)
+        info_dict = getLicenseUser(self.license_server, self.port, self.login_user,self.user_passwd)
         print info_dict
 
         return info_dict.get('res', 10)
 
     def confirm(self):
-        self.user_name = self.userEntry.get()
+        self.login_user = self.userEntry.get()
         self.user_passwd = self.passwdEntry.get()
         self.license_server = self.serverEntry.get()
 
-        if self.user_name == '' or self.user_passwd == '':
+        if self.login_user == '' or self.user_passwd == '':
             tkMessageBox.showinfo(u"告警", MSG['1'])
             return
 
         self.user_valid = self.getUserInfo()
 
         if self.user_valid == 1:
-            setLoginUser(os.path.join(BASE_DIR,'file'), self.user_name,self.license_server)
+            setLoginUser(os.path.join(BASE_DIR,'file'), self.login_user,self.license_server)
             self.LicenseMenu()
             return
         elif self.user_valid == 2:
@@ -231,11 +268,19 @@ class LicenseManager:
 
     def getVersionINfo(self):
         self.license_code =  self.oneEntry.get()
+        self.work_no =  self.workNoEntry.get()
 
-        if self.license_code == '':
-            msg = u"请填写License Code再验证"
-            self.show_info(msg)
-            return
+        if self.login_user == 'root':
+            if self.license_code == '':
+                msg = u"请填写License Code再验证"
+                self.show_info(msg)
+                return
+        else:
+            if self.work_no == '':
+                msg = u"请填写工单号再验证"
+                self.show_info(msg)
+                return
+
 
         self.InitSystem()
 
@@ -282,7 +327,7 @@ class LicenseManager:
     def getLicenseKeyInfo(self):
        try:
            self.writeMessage(u'验证License Code ...')
-           info_dict = getLicenseInfo(self.license_server, self.port, self.key_id, self.license_code)
+           info_dict = getLicenseInfo(self.license_server, self.port, self.key_id, self.license_code, self.work_no)
            self.max_ap = info_dict.get('max_ap_allowed', '')
            self.max_ac = info_dict.get('max_ac_allowed', '')
            self.max_user = info_dict.get('max_user_allowed', '')
@@ -634,10 +679,11 @@ def CPUinfo():
                     procinfo[line.split(':')[0].strip()] = ''
     return CPUinfo['proc0']
 
-def getLicenseInfo(ip, port, key_id, license_code):
+def getLicenseInfo(ip, port, key_id, license_code,work_no):
     connection_str='http://%s:%s/adminbd/license_activate?'% (ip, port)
     connection_str = connection_str + 'key_id=' + key_id
     connection_str = connection_str + '&license_code=' + license_code
+    connection_str = connection_str + '&work_no=' + work_no
 
     f = urllib2.urlopen(connection_str)
     response = f.read()
@@ -703,7 +749,7 @@ root = Tk()
 imgicon = PhotoImage(file=os.path.join(BASE_DIR, 'file/license.gif'))
 root.tk.call('wm', 'iconphoto', root._w, imgicon)
 root.title(u"BDCloud License 激活工具")
-root.geometry("620x430")
+root.geometry("820x530")
 
 root.resizable(width=FALSE, height=FALSE)
 
