@@ -14,6 +14,7 @@ import string
 import time
 from django.utils import timezone
 import pytz
+from adminbd.models import SystemConfig
 # Create your views here.
 
 
@@ -124,6 +125,37 @@ class UserIndexView(View):
         context['user_level'] = user_level
         return render(request, 'user_list.html',context)
 
+#license code 生成
+def genLicenseCode(code_type,*args):
+    license_coun = SystemConfig.objects.filter(attribute='license_count')
+    if license_coun.count() == 0:
+        system_license = SystemConfig(attribute='license_count',value="0")
+        system_license.save()
+    value,res = SystemConfig.getAttrValue('license_count')
+    print type(value),res,int(value)
+    code = ""
+    if code_type == "f":
+        #工厂code
+        print "f"
+        code = "BCPLICF"+str(int(value)+1)
+        print code
+    elif code_type == "d":
+        #root用户code
+        print "d"
+        code = "BCPLICD"+str(int(value)+1)
+        print code
+    if "save_in" in args:
+        license_coun.update(value=str(int(value)+1))
+
+    print license_coun[0].value
+    return code
+
+def genCloudNum(code_type):
+    timestamp = str(int(time.time()))
+    nonce = ''.join(random.sample(string.digits,6))
+    code = code_type+timestamp+nonce
+    return code
+
 class AddLicenseView(View):
     def get(self,request):
         username = request.session.get('username')
@@ -147,11 +179,11 @@ class AddLicenseView(View):
         context['user_level'] = user_level
 
         if request.is_ajax():
-            license_code = genLicenseCode("BUSS")
+            print "in request.is_ajax() "
+            license_code = genLicenseCode("d")
             context['code'] = license_code
-            print "pro code=",license_code,context['code']
+            # print "pro code=",license_code,context['code']
             return HttpResponse(license_code)
-            # return JsonResponse({"code":license_code})
         return render(request, 'license_added.html',context)
 
     def post(self,request):
@@ -237,6 +269,10 @@ class AddLicenseView(View):
 
             license.save()
             print "save license"
+            license_coun = SystemConfig.objects.filter(attribute='license_count')
+            if license_coun.count() >0:
+                value = license_code.split("D")[1]
+                license_coun.update(value=value)
             result = 1
             uu = {'res':result}
             return JsonResponse(uu)
@@ -404,7 +440,7 @@ class AddCloudView(View):
             cloudinfo.buyer = cloud_buyer
             cloudinfo.contacts = contacts
             cloudinfo.phone = phone
-            cloud_num = genLicenseCode("BUSS")
+            cloud_num = genCloudNum("BUSS")
             cloudinfo.cloudNum = cloud_num
             cloudinfo.save()
             if cloud_user_id:
@@ -728,13 +764,6 @@ def getRandom16Num():
     timestamp = str(int(time.time()))
     nonce = ''.join(random.sample(string.digits,6))
     return  (timestamp+nonce)
-
-#license code 生成
-def genLicenseCode(code_type):
-    timestamp = str(int(time.time()))
-    nonce = ''.join(random.sample(string.digits,6))
-    code = code_type+timestamp+nonce
-    return code
 
 class RegisterLicenseView(View):
     def get(self,request):
