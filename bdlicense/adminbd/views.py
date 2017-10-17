@@ -125,13 +125,74 @@ class UserIndexView(View):
         context['user_level'] = user_level
         return render(request, 'user_list.html',context)
 
+def genZteCode():
+    print "call genZteCode() fun"
+
+    year_context = {"2010":"A","2011":"B","2012":"C","2013":"D","2014":"E","2015":"F","2016":"G",
+                    "2017":"H","2018":"J","2019":"K","2020":"L","2021":"M","2022":"N","2023":"P",
+                    "2024":"Q","2025":"R","2026":"T","2027":"U","2028":"V","2029":"W","2030":"X",
+                    "2031":"Y"}
+    month_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+                     "10":"A","11":"B","12":"C"}
+
+    day_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+                     "10":"A","11":"B","12":"C","13":"D","14":"E","15":"F","16":"G","17":"H",
+                   "18":"I","19":"J","20":"K","21":"L","22":"M","23":"N","24":"O","25":"P",
+                   "26":"Q","27":"R","28":"S","29":"T","30":"U","31":"V"
+                   }
+
+    license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
+    if license_coun.count() == 0:
+        system_license = SystemConfig(attribute='zte_license_count',value="0")
+        system_license.save()
+    value,res = SystemConfig.getAttrValue('zte_license_count')
+    print type(value),res,int(value)
+    try:
+        d_sn = ""
+        print (str(value)).__len__()
+        i = (str(value)).__len__()
+        if i == 1:
+            d_sn = "0000"+str(int(value)+1)
+        elif i == 2:
+            d_sn = "000"+str(int(value)+1)
+        elif i == 3:
+            d_sn = "00"+str(int(value)+1)
+        elif i == 4:
+            d_sn = "0"+str(int(value)+1)
+        else:
+            d_sn = str(int(value)+1)
+        print d_sn
+        if d_sn.__len__() > 5:
+            print "not format name"
+            return False
+        start_date = datetime.now().strftime("%Y-%m-%d")
+        print start_date
+        cur_str_time = start_date.split("-")
+        y = cur_str_time[0]
+        m = cur_str_time[1]
+        d = cur_str_time[2]
+        print y,m,d,type(y)
+
+        y_value = year_context.get(y)
+        m_value = month_context.get(m)
+        d_value = day_context.get(d)
+        print y_value,m_value,d_value
+        if y_value and m_value and d_value:
+            print "ZTEKPBY"+str(y_value)+str(m_value)+str(d_value)+d_sn
+            return "ZTEKPBY"+str(y_value)+str(m_value)+str(d_value)+d_sn
+        else:
+            return False
+    except Exception,e:
+        print e
+    return False
+
 #license code 生成
 def genLicenseCode(code_type,*args):
-    license_coun = SystemConfig.objects.filter(attribute='license_count')
+    license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
     if license_coun.count() == 0:
-        system_license = SystemConfig(attribute='license_count',value="0")
+        system_license = SystemConfig(attribute='bd_license_count',value="0")
         system_license.save()
-    value,res = SystemConfig.getAttrValue('license_count')
+    value,res = SystemConfig.getAttrValue('bd_license_count')
     print type(value),res,int(value)
     code = ""
     if code_type == "f":
@@ -181,6 +242,7 @@ class AddLicenseView(View):
         if request.is_ajax():
             print "in request.is_ajax() "
             license_code = genLicenseCode("d")
+            # license_code = genZteCode()
             context['code'] = license_code
             # print "pro code=",license_code,context['code']
             return HttpResponse(license_code)
