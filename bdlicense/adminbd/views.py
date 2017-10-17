@@ -241,8 +241,8 @@ class AddLicenseView(View):
 
         if request.is_ajax():
             print "in request.is_ajax() "
-            # license_code = genLicenseCode("d")
-            license_code = genZteCode()
+            license_code = genLicenseCode("d")
+            # license_code = genZteCode()
             context['code'] = license_code
             # print "pro code=",license_code,context['code']
             return HttpResponse(license_code)
