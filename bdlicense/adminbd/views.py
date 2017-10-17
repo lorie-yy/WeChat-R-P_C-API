@@ -1114,3 +1114,47 @@ class Modify_license(View):
             return JsonResponse({"result":1})
         else:
             return JsonResponse({"result":0})
+
+class sys_config(View):
+    def get(self, request):
+        print "in IndexYunView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        context = {}
+        if is_superuser:
+            userSets = User.objects.all()
+            context['userSets'] = userSets
+        else:
+            print "not superuser,no right to display the user list"
+            return HttpResponse("No Right")
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+        return render(request, 'system_config.html',context)
+
+class or_query(View):
+    def get(self, request):
+        print "in IndexYunView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        context = {}
+        if is_superuser:
+            userSets = User.objects.all()
+            context['userSets'] = userSets
+        else:
+            print "not superuser,no right to display the user list"
+            return HttpResponse("No Right")
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+        return render(request, 'order_query.html',context)

@@ -1,0 +1,81 @@
+{% extends "common/common.html" %}
+    {% block page-inner %}
+        <style>
+            button{
+                margin-bottom: 10px;
+            }
+        </style>
+        <div class="panel">
+            <div class="panel-heading">
+                <h3>工单查询</h3>
+                <hr/>
+            </div>
+
+            <div class="panel-body">
+                <form  role="form" id="sys_config" class="form-horizontal" action="" method="post" onsubmit="return false"  >
+                     {% csrf_token %}
+                    <div>
+                        <div>工单号</div>
+                        <input type="text" placeholder="url" id="or_num"/>
+                        <button id="submit">查询</button>
+                    </div>
+                </form>
+
+                    <table class="table table-striped table-condensed table-hover" style="padding: auto 35px;">
+                    <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>用户名</th>
+                            <th>管理员等级</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 15px;">
+                    {% if is_superuser %}
+                        {% for user in userSets %}
+                                 <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                     {% if user.user_level == 0 %}
+                                        <td>销售用户</td>
+                                     {% elif user.user_level == 1 %}
+                                         <td>超级用户</td>
+                                     {% else %}
+                                          <td>工厂用户</td>
+                                     {% endif %}
+                                    <td>
+                                        <a href="{% url 'adminbd:user_cloud' %}?id={{ user.id }}"
+                                            class="btn btn-white btn-sm btn-icon" style="height: 28px">
+                                           查看关联云平台
+                                        </a>
+                                    </td>
+                                 </tr>
+                        {% endfor %}
+                    {% else %}
+                        <th>暂无权限查看用户列表，请联系超级管理员</th>
+                    {% endif %}
+                    </tbody>
+                </table>
+             </div>
+        </div>
+
+    <script>
+    $(document).ready(function(){
+        $("#submit").click(function(){
+            var or_num =$.trim($("#sys_url").val());
+                $.ajax({
+                    url:"/adminbd/or_query",
+                    data: {or_num:or_num},
+                    type:"POST",
+                    success:function(data) {
+                        alert(data);
+                    },
+                    error:function(){
+                         ErrorWarning("服务器错误！");
+                    }
+            })
+        });
+
+    });
+    </script>
+    {% endblock %}
