@@ -130,7 +130,7 @@
                             <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx">博达code</label>
                             <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>
                         </div>
-                        <a class="col-sm-1 btn btn-turquoise" onclick="proCode()">生成</a>
+                        <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
@@ -202,24 +202,45 @@
         </div>
     </div>
     <script>
+{#        function proCode(){#}
+{#            var bdCode;#}
+{#            if($("#bd_code").is(":checked")){#}
+{#                bdCode='0';#}
+{#            }#}
+{#            if($("#zx_code").is(":checked")){#}
+{#                bdCode='1';#}
+{#            }#}
+{#            #}
+{#            $.get("{% url 'adminbd:add_license' %}",{'code_type':bdCode},function(code){#}
+{#                if($("#bd_code").is(":checked")){#}
+{#                    $(".create").val(code);#}
+{#                }#}
+{#                if($("#zx_code").is(":checked")){#}
+{#                    $(".create").val(code);#}
+{#                }#}
+{#                $("#license_code").attr("disabled","disabled").css('color','black');#}
+{#            })#}
+{##}
+{#        }#}
         function proCode(){
             var bdCode;
             if($("#bd_code").is(":checked")){
                 bdCode='0';
-            }
-            if($("#zx_code").is(":checked")){
+                $("#zx_code").attr('disabled','disabled');
+            }else if($("#zx_code").is(":checked")){
                 bdCode='1';
+                $("#bd_code").attr('disabled','disabled');
+            }else{
+                alert("请选择code类型!");
+                return;
             }
+            $("#create").css('display','none');
             $.get("{% url 'adminbd:add_license' %}",{'code_type':bdCode},function(code){
-                if($("#bd_code").is(":checked")){
-                    $(".create").val(code);
-                }
-                if($("#zx_code").is(":checked")){
-                    $(".create").val(code);
-                }
+                $(".create").val(code);
                 $("#license_code").attr("disabled","disabled").css('color','black');
             })
         }
+
     </script>
     <script>
     $(document).ready(function(){
