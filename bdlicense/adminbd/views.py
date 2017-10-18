@@ -150,17 +150,19 @@ def genZteCode():
     try:
         d_sn = ""
         print (str(value)).__len__()
-        i = (str(value)).__len__()
+        j = str(int(value)+1)
+        i = j.__len__()
+        print "i=%s"%i
         if i == 1:
-            d_sn = "0000"+str(int(value)+1)
+            d_sn = "0000"+j
         elif i == 2:
-            d_sn = "000"+str(int(value)+1)
+            d_sn = "000"+j
         elif i == 3:
-            d_sn = "00"+str(int(value)+1)
+            d_sn = "00"+j
         elif i == 4:
-            d_sn = "0"+str(int(value)+1)
+            d_sn = "0"+j
         else:
-            d_sn = str(int(value)+1)
+            d_sn = j
         print d_sn
         if d_sn.__len__() > 5:
             print "not format name"
@@ -187,7 +189,7 @@ def genZteCode():
     return False
 
 #license code 生成
-def genLicenseCode(code_type,*args):
+def genBdCode(code_type,*args):
     license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
     if license_coun.count() == 0:
         system_license = SystemConfig(attribute='bd_license_count',value="0")
@@ -241,9 +243,13 @@ class AddLicenseView(View):
 
         if request.is_ajax():
             print "in request.is_ajax() "
-            license_code = genLicenseCode("d")
-            # license_code = genZteCode()
-            context['code'] = license_code
+            code_type = request.GET.get('code_type','1')
+            license_code = ""
+            if code_type == "0":
+                license_code = genBdCode("d")
+            elif code_type == "1":
+                license_code = genZteCode()
+            # context['code'] = license_code
             # print "pro code=",license_code,context['code']
             return HttpResponse(license_code)
         return render(request, 'license_added.html',context)
