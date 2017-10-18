@@ -189,7 +189,7 @@ def genZteCode():
     return False
 
 #license code 生成
-def genBdCode(code_type,*args):
+def genBdCode(code_type):
     license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
     if license_coun.count() == 0:
         system_license = SystemConfig(attribute='bd_license_count',value="0")
@@ -207,10 +207,6 @@ def genBdCode(code_type,*args):
         print "d"
         code = "BCPLICD"+str(int(value)+1)
         print code
-    if "save_in" in args:
-        license_coun.update(value=str(int(value)+1))
-
-    print license_coun[0].value
     return code
 
 def genCloudNum(code_type):
@@ -229,8 +225,6 @@ class AddLicenseView(View):
         print "in add license get func"
 
         context = {}
-        # licenseTypes = LicenseType.objects.all()
-        # context['licenseTypes'] = licenseTypes
 
         licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
         context['licenseParams'] = licenseParams
@@ -249,8 +243,6 @@ class AddLicenseView(View):
                 license_code = genBdCode("d")
             elif code_type == "1":
                 license_code = genZteCode()
-            # context['code'] = license_code
-            # print "pro code=",license_code,context['code']
             return HttpResponse(license_code)
         return render(request, 'license_added.html',context)
 
@@ -268,11 +260,8 @@ class AddLicenseView(View):
         low_count = request.POST.get('low',0)
         mid_count = request.POST.get('medium',0)
         high_count = request.POST.get('high',0)
-        # print "low_count:"+low_count+"mid_count:"+mid_count+"high_count:"+high_count
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-        # print "data_license=",data_license
-        # print "charging_license=",charging_license
         uu = {}
         #one cloud has only one valid license
         if cloud_info:
@@ -336,11 +325,18 @@ class AddLicenseView(View):
                 license.licenseParam.add(hP)
 
             license.save()
-            print "save license"
-            license_coun = SystemConfig.objects.filter(attribute='license_count')
-            if license_coun.count() >0:
+            print "save license successfully"
+            if "ZTEKPBY" in license_code:
+                license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
+                value = int(license_code[10:])
+                license_coun.update(value=str(value))
+                print "save zte_license_count in system config table successfully"
+            elif "BCPLIC" in license_code:
+                license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+                # if license_coun.count() >0:
                 value = license_code.split("D")[1]
                 license_coun.update(value=value)
+                print "save bd_license_count in system config table successfully"
             result = 1
             uu = {'res':result}
             return JsonResponse(uu)
