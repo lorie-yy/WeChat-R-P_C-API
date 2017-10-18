@@ -203,7 +203,14 @@
     </div>
     <script>
         function proCode(){
-            $.get("{% url 'adminbd:add_license' %}",function(code){
+            var bdCode;
+            if($("#bd_code").is(":checked")){
+                bdCode='0';
+            }
+            if($("#zx_code").is(":checked")){
+                bdCode='1';
+            }
+            $.get("{% url 'adminbd:add_license' %}",{'code_type':bdCode},function(code){
                 if($("#bd_code").is(":checked")){
                     $(".create").val(code);
                 }
