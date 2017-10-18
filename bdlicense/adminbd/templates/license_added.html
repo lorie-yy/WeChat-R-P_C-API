@@ -9,6 +9,10 @@
             line-height: 30px;
             padding: 0;
         }
+        [type='radio']{
+            position: relative;
+            top: 2px;
+        }
         #fun_all{
             width: 280px;
             height: 34px;
@@ -105,105 +109,111 @@
            font-size: 13px;
         }
     </style>
-        <div id="cover" style=""></div>
-        <div class="panel">
-                <div class="panel-heading">
-                    <h3>添加license</h3>
-                    <hr/>
-                </div>
-                <div class="panel-body">
-                <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
-                     {% csrf_token %}
-                    <div class="form-horizontal" style="background-color: #fff;padding-bottom: 13px;">
-                        <div class="form-group" style="padding-top: 20px;margin-bottom: 0">
+    <div id="cover" style=""></div>
+    <div class="panel">
+            <div class="panel-heading">
+                <h3>添加license</h3>
+                <hr/>
+            </div>
+            <div class="panel-body">
+            <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
+                 {% csrf_token %}
+                <div class="form-horizontal" style="background-color: #fff;padding-bottom: 13px;">
+                    <div class="form-group" style="padding-top: 20px;margin-bottom: 0">
 
-                            <label class="col-sm-3 control-label" for="license_code" >license 码</label>
-                            <div class="col-sm-4" >
-                                <input placeholder="没有Code? 点击右侧按钮生成license码" value="" spellcheck="false" style="padding: 4px 0;" type="text" class="create" name="license_code" id="license_code" >
+                        <label class="col-sm-3 control-label" for="license_code" >license 码</label>
+                        <div class="col-sm-4" >
+                            <input placeholder="没有Code? 点击右侧按钮生成license码" value="" spellcheck="false" style="padding: 4px 0;margin-bottom: 0" type="text" class="create" name="license_code" id="license_code" >
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
-                            </div>
-                            <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>
+                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx">博达code</label>
+                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
-                            <div class="col-sm-4">
-                                <select onchange="" class="form-control" id="cloud_info" name="cloud_info" >
-                                    <option value="" disabled="" selected="">选择License对应云平台</option>
-                                    {% for cloudInfo in cloudInfos %}
-                                        <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                        <a class="col-sm-1 btn btn-turquoise" onclick="proCode()">生成</a>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
+                        <div class="col-sm-4">
+                            <select onchange="" class="form-control" id="cloud_info" name="cloud_info" >
+                                <option value="" disabled="" selected="">选择License对应云平台</option>
+                                {% for cloudInfo in cloudInfos %}
+                                    <option id="bao-month" value="{{ cloudInfo.id }}">{{ cloudInfo.cloudName }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
-                             <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
-                             <div class="col-sm-4" style="position: relative;">
-                                 <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
-                                        <option value="" disabled="" selected="">选择配置类型</option>
-                                     {% for  licenseParam in licenseParams%}
+                    </div>
+                    <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
+                         <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
+                         <div class="col-sm-4" style="position: relative;">
+                             <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
+                                    <option value="" disabled="" selected="">选择配置类型</option>
+                                 {% for  licenseParam in licenseParams%}
 {#                                         {% if licenseParam.id == 4 and username != "root" %}#}
 {#                                             <option value="1{{ licenseParam.id }}" style="display: none">{{ licenseParam.cloudRankName }}</option>#}
 {#                                         {% else %}#}
-                                     {% if licenseParam.id != 4 %}
-                                             <option value="1{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
-                                         {% endif %}
-                                     {% endfor %}
-                                 </select>
+                                 {% if licenseParam.id != 4 %}
+                                         <option value="1{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
+                                     {% endif %}
+                                 {% endfor %}
+                             </select>
 {#                             license配置增减功能#}
-                                 <div id="fun_all">
-                                     <button class="fun_addm">-</button>
-                                     <input type="text" id="fun_num" value="1"/>
-                                     <button class="fun_addm">+</button>
-                                     <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
-                                     <button class="fun_addm" style="width: 75px;">配置说明</button>
-                                     <div id="content">
-                                         <p style="text-align: center;margin-bottom: 0;font-weight: bold;height: 35px;line-height: 35px;">配置说明</p>
-                                         <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
-                                         <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
-                                         <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
-                                     </div>
+                             <div id="fun_all">
+                                 <button class="fun_addm">-</button>
+                                 <input type="text" id="fun_num" value="1"/>
+                                 <button class="fun_addm">+</button>
+                                 <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
+                                 <button class="fun_addm" style="width: 75px;">配置说明</button>
+                                 <div id="content">
+                                     <p style="text-align: center;margin-bottom: 0;font-weight: bold;height: 35px;line-height: 35px;">配置说明</p>
+                                     <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
+                                     <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
+                                     <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
                                  </div>
-                                <div id="article"></div>
                              </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" for="license_time" >License有效期</label>
-                            <div class="col-sm-4">
-                                <select class="form-control" id="license_time" name="license_time" >
-                                    <option value="" disabled="" selected="">选择License有效时间</option>
-                                        <option id="one" value="1">一年</option>
-                                        <option id="two" value="2">两年</option>
-                                        <option id="three" value="3">三年</option>
-                                        <option id="five" value="5">五年</option>
-                                </select>
-                            </div>
-                      </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label" >License功能</label>
-                            <label class="check_add"><input type="checkbox" value="4" id="shu_ju">大数据</label>
-                            <label class="check_add"><input type="checkbox" value="2" id="ji_fei">计费</label>
-                        </div>
-
-                        <div class="form-group">
-                            <a id="submit" class="btn btn-success" style="margin-left:50px;">提交</a>
-                            <a style="margin-right:50px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
-                        </div>
-
+                            <div id="article"></div>
+                         </div>
                     </div>
-                </form>
-            </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="license_time" >License有效期</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" id="license_time" name="license_time" >
+                                <option value="" disabled="" selected="">选择License有效时间</option>
+                                    <option id="one" value="1">一年</option>
+                                    <option id="two" value="2">两年</option>
+                                    <option id="three" value="3">三年</option>
+                                    <option id="five" value="5">五年</option>
+                            </select>
+                        </div>
+                  </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" >License功能</label>
+                        <label class="check_add"><input type="checkbox" value="4" id="shu_ju">大数据</label>
+                        <label class="check_add"><input type="checkbox" value="2" id="ji_fei">计费</label>
+                    </div>
+
+                    <div class="form-group">
+                        <a id="submit" class="btn btn-success" style="margin-left:50px;">提交</a>
+                        <a style="margin-right:50px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
+                    </div>
+
+                </div>
+            </form>
         </div>
-        <script>
-            function proCode(){
-                $.get("{% url 'adminbd:add_license' %}",function(code){
+    </div>
+    <script>
+        function proCode(){
+            $.get("{% url 'adminbd:add_license' %}",function(code){
+                if($("#bd_code").is(":checked")){
                     $(".create").val(code);
-                    $("#create").css("display","none");
-                    $("#license_code").attr("disabled","disabled").css('color','black');
-                })
+                }
+                if($("#zx_code").is(":checked")){
+                    $(".create").val(code);
+                }
+                $("#license_code").attr("disabled","disabled").css('color','black');
+            })
         }
-        </script>
+    </script>
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
