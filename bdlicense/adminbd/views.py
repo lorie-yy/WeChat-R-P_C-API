@@ -148,22 +148,24 @@ def genZteCode():
     value,res = SystemConfig.getAttrValue('zte_license_count')
     print type(value),res,int(value)
     try:
-        d_sn = ""
-        print (str(value)).__len__()
-        j = str(int(value)+1)
-        i = j.__len__()
-        print "i=%s"%i
-        if i == 1:
-            d_sn = "0000"+j
-        elif i == 2:
-            d_sn = "000"+j
-        elif i == 3:
-            d_sn = "00"+j
-        elif i == 4:
-            d_sn = "0"+j
-        else:
-            d_sn = j
+        # d_sn = ""
+        # print (str(value)).__len__()
+        # j = str(int(value)+1)
+        # i = j.__len__()
+        # print "i=%s"%i
+        # if i == 1:
+        #     d_sn = "0000"+j
+        # elif i == 2:
+        #     d_sn = "000"+j
+        # elif i == 3:
+        #     d_sn = "00"+j
+        # elif i == 4:
+        #     d_sn = "0"+j
+        # else:
+        #     d_sn = j
+        d_sn = (str(int(value)+1)).zfill(5)
         print d_sn
+
         if d_sn.__len__() > 5:
             print "not format name"
             return False
@@ -237,13 +239,19 @@ class AddLicenseView(View):
 
         if request.is_ajax():
             print "in request.is_ajax() "
-            code_type = request.GET.get('code_type','1')
+            code_type = request.GET.get('code_type')
             license_code = ""
             if code_type == "0":
                 license_code = genBdCode("d")
             elif code_type == "1":
                 license_code = genZteCode()
-            return HttpResponse(license_code)
+            else:
+                return HttpResponse("error!!!!")
+            #response code
+            if license_code:
+                return HttpResponse(license_code)
+            else:
+                return HttpResponse("error!!!!")
         return render(request, 'license_added.html',context)
 
     def post(self,request):
