@@ -125,6 +125,7 @@ class UserIndexView(View):
         context['user_level'] = user_level
         return render(request, 'user_list.html',context)
 
+#zte code
 def genZteCode():
     print "call genZteCode() fun"
 
@@ -148,21 +149,6 @@ def genZteCode():
     value,res = SystemConfig.getAttrValue('zte_license_count')
     print type(value),res,int(value)
     try:
-        # d_sn = ""
-        # print (str(value)).__len__()
-        # j = str(int(value)+1)
-        # i = j.__len__()
-        # print "i=%s"%i
-        # if i == 1:
-        #     d_sn = "0000"+j
-        # elif i == 2:
-        #     d_sn = "000"+j
-        # elif i == 3:
-        #     d_sn = "00"+j
-        # elif i == 4:
-        #     d_sn = "0"+j
-        # else:
-        #     d_sn = j
         d_sn = (str(int(value)+1)).zfill(5)
         print d_sn
 
@@ -171,6 +157,8 @@ def genZteCode():
             return False
         start_date = datetime.now().strftime("%Y-%m-%d")
         print start_date
+        print timezone.now()
+        print datetime.now()
         cur_str_time = start_date.split("-")
         y = cur_str_time[0]
         m = cur_str_time[1]
@@ -181,6 +169,7 @@ def genZteCode():
         m_value = month_context.get(m)
         d_value = day_context.get(d)
         print y_value,m_value,d_value
+
         if y_value and m_value and d_value:
             print "ZTEKPBY"+str(y_value)+str(m_value)+str(d_value)+d_sn
             return "ZTEKPBY"+str(y_value)+str(m_value)+str(d_value)+d_sn
@@ -190,7 +179,7 @@ def genZteCode():
         print e
     return False
 
-#license code 生成
+#bd code 生成
 def genBdCode(code_type):
     license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
     if license_coun.count() == 0:
@@ -198,17 +187,9 @@ def genBdCode(code_type):
         system_license.save()
     value,res = SystemConfig.getAttrValue('bd_license_count')
     print type(value),res,int(value)
-    code = ""
-    if code_type == "f":
-        #工厂code
-        print "f"
-        code = "BCPLICF"+str(int(value)+1)
-        print code
-    elif code_type == "d":
-        #root用户code
-        print "d"
-        code = "BCPLICD"+str(int(value)+1)
-        print code
+    code = "BCPLIC"+str(code_type)+str(int(value)+1)
+    print code
+
     return code
 
 def genCloudNum(code_type):
@@ -242,7 +223,7 @@ class AddLicenseView(View):
             code_type = request.GET.get('code_type')
             license_code = ""
             if code_type == "0":
-                license_code = genBdCode("d")
+                license_code = genBdCode("D")
             elif code_type == "1":
                 license_code = genZteCode()
             else:
