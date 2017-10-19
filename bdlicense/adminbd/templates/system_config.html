@@ -1,0 +1,55 @@
+{% extends "common/common.html" %}
+    {% block page-inner %}
+        <style>
+            button{
+                margin: auto 10px;
+            }
+        </style>
+        <div class="panel">
+            <div class="panel-heading">
+                <h3>订单系统</h3>
+                <hr/>
+            </div>
+
+            <div class="panel-body">
+                <form  role="form" id="sys_config" class="form-horizontal" action="" method="post" onsubmit="return false"  >
+                     {% csrf_token %}
+                    <div>
+                        <div>订单系统URL</div>
+                        <input type="text" placeholder="url" id="sys_url"/>
+                        <button class="right" id="submit">确认</button>
+                        <button class="right" id="change">修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    <script>
+    $(document).ready(function(){
+        $("#submit").click(function(){
+            var sys_url =$.trim($("#sys_url").val());
+{#                $.get("/adminbd/sys_config",function(data){#}
+{#                    #}
+{#                });#}
+{#                $.post("/adminbd/sys_config",{#}
+{#                    name:"...",#}
+{#                    url:"..."#}
+{#                },function(data){#}
+{#                    #}
+{#                });#}
+                $.ajax({
+                     url:"/adminbd/sys_config",
+                     data: {sys_url:sys_url},
+                     type:"POST",
+                     success:function(data) {
+                         alert(data);
+                     },
+                    error:function(){
+                         ErrorWarning("服务器错误！");
+                    }
+                })
+        });
+
+    });
+    </script>
+    {% endblock %}

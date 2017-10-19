@@ -145,9 +145,16 @@
                 <li>
                     <a class="waves-effect waves-dark" href="/adminbd/index"><i class="fa fa-dashboard"></i> License列表</a>
                 </li>
+                <li>
+                    <a class="waves-effect waves-dark" href="/adminbd/or_query"><i class="fa fa-search"></i> 工单查询</a>
+                </li>
+
                 {% if is_superuser %}
                     <li>
                         <a class="waves-effect waves-dark" href="/adminbd/user_list"><i class="fa fa-user"></i> 用户列表</a>
+                    </li>
+                    <li>
+                        <a class="waves-effect waves-dark" href="/adminbd/sys_config"><i class="fa fa-cogs"></i> 系统配置</a>
                     </li>
                 {% endif %}
             </ul>

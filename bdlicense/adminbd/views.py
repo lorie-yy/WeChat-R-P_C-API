@@ -14,6 +14,7 @@ import string
 import time
 from django.utils import timezone
 import pytz
+from adminbd.models import SystemConfig
 # Create your views here.
 
 
@@ -124,6 +125,79 @@ class UserIndexView(View):
         context['user_level'] = user_level
         return render(request, 'user_list.html',context)
 
+#zte code
+def genZteCode():
+    print "call genZteCode() fun"
+
+    year_context = {"2010":"A","2011":"B","2012":"C","2013":"D","2014":"E","2015":"F","2016":"G",
+                    "2017":"H","2018":"J","2019":"K","2020":"L","2021":"M","2022":"N","2023":"P",
+                    "2024":"Q","2025":"R","2026":"T","2027":"U","2028":"V","2029":"W","2030":"X",
+                    "2031":"Y"}
+    month_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+                     "10":"A","11":"B","12":"C"}
+
+    day_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+                     "10":"A","11":"B","12":"C","13":"D","14":"E","15":"F","16":"G","17":"H",
+                   "18":"I","19":"J","20":"K","21":"L","22":"M","23":"N","24":"O","25":"P",
+                   "26":"Q","27":"R","28":"S","29":"T","30":"U","31":"V"
+                   }
+
+    license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
+    if license_coun.count() == 0:
+        system_license = SystemConfig(attribute='zte_license_count',value="0")
+        system_license.save()
+    value,res = SystemConfig.getAttrValue('zte_license_count')
+    print type(value),res,int(value)
+    try:
+        d_sn = (str(int(value)+1)).zfill(5)
+        print d_sn
+
+        if d_sn.__len__() > 5:
+            print "not format name"
+            return False
+        start_date = datetime.now().strftime("%Y-%m-%d")
+        print start_date
+        print timezone.now()
+        print datetime.now()
+        cur_str_time = start_date.split("-")
+        y = cur_str_time[0]
+        m = cur_str_time[1]
+        d = cur_str_time[2]
+        print y,m,d,type(y)
+
+        y_value = year_context.get(y)
+        m_value = month_context.get(m)
+        d_value = day_context.get(d)
+        print y_value,m_value,d_value
+
+        if y_value and m_value and d_value:
+            print "ZTEKPBY"+str(y_value)+str(m_value)+str(d_value)+d_sn
+            return "ZTEKPBY"+str(y_value)+str(m_value)+str(d_value)+d_sn
+        else:
+            return False
+    except Exception,e:
+        print e
+    return False
+
+#bd code 生成
+def genBdCode(code_type):
+    license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+    if license_coun.count() == 0:
+        system_license = SystemConfig(attribute='bd_license_count',value="0")
+        system_license.save()
+    value,res = SystemConfig.getAttrValue('bd_license_count')
+    print type(value),res,int(value)
+    code = "BCPLIC"+str(code_type)+str(int(value)+1)
+    print code
+
+    return code
+
+def genCloudNum(code_type):
+    timestamp = str(int(time.time()))
+    nonce = ''.join(random.sample(string.digits,6))
+    code = code_type+timestamp+nonce
+    return code
+
 class AddLicenseView(View):
     def get(self,request):
         username = request.session.get('username')
@@ -134,8 +208,6 @@ class AddLicenseView(View):
         print "in add license get func"
 
         context = {}
-        # licenseTypes = LicenseType.objects.all()
-        # context['licenseTypes'] = licenseTypes
 
         licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
         context['licenseParams'] = licenseParams
@@ -147,11 +219,20 @@ class AddLicenseView(View):
         context['user_level'] = user_level
 
         if request.is_ajax():
-            license_code = genLicenseCode("BUSS")
-            context['code'] = license_code
-            print "pro code=",license_code,context['code']
-            return HttpResponse(license_code)
-            # return JsonResponse({"code":license_code})
+            print "in request.is_ajax() "
+            code_type = request.GET.get('code_type')
+            license_code = ""
+            if code_type == "0":
+                license_code = genBdCode("D")
+            elif code_type == "1":
+                license_code = genZteCode()
+            else:
+                return HttpResponse("error!!!!")
+            #response code
+            if license_code:
+                return HttpResponse(license_code)
+            else:
+                return HttpResponse("error!!!!")
         return render(request, 'license_added.html',context)
 
     def post(self,request):
@@ -168,11 +249,8 @@ class AddLicenseView(View):
         low_count = request.POST.get('low',0)
         mid_count = request.POST.get('medium',0)
         high_count = request.POST.get('high',0)
-        # print "low_count:"+low_count+"mid_count:"+mid_count+"high_count:"+high_count
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-        # print "data_license=",data_license
-        # print "charging_license=",charging_license
         uu = {}
         #one cloud has only one valid license
         if cloud_info:
@@ -236,7 +314,18 @@ class AddLicenseView(View):
                 license.licenseParam.add(hP)
 
             license.save()
-            print "save license"
+            print "save license successfully"
+            if "ZTEKPBY" in license_code:
+                license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
+                value = int(license_code[10:])
+                license_coun.update(value=str(value))
+                print "save zte_license_count in system config table successfully"
+            elif "BCPLIC" in license_code:
+                license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+                # if license_coun.count() >0:
+                value = license_code.split("D")[1]
+                license_coun.update(value=value)
+                print "save bd_license_count in system config table successfully"
             result = 1
             uu = {'res':result}
             return JsonResponse(uu)
@@ -404,7 +493,7 @@ class AddCloudView(View):
             cloudinfo.buyer = cloud_buyer
             cloudinfo.contacts = contacts
             cloudinfo.phone = phone
-            cloud_num = genLicenseCode("BUSS")
+            cloud_num = genCloudNum("BUSS")
             cloudinfo.cloudNum = cloud_num
             cloudinfo.save()
             if cloud_user_id:
@@ -728,13 +817,6 @@ def getRandom16Num():
     timestamp = str(int(time.time()))
     nonce = ''.join(random.sample(string.digits,6))
     return  (timestamp+nonce)
-
-#license code 生成
-def genLicenseCode(code_type):
-    timestamp = str(int(time.time()))
-    nonce = ''.join(random.sample(string.digits,6))
-    code = code_type+timestamp+nonce
-    return code
 
 class RegisterLicenseView(View):
     def get(self,request):
@@ -1114,3 +1196,47 @@ class Modify_license(View):
             return JsonResponse({"result":1})
         else:
             return JsonResponse({"result":0})
+
+class sys_config(View):
+    def get(self, request):
+        print "in IndexYunView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        context = {}
+        if is_superuser:
+            userSets = User.objects.all()
+            context['userSets'] = userSets
+        else:
+            print "not superuser,no right to display the user list"
+            return HttpResponse("No Right")
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+        return render(request, 'system_config.html',context)
+
+class or_query(View):
+    def get(self, request):
+        print "in IndexYunView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        context = {}
+        if is_superuser:
+            userSets = User.objects.all()
+            context['userSets'] = userSets
+        else:
+            print "not superuser,no right to display the user list"
+            return HttpResponse("No Right")
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+        return render(request, 'order_query.html',context)
