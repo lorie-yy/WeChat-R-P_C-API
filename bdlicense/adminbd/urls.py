@@ -31,4 +31,6 @@ urlpatterns = patterns(
     url(r'^download_license_client_file',views.download_license_file, name='download_license_client_file'),
     url(r'^download_license_usage_file',views.download_hlep_usage_file, name='download_license_usage_file'),
     url(r'^work_order',views.get_work_order_info, name='work_order'),
+    url(r'^sys_config',views.sys_config.as_view(), name='sys_config'),
+    url(r'^or_query',views.or_query.as_view(), name='or_query'),
 )

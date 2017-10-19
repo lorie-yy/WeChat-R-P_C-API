@@ -83,3 +83,25 @@ class LicenseRecord(models.Model):
     build_time = models.DateTimeField(auto_now_add=True)
     expire_time = models.DateTimeField('过期时间', blank=True, null=True)
 
+class SystemConfig(models.Model):
+    id = models.AutoField(primary_key=True)
+    attribute = models.CharField(max_length=64, db_index=True, unique=True)
+    value = models.CharField(max_length=253)
+    description = models.CharField(max_length=253, blank=True, null = True)
+
+    class Meta:
+        managed = True
+        db_table = 'system_config'
+
+    def __unicode__(self):
+        return u'%s = %s, %s ' % (self.attribute, self.value, self.description)
+
+    @staticmethod
+    def getAttrValue(_attr):
+        records = SystemConfig.objects.filter(attribute=_attr)
+        if records.count() == 1:
+            return records[0].value, True
+        else:
+            # error: miss the configuration
+            print ("attribute %s doesn't exist in system_config table \n" % (_attr))
+            return '', False
