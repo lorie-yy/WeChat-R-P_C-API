@@ -727,46 +727,73 @@ def get_work_order_info(request):
     result = {}
     work_no = request.GET.get('work_no', "")
 
-    order_server_ip = '192.168.1.83'
-    order_server_port = '8002'
-    user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
-    client=Client(user_url)      #Client里面直接放访问的URL，可以生成一个webservice对象
+    # order_server_ip = '192.168.1.83'
+    # order_server_port = '8002'
+    # user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
+    # client=Client(user_url)
+    #
+    # os_ids = ['BCP8200-OS-STD']
+    # license_ids = ['BCP8200-Lic-64', 'BCP8200-Lic-128']
+    # rst_dict = {'os_info':[], 'license_info':[]}
+    #
+    # line_list = [3,11]
+    # for each in line_list:
+    #     print work_no
+    #     result=client.service.loadOrderInfoByNoiCloud(work_no, each)
+    #
+    #     result = json.loads(result)
+    #     details =  result['details']
+    #
+    #     tmp_dict = {}
+    #     if details['productType'] in os_ids:
+    #         tmp_dict['productType'] = details['productType']
+    #         tmp_dict['sumNo'] = details['sumNo']
+    #
+    #         rst_dict['os_info'].append(tmp_dict)
+    #     elif details['productType'] in license_ids:
+    #         tmp_dict['productType'] = details['productType']
+    #         tmp_dict['sumNo'] = details['sumNo']
+    #
+    #         rst_dict['license_info'].append(tmp_dict)
+    #     else:
+    #         continue
+    #
+    # print rst_dict
 
-    print (client)
-    # result=client.service.loadOrderInfoByNoiCloud("SC20170915302")
-    #result=client.service.loadOrderInfoByNoiCloud("SC20170928001", '3')
+    rst_dict = {'license_info': [{'sumNo': 1, 'productType': u'BCP8200-Lic-64'},{'sumNo': 2, 'productType': u'BCP8200-Lic-128'}], 'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]}
 
-    os_ids = ['BCP8200-OS-STD']
-    license_ids = ['BCP8200-Lic-64', 'BCP8200-Lic-128']
-    rst_dict = {'os_info':[], 'license_info':[]}
+    lic_info = LicenseParams.objects.all()
 
-    line_list = [3,11]
-    for each in line_list:
-        print "111111111111"
-        print work_no
+    basic_lic_dict = {}
+    for each in lic_info:
+        basic_lic_dict[each.cloudRankName] = [each.maxAPs, each.maxACs,each.maxUsers]
+
+    print basic_lic_dict
+
+    maxAPs = 0
+    maxACs = 0
+    maxUser = 0
+
+    for each in rst_dict['license_info']:
         print each
-        result=client.service.loadOrderInfoByNoiCloud(work_no, each)
+        if each['productType'] in basic_lic_dict.keys():
+            print each['sumNo']
+            print each['productType']
+            print basic_lic_dict[each['productType']]
 
-        result = json.loads(result)
-        details =  result['details']
+            print maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
 
-        print "222222222222222222"
-        tmp_dict = {}
-        if details['productType'] in os_ids:
-            tmp_dict['productType'] = details['productType']
-            tmp_dict['sumNo'] = details['sumNo']
+            maxAPs = maxAPs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][0])
+            maxACs = maxACs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][1])
+            maxUser = maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
 
-            rst_dict['os_info'].append(tmp_dict)
-        elif details['productType'] in license_ids:
-            tmp_dict['productType'] = details['productType']
-            tmp_dict['sumNo'] = details['sumNo']
+    rst_dict['max_ap_allowed'] = maxAPs
+    rst_dict['max_ac_allowed'] = maxACs
+    rst_dict['max_user_allowed'] = maxUser
 
-            rst_dict['license_info'].append(tmp_dict)
-        else:
-            continue
-
-    print result
     print rst_dict
+
+
     return JsonResponse(rst_dict)
 
 class ActivateLicenseView(View):
