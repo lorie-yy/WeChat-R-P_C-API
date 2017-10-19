@@ -14,6 +14,7 @@ import string
 import time
 from django.utils import timezone
 import pytz
+import json
 # Create your views here.
 
 
@@ -629,6 +630,55 @@ class UpdateKeyIDView(View):
         licenses.update(license_status=LicenseRecord.OPEN)
         print "license status updated successfully"
         return HttpResponse("OK")
+
+def get_work_order_info(request):
+    from suds import WebFault
+    from suds.client import Client
+
+    result = {}
+    work_no = request.GET.get('work_no', "")
+
+    order_server_ip = '192.168.1.83'
+    order_server_port = '8002'
+    user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
+    client=Client(user_url)      #Client里面直接放访问的URL，可以生成一个webservice对象
+
+    print (client)
+    # result=client.service.loadOrderInfoByNoiCloud("SC20170915302")
+    #result=client.service.loadOrderInfoByNoiCloud("SC20170928001", '3')
+
+    os_ids = ['BCP8200-OS-STD']
+    license_ids = ['BCP8200-Lic-64', 'BCP8200-Lic-128']
+    rst_dict = {'os_info':[], 'license_info':[]}
+
+    line_list = [3,11]
+    for each in line_list:
+        print "111111111111"
+        print work_no
+        print each
+        result=client.service.loadOrderInfoByNoiCloud(work_no, each)
+
+        result = json.loads(result)
+        details =  result['details']
+
+        print "222222222222222222"
+        tmp_dict = {}
+        if details['productType'] in os_ids:
+            tmp_dict['productType'] = details['productType']
+            tmp_dict['sumNo'] = details['sumNo']
+
+            rst_dict['os_info'].append(tmp_dict)
+        elif details['productType'] in license_ids:
+            tmp_dict['productType'] = details['productType']
+            tmp_dict['sumNo'] = details['sumNo']
+
+            rst_dict['license_info'].append(tmp_dict)
+        else:
+            continue
+
+    print result
+    print rst_dict
+    return JsonResponse(rst_dict)
 
 class ActivateLicenseView(View):
     def get(self,request):

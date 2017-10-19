@@ -30,4 +30,5 @@ urlpatterns = patterns(
     url(r'^license_reset_result',views.LicenseResetResultView.as_view(), name='license_reset_result'),
     url(r'^download_license_client_file',views.download_license_file, name='download_license_client_file'),
     url(r'^download_license_usage_file',views.download_hlep_usage_file, name='download_license_usage_file'),
+    url(r'^work_order',views.get_work_order_info, name='work_order'),
 )

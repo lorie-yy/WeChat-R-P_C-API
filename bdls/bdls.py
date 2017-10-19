@@ -202,10 +202,15 @@ class LicenseManager:
         self.expireTimeEntry.grid(row=8, column=1)
         self.expireTimeEntry.configure(state=DISABLED)
 
+        self.readButton = Button(self.frame2)
+        self.readButton["text"] = u"读取ukey信息"
+        self.readButton["command"] = self.readUkeyInfo
+        self.readButton.grid(row=9, column=0, padx=30,pady=5, sticky=SW)
 
         self.getButton = Button(self.frame2)
-        self.getButton["text"] = u"验证"
-        self.getButton["command"] = self.getVersionINfo
+        self.getButton["text"] = u"查询信息"
+        # self.getButton["command"] = self.getVersionINfo
+        self.getButton["command"] = self.checkWorkOrderInfo
         self.getButton.grid(row=9, column=1, padx=30,pady=5, sticky=SW)
         self.submitButton = Button(self.frame2)
         self.submitButton["text"] = u"写入"
@@ -266,9 +271,43 @@ class LicenseManager:
         self.text.insert(END, msg)
         self.text.configure(state=DISABLED)
 
+    def readUkeyInfo(self):
+        KEY_INFO = self.getDataFromKey()
+        self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
+        if self.key_id == "":
+            time.sleep(3)
+            KEY_INFO = LicenseLib.getUsbKeyContent()
+            self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
+            if self.key_id == "":
+                self.writeMessage(u'[错误] 没有读取到USB Key信息，请检查USB Key是否插好')
+                return
+
+    def checkWorkOrderInfo(self):
+        self.work_no =  self.workNoEntry.get()
+
+        work_info = getWorkOrderInfo(self.license_server, self.port, self.work_no)
+        print work_info
+
+        os_info_list = work_info['os_info']
+        license_info_list = work_info['license_info']
+
+
+        if len(os_info_list) > 1:
+            msg = u"非法的OS工单"
+
+        msg = u"\nOS: %s   %s\n" % (os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', ""))
+
+        for each in license_info_list:
+            msg = msg + "%s\t%s" % (each.get('productType',""), each.get('sumNo', ""))
+
+        self.writeMessage(msg)
+
+
+
+
     def getVersionINfo(self):
         self.license_code =  self.oneEntry.get()
-        self.work_no =  self.workNoEntry.get()
+
 
         if self.login_user == 'root':
             if self.license_code == '':
@@ -284,15 +323,15 @@ class LicenseManager:
 
         self.InitSystem()
 
-        KEY_INFO = self.getDataFromKey()
-        self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
-        if self.key_id == "":
-            time.sleep(3)
-            KEY_INFO = LicenseLib.getUsbKeyContent()
-            self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
-            if self.key_id == "":
-                self.writeMessage(u'[错误] 没有读取到USB Key信息，请检查USB Key是否插好')
-                return
+        # KEY_INFO = self.getDataFromKey()
+        # self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
+        # if self.key_id == "":
+        #     time.sleep(3)
+        #     KEY_INFO = LicenseLib.getUsbKeyContent()
+        #     self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
+        #     if self.key_id == "":
+        #         self.writeMessage(u'[错误] 没有读取到USB Key信息，请检查USB Key是否插好')
+        #         return
 
         self.keyEntry.configure(state=NORMAL)
         self.keyEntry.delete('0', END)
@@ -684,6 +723,19 @@ def getLicenseInfo(ip, port, key_id, license_code,work_no):
     connection_str = connection_str + 'key_id=' + key_id
     connection_str = connection_str + '&license_code=' + license_code
     connection_str = connection_str + '&work_no=' + work_no
+
+    f = urllib2.urlopen(connection_str)
+    response = f.read()
+
+    info_dict = {}
+    info_dict = json.JSONDecoder().decode(response)
+
+    return info_dict
+
+def getWorkOrderInfo(ip, port,work_order_id):
+    connection_str='http://%s:%s/adminbd/work_order?'% (ip, port)
+    connection_str = connection_str + '&work_no=' + work_order_id
+    print connection_str
 
     f = urllib2.urlopen(connection_str)
     response = f.read()
