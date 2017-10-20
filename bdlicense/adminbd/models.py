@@ -71,17 +71,30 @@ class LicenseRecord(models.Model):
     discription = models.CharField('云平台信息描述',max_length=255, default="")
     license_code = models.CharField(max_length=255, null=False, blank=False)
     license_status = models.IntegerField(choices=LicenseStatusChoices,verbose_name='license状态',default=0)#0:close;1:open
-    low_counts = models.IntegerField(null=True,default=0)
-    mid_counts = models.IntegerField(null=True,default=0)
-    high_counts = models.IntegerField(null=True,default=0)
+    # low_counts = models.IntegerField(null=True,default=0)
+    # mid_counts = models.IntegerField(null=True,default=0)
+    # high_counts = models.IntegerField(null=True,default=0)
+    maxAps = models.IntegerField(null=True,default=0)
+    maxAcs = models.IntegerField(null=True,default=0)
+    maxUsers = models.IntegerField(null=True,default=0)
     is_valid = models.IntegerField(null=True,default=1)#0:无效；1:有效,2:已注册
     is_reset = models.IntegerField(null=True,default=1)#0:重置的license；1:未重置过
     random_num = models.CharField(max_length=16,null=True,default='')#license对应的随机数
-    licenseType= models.ForeignKey(LicenseType)
+    # licenseType= models.ForeignKey(LicenseType)
+    licenseType= models.CharField(max_length=255, null=True, blank=False,default='1')
     licenseParam = models.ManyToManyField(LicenseParams,default=None, null=True)
     cloudInfo = models.ForeignKey(CloudInformation)
     build_time = models.DateTimeField(auto_now_add=True)
     expire_time = models.DateTimeField('过期时间', blank=True, null=True)
+    workOrder = models.CharField(max_length=255, null=True, blank=False,default='')
+
+class WorkOrder(models.Model):
+    id = models.AutoField(primary_key=True)
+    materiel_name = models.CharField(max_length=255, null=True, blank=False,default='')
+    materiel_count = models.CharField(max_length=255, null=True, blank=False,default='')
+    workorder = models.ForeignKey(LicenseRecord)
+    # params = models.ForeignKey(LicenseParams)
+
 
 class SystemConfig(models.Model):
     id = models.AutoField(primary_key=True)

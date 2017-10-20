@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
-from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicenseParams
+from adminbd.models import LicenseRecord,CloudInformation,LicenseType,LicenseParams,WorkOrder
 from datetime import datetime
 import os.path
 import logging
@@ -790,6 +790,132 @@ def get_work_order_info(request):
     rst_dict['max_ap_allowed'] = maxAPs
     rst_dict['max_ac_allowed'] = maxACs
     rst_dict['max_user_allowed'] = maxUser
+
+    license_code = ''
+    code_type = ''
+    license_type = ''#例如，1：基本版本，4：大数据版本,2：计费版本（3：基本+计费，5：基本+大数据，7：基本+计费+大数据）
+    license_time = ''#license 有效期，比如1,2,3,5单位：年
+
+    #format expire time
+    cur_time = datetime.now()
+    print cur_time
+    cur_year = cur_time.year
+    fut_year = cur_year+int(license_time)
+    cur_time = cur_time.replace(year=fut_year)
+    print cur_time
+    rst_dict['license_expire_time'] = cur_time
+
+    if license_code == '':
+        #第一次验证激活
+
+        #1.云平台的管理员（即服务器保存的用户名密码，只有提供用户名，才能登陆，才能查看自己云平台以及license的相关信息）
+        #2.云平台的相关信息（云平台管理员必须有，其次云平台编号：暂时自己生成。其他包括名称、购买方、安装地址、联系人、联系电话可有可无）
+        #3.license相关信息（工单号、key_id、code、status、valid、reset、random_num、type、params、云平台、过期时间
+        #   maxaps,maxacs,maxusers ）
+
+        #管理员添加的相关操作
+        username = ''
+        contactor = ''
+        phone = ''
+        userObj = User.objects.filter(username=username)
+        uId = 0
+        if userObj.count() > 0:
+            uId = userObj[0].id
+        else:
+            user = User.objects.create_user(username=username,password="123456")
+            print "create new user and inital pwd is 123456"
+            print user
+            # if super_user == 1:
+            #     user.is_superuser = 1
+            # else:
+            user.is_superuser = 0
+            user.user_level = 0
+            user.is_staff = 1
+            user.is_active = 1
+            user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+            if contactor:
+                user.contacts = contactor
+            if phone:
+                user.phone_num = phone
+            uId = user.id
+
+        #云平台的相关操作
+        cloud_name = ''
+        install_add = ''
+        cloud_buyer = ''
+        contacts = ''
+        #以上参数可有可无
+        cloudInfo = CloudInformation()
+        userObj = User.objects.get(id=int(uId))
+        cloudInfo.cloudUser.add(userObj)
+        cloudInfo.cloudName = cloud_name
+        cloudInfo.installAddress = install_add
+        cloudInfo.buyer = cloud_buyer
+        cloudInfo.contacts = contacts
+        cloudInfo.phone = phone
+        cloud_num = genCloudNum("BUSS")
+        cloudInfo.cloudNum = cloud_num
+        cloudInfo.save()
+
+        #license相关操作
+        if code_type == 'bdcode':
+            license_code = genBdCode('F')
+        elif code_type == 'ztecode':
+            license_code = genZteCode()
+
+
+        licenseObj = LicenseRecord()
+        licenseObj.license_code = license_code
+        # licenseObj.workorder_set = work_no #该license对应的工单号
+        licenseObj.license_type = int(license_type)#表示该license的功能
+        licenseObj.cloudInfo_id = cloudInfo.id
+        licenseObj.expire_time = cur_time
+        licenseObj.maxAps = maxAPs #该license支持的最大AP
+        licenseObj.maxAcs = maxACs#该license支持的最大AC
+        licenseObj.maxUsers = maxUser#该license支持的最大User
+        licenseObj.save()
+
+        #工单表的相关操作
+        for each in rst_dict['license_info']:
+            # WorkOrder.objects.filter(materiel_name=each['productType'])
+            woObj = WorkOrder()
+            woObj.materiel_name = each['productType']
+            woObj.materiel_count = each['sumNo']
+            woObj.workorder_id = licenseObj.workOrder
+            woObj.save()
+
+        rst_dict['license_code'] = license_code
+    else:
+        #扩容或者增加功能
+
+        #工单号信息
+        # rst_dict = {'license_info': [{'sumNo': 1, 'productType': u'BCP8200-Lic-64'},
+        #                               {'sumNo': 2, 'productType': u'BCP8200-Lic-128'}],
+        #               'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]
+        #           }
+
+        licenseObj = LicenseRecord.objects.filter(license_code=license_code)
+        licenseObj.update(maxAps = maxAPs,maxAcs=maxACs,maxUsers=maxUser,licenseType=int(license_type))
+        workorders = licenseObj[0].wordOrder_set.all()
+
+        materiel_name = []
+        for workorder in workorders:
+            materiel_name.append(workorder.materiel_name)
+
+        for workorder in workorders:
+            for each in rst_dict['license_info']:
+                if each['productType'] in materiel_name:
+                    if each['productType'] == workorder.materiel_name:
+                        workorder.materiel_count = each['sumNo']
+                        workorder.save()
+                else:
+                    woObj = WorkOrder()
+                    woObj.materiel_name = each['productType']
+                    woObj.materiel_count = each['sumNo']
+                    woObj.workorder_id = licenseObj.workOrder
+                    woObj.save()
+
+        rst_dict['license_code'] = license_code
 
     print rst_dict
 
