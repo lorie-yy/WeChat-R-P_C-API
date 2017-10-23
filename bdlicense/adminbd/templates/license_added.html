@@ -48,12 +48,12 @@
             color: #fff;
         }
         #content{
-            width: 320px;
-            height: 178px;
+            width: 340px;
+            height: 240px;
             position: fixed;
             top: 50%; left: 50%;
-            margin-left: -160px;
-            margin-top: -109px;
+            margin-left: -170px;
+            margin-top: -190px;
             display: none;
             background: floralwhite;
             z-index: 99;
@@ -65,7 +65,7 @@
         }
         .alert{
             text-align: center;
-            padding: 10px 0;
+            padding: 7px 0;
             margin-bottom: 0;
         }
         #cover{
@@ -146,7 +146,7 @@
                     <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
                          <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
                          <div class="col-sm-4" style="position: relative;">
-                             <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
+                             <select class="form-control" id="funcSet" name="funcSet" >
                                     <option value="" disabled="" selected="">选择配置类型</option>
                                  {% for  licenseParam in licenseParams%}
 {#                                         {% if licenseParam.id == 4 and username != "root" %}#}
@@ -166,9 +166,11 @@
                                  <button class="fun_addm" style="width: 75px;">配置说明</button>
                                  <div id="content">
                                      <p style="text-align: center;margin-bottom: 0;font-weight: bold;height: 35px;line-height: 35px;">配置说明</p>
-                                     <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
-                                     <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
-                                     <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
+                                     <p class="alert alert-warning">最低配--32个AP，1个AC授权</p>
+                                     <p class="alert alert-info">低配--64个AP，1个AC授权</p>
+                                     <p class="alert alert-success" >中配--128，1个AC授权</p>
+                                     <p class="alert alert-info">高配--512，2个AC授权</p>
+                                     <p class="alert alert-danger">最高配--1024个AP，4个AC授权</p>
                                  </div>
                              </div>
                             <div id="article"></div>
@@ -245,7 +247,7 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,low=0,medium=0,high=0;
+        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,lower= 0,low=0,medium=0,high= 0,higher=0;
         $('.fun_addm').eq(0).click(function(){
             license_num =$.trim($('#fun_num').val());
             if(license_num==0){
@@ -259,13 +261,19 @@
         });
         $('.fun_addm').eq(2).click(function(){
             if($("[value='11']").is(":selected")){
-                low =$.trim($('#fun_num').val());
+                lower =$.trim($('#fun_num').val());
             }else if($("[value='12']").is(":selected")){
-                medium =$.trim($('#fun_num').val());
+                low =$.trim($('#fun_num').val());
             }else if($("[value='13']").is(":selected")){
+                medium =$.trim($('#fun_num').val());
+            }else if($("[value='14']").is(":selected")){
                 high =$.trim($('#fun_num').val());
+            }else if($("[value='15']").is(":selected")){
+                higher =$.trim($('#fun_num').val());
+            }else{
+                return ;
             }
-            $("#article").text("低配："+low+"个 中配："+medium+"个 高配："+high+"个");
+            $("#article").text("最低配："+lower+"个;  低配："+low+"个;  中配："+medium+"个;  高配："+high+"个;  最高配："+higher+"个");
 {#            alert(low+"A"+medium+"B"+high+"C");#}
         });
 
@@ -307,7 +315,7 @@
                 AlarmWarning("请选择配置类型!",btnSn);
             }else if(!license_time){
                 AlarmWarning("请选择license有效时间!",btnSn);
-            }else if(low==0 && medium == 0 && high == 0){
+            }else if(lower==0 && low==0 && medium == 0 && high == 0 && higher == 0){
                 AlarmWarning("请选择配置个数并点击确认!")
             }
             else{
@@ -315,7 +323,7 @@
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
-                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,low:low,medium:medium,high:high,license_time:license_time,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,lower:lower,low:low,medium:medium,high:high,higher:higher,license_time:license_time,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 1){
