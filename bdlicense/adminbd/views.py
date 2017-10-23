@@ -211,6 +211,7 @@ class AddLicenseView(View):
         context = {}
 
         licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
+        print "licenseParams count",licenseParams.count()
         context['licenseParams'] = licenseParams
 
         cloudInfos = CloudInformation.objects.exclude(cloudName = "")
@@ -629,34 +630,47 @@ class KeyParamsView(View):
         try:
             if key_id is not None:
                 licenseObj = LicenseRecord.objects.get(id=key_id)
-                paramsObjs = licenseObj.licenseParam.all()
-                print "paramsObjs.counts",paramsObjs.count()
-                aps = 0
-                acs = 0
-                for paramsObj in paramsObjs:
-                    if paramsObj.id == 1:
-                        print licenseObj.low_counts
-                        print paramsObj.maxAPs
-                        print paramsObj.maxAPs*licenseObj.low_counts
-                        aps += paramsObj.maxAPs*licenseObj.low_counts
-                        acs += paramsObj.maxACs*licenseObj.low_counts
-                        print "aps=",aps
-                        print "acs=",acs
-                    elif paramsObj.id == 2:
-                        aps += paramsObj.maxAPs*licenseObj.mid_counts
-                        acs += paramsObj.maxACs*licenseObj.mid_counts
-                        print "aps=",aps
-                        print "acs=",acs
-                    else:
-                        aps += paramsObj.maxAPs*licenseObj.high_counts
-                        acs += paramsObj.maxACs*licenseObj.high_counts
-                context['aps'] = aps
-                context['acs'] = acs
-                context['paramsObj'] = paramsObjs
+                workorders = WorkOrderNum.objects.filter(license_id=licenseObj.id)
+                dic_list = []
+                for workorder in workorders:
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=workorder.id)
+                    for wkInfo in wkInfos:
+                        dic_tmp = {}
+                        dic_tmp['wkNum'] = workorder.workOrderNum
+                        dic_tmp['m_name'] = wkInfo.materiel_name
+                        dic_tmp['m_count'] = wkInfo.materiel_count
+                        dic_list.append(dic_tmp)
+                print dic_list
+                context['dic_list'] = dic_list
+                # paramsObjs = licenseObj.licenseParam.all()
+                # print "paramsObjs.counts",paramsObjs.count()
+                # aps = 0
+                # acs = 0
+                # for paramsObj in paramsObjs:
+                #     if paramsObj.id == 1:
+                #         print licenseObj.low_counts
+                #         print paramsObj.maxAPs
+                #         print paramsObj.maxAPs*licenseObj.low_counts
+                #         aps += paramsObj.maxAPs*licenseObj.low_counts
+                #         acs += paramsObj.maxACs*licenseObj.low_counts
+                #         print "aps=",aps
+                #         print "acs=",acs
+                #     elif paramsObj.id == 2:
+                #         aps += paramsObj.maxAPs*licenseObj.mid_counts
+                #         acs += paramsObj.maxACs*licenseObj.mid_counts
+                #         print "aps=",aps
+                #         print "acs=",acs
+                #     else:
+                #         aps += paramsObj.maxAPs*licenseObj.high_counts
+                #         acs += paramsObj.maxACs*licenseObj.high_counts
+                context['aps'] = licenseObj.maxAps
+                context['acs'] = licenseObj.maxAcs
+                context['user_s'] = licenseObj.maxUsers
+                # context['paramsObj'] = paramsObjs
                 context['code'] = licenseObj.license_code
-                context['low_count'] = licenseObj.low_counts
-                context['mid_count'] = licenseObj.mid_counts
-                context['high_count'] = licenseObj.high_counts
+                # context['low_count'] = licenseObj.low_counts
+                # context['mid_count'] = licenseObj.mid_counts
+                # context['high_count'] = licenseObj.high_counts
         except Exception,e:
             print e
         context['username'] = username
@@ -870,9 +884,9 @@ def get_work_order_info(request):
             #3.license相关信息（工单号、key_id、code、status、valid、reset、random_num、type、params、云平台、过期时间
             #   maxaps,maxacs,maxusers ）
 
-            username = 'lijie'
-            contactor = '李杰'
-            phone = '15821837085'
+            username = ''
+            contactor = ''
+            phone = ''
 
             try:
                 #管理员添加的相关操作
