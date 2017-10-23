@@ -86,13 +86,18 @@ class LicenseRecord(models.Model):
     cloudInfo = models.ForeignKey(CloudInformation)
     build_time = models.DateTimeField(auto_now_add=True)
     expire_time = models.DateTimeField('过期时间', blank=True, null=True)
-    workOrder = models.CharField(max_length=255, null=True, blank=False,default='')
 
-class WorkOrder(models.Model):
+
+class WorkOrderNum(models.Model):
+    id = models.AutoField(primary_key=True)
+    workOrderNum = models.CharField(max_length=255, null=True, blank=False,default='')
+    license = models.ForeignKey(LicenseRecord)
+
+class WorkOrderInformation(models.Model):
     id = models.AutoField(primary_key=True)
     materiel_name = models.CharField(max_length=255, null=True, blank=False,default='')
     materiel_count = models.CharField(max_length=255, null=True, blank=False,default='')
-    workorder = models.ForeignKey(LicenseRecord)
+    workordernum = models.ForeignKey(WorkOrderNum)
     # params = models.ForeignKey(LicenseParams)
 
 
