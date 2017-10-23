@@ -283,37 +283,45 @@ class AddLicenseView(View):
         # add new LicenseRecord
         try:
 
-            licenseType = LicenseType(type="1")
-            licenseType.save()
-            if data_license:
-                value = int(licenseType.type) | int(data_license)
-                print "value=",value
-                licenseType.type = value
-                licenseType.save()
-            if charging_license:
-                value = int(licenseType.type) | int(charging_license)
-                licenseType.type = value
-                print "value=",value
-                licenseType.save()
+            # licenseType = LicenseType(type="1")
+            # licenseType.save()
+            # if data_license:
+            #     value = int(licenseType.type) | int(data_license)
+            #     print "value=",value
+            #     licenseType.type = value
+            #     licenseType.save()
+            # if charging_license:
+            #     value = int(licenseType.type) | int(charging_license)
+            #     licenseType.type = value
+            #     print "value=",value
+            #     licenseType.save()
 
-            license = LicenseRecord()
+            license = LicenseRecord(licenseType="1")
             license.license_code = license_code
-            license.licenseType_id = licenseType.id
             license.cloudInfo_id = cloud_info
             license.expire_time = cur_time
             license.low_counts = low_count
             license.mid_counts = mid_count
             license.high_counts = high_count
             license.save()
-            if int(low_count) != 0:
-                lP = LicenseParams.objects.get(id=1)
-                license.licenseParam.add(lP)
-            if int(mid_count) != 0:
-                mP = LicenseParams.objects.get(id=2)
-                license.licenseParam.add(mP)
-            if int(high_count) != 0:
-                hP = LicenseParams.objects.get(id=3)
-                license.licenseParam.add(hP)
+            if data_license:
+                value = int(license.licenseType) | int(data_license)
+                license.licenseType = value
+                license.save()
+            if charging_license:
+                value = int(license.licenseType) | int(charging_license)
+                license.licenseType = value
+                license.save()
+            WorkOrderInformation()
+            # if int(low_count) != 0:
+            #     lP = LicenseParams.objects.get(id=1)
+            #     license.licenseParam.add(lP)
+            # if int(mid_count) != 0:
+            #     mP = LicenseParams.objects.get(id=2)
+            #     license.licenseParam.add(mP)
+            # if int(high_count) != 0:
+            #     hP = LicenseParams.objects.get(id=3)
+            #     license.licenseParam.add(hP)
 
             license.save()
             print "save license successfully"
