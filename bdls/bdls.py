@@ -47,6 +47,7 @@ class LicenseManager:
         self.max_ac = 0
         self.max_user = 0
         self.expire_time = ""
+        self.work_no = ""
         self.user_valid = False
         self.license_valid = False
         self.master = master
@@ -67,13 +68,14 @@ class LicenseManager:
 
         self.frame = Frame(self.master)
         #self.frame.grid(row=0, column=0)
-        self.frame.pack(fill="both",padx=200)
+        self.frame.pack(fill="both",padx=350)
         self.titleLabel = Label(self.frame)
         self.titleLabel['text'] =u'Bdyun License 激活工具'
         self.titleLabel["font"] = ("Arial", 20)
-        self.titleLabel.grid(row=1, column=0, sticky=SW)
+        self.titleLabel.grid(row=1, column=2, sticky=SW)
 
         self.SetupMenu()
+        #self.LicenseMenu()
 
 
 
@@ -105,33 +107,33 @@ class LicenseManager:
     def SetupMenu(self):
         self.CleanPlan()
 
-        self.setframe = LabelFrame(self.master, text=u"配置信息", height=300)
+        self.setframe = LabelFrame(self.master, text=u"配置信息")
         #self.setframe.grid(row=3, column=0,  columnspan=3, padx=10, pady=10,ipadx=50)
-        self.setframe.pack(fill="both",padx=20,pady=40,ipady=10)
+        self.setframe.pack(fill="both",padx=20,pady=80,ipadx=100, ipady=40)
 
-        self.userLable = Label(self.setframe, text=u"用户名: ", width=30, anchor="e")
-        self.userLable.grid(row=0, column=0,ipady=25)
-        self.userEntry = Entry(self.setframe,width=30)
+        self.userLable = Label(self.setframe, text=u"用户名: ", width=30, anchor="e",font=('Helvetica', '12'))
+        self.userLable.grid(row=0, column=0,columnspan=2,ipadx=40, ipady=25)
+        self.userEntry = Entry(self.setframe,width=40,bd=3,font=('Helvetica', '12'))
         self.userEntry.insert(END, self.login_user)
-        self.userEntry.grid(row=0, column=1, columnspan=2)
+        self.userEntry.grid(row=0, column=2, columnspan=2)
 
-        self.passwdLable = Label(self.setframe, text=u"密码: ", width=30, anchor="e")
-        self.passwdLable.grid(row=2, column=0)
-        self.passwdEntry = Entry(self.setframe,width=30)
+        self.passwdLable = Label(self.setframe, text=u"密码: ", width=30, anchor="e",font=('Helvetica', '12'))
+        self.passwdLable.grid(row=1, column=0,columnspan=2,ipadx=40, ipady=25)
+        self.passwdEntry = Entry(self.setframe,width=40,bd=3,font=('Helvetica', '12'))
         self.passwdEntry.insert(END, self.user_passwd)
         self.passwdEntry['show']='*'
-        self.passwdEntry.grid(row=2, column=1)
+        self.passwdEntry.grid(row=1, column=2, columnspan=2)
 
-        self.serverLable = Label(self.setframe, text=u"License 服务器地址: ",  width=30, anchor="e")
-        self.serverLable.grid(row=5, column=0,pady=25)
-        self.serverEntry = Entry(self.setframe,  width=30)
+        self.serverLable = Label(self.setframe, text=u"License 服务器地址: ",  width=30, anchor="e",font=('Helvetica', '12'))
+        self.serverLable.grid(row=5, column=0,columnspan=2,ipadx=40,pady=25)
+        self.serverEntry = Entry(self.setframe,  width=40,bd=3,font=('Helvetica', '12'))
         self.serverEntry.insert(END, self.license_server)
-        self.serverEntry.grid(row=5, column=1)
+        self.serverEntry.grid(row=5, column=2, columnspan=2)
 
-        self.getButton = Button(self.setframe)
+        self.getButton = Button(self.setframe,font=('Helvetica', '12'))
         self.getButton["text"] = u"用户登录"
         self.getButton["command"] = self.confirm
-        self.getButton.grid(row=9, column=1, padx=30,pady=5, sticky=SW)
+        self.getButton.grid(row=9, column=3, padx=20,pady=10, sticky=SW)
         self.submitButton = Button(self.setframe)
 
     def CleanPlan(self):
@@ -151,79 +153,80 @@ class LicenseManager:
         self.CleanPlan()
         self.frame2 = LabelFrame(self.master, text=u"License 信息", height=300)
         # self.frame2.grid(row=2, column=6, padx=10, pady=5,ipadx=50)
-        self.frame2.pack(fill="both",padx=20,pady=20)
+        self.frame2.pack(fill="both",padx=20,pady=10)
 
         if self.login_user == 'root':
             self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
-            self.oneLable.grid(row=3, column=0)
-            self.oneEntry = Entry(self.frame2,width=30)
+            self.oneLable.grid(row=3, column=0,columnspan=4,ipadx=50)
+            self.oneEntry = Entry(self.frame2,width=40,bd=2,font=('Helvetica', '12'))
             self.oneEntry.insert(END, self.license_code)
-            self.oneEntry.grid(row=3, column=1)
+            self.oneEntry.grid(row=3, column=5, columnspan=4)
         else:
             self.workNoLable = Label(self.frame2, text=u"工单号: ", width=30, anchor="e")
-            self.workNoLable.grid(row=0, column=0)
-            self.workNoEntry = Entry(self.frame2,width=30)
-            self.workNoEntry.insert(END, self.license_code)
-            self.workNoEntry.grid(row=0, column=1)
+            self.workNoLable.grid(row=0, column=0,columnspan=4,ipadx=40)
+            self.workNoEntry = Entry(self.frame2,width=40,bd=2)
+            self.workNoEntry.insert(END, self.work_no)
+            self.workNoEntry.grid(row=0, column=5, columnspan=4)
 
             self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
-            self.oneLable.grid(row=3, column=0)
-            self.oneEntry = Entry(self.frame2,width=30)
-            self.oneEntry.grid(row=3, column=1)
+            self.oneLable.grid(row=3, column=0,columnspan=4,ipadx=40,pady=8)
+            self.oneEntry = Entry(self.frame2,width=40)
+            self.oneEntry.grid(row=3, column=5, columnspan=4)
             self.oneEntry.configure(state=DISABLED)
 
-        self.keyLable = Label(self.frame2, text=u"KEY ID: ", width=30, anchor="e")
-        self.keyLable.grid(row=4, column=0)
-        self.keyEntry = Entry(self.frame2,width=30)
-        self.keyEntry.grid(row=4, column=1)
+        self.keyLable = Label(self.frame2, text=u"UKey ID: ", width=30, anchor="e")
+        self.keyLable.grid(row=4, column=0,columnspan=4,ipadx=40)
+        self.keyEntry = Entry(self.frame2,width=40)
+        self.keyEntry.grid(row=4, column=5, columnspan=4)
         self.keyEntry.configure(state=DISABLED)
 
         self.apLable = Label(self.frame2, text=u"最大AP数: ",  width=30, anchor="e")
-        self.apLable.grid(row=5, column=0,pady=5)
-        self.apEntry = Entry(self.frame2,  width=30)
-        self.apEntry.grid(row=5, column=1)
+        self.apLable.grid(row=5, column=0,columnspan=4,ipadx=40,pady=8)
+        self.apEntry = Entry(self.frame2,  width=40)
+        self.apEntry.grid(row=5, column=5, columnspan=4)
         self.apEntry.configure(state=DISABLED)
 
         self.acLable = Label(self.frame2, text=u"最大AC数: ",   width=30, anchor="e")
-        self.acLable.grid(row=6, column=0)
-        self.acEntry = Entry(self.frame2,   width=30)
-        self.acEntry.grid(row=6, column=1)
+        self.acLable.grid(row=6, column=0,columnspan=4,ipadx=40)
+        self.acEntry = Entry(self.frame2,   width=40)
+        self.acEntry.grid(row=6, column=5, columnspan=4)
         self.acEntry.configure(state=DISABLED)
 
         self.userLable = Label(self.frame2, text=u"最大用户数: ",   width=30, anchor="e")
-        self.userLable.grid(row=7, column=0,pady=5)
-        self.userEntry = Entry(self.frame2,   width=30)
-        self.userEntry.grid(row=7, column=1)
+        self.userLable.grid(row=7, column=0,columnspan=4,ipadx=40,pady=8)
+        self.userEntry = Entry(self.frame2,   width=40)
+        self.userEntry.grid(row=7, column=5, columnspan=4)
         self.userEntry.configure(state=DISABLED)
 
         self.expireTimeLable = Label(self.frame2, text=u"到期时间: ",   width=30, anchor="e")
-        self.expireTimeLable.grid(row=8, column=0)
-        self.expireTimeEntry = Entry(self.frame2,   width=30)
-        self.expireTimeEntry.grid(row=8, column=1)
+        self.expireTimeLable.grid(row=8, column=0,columnspan=4,ipadx=40)
+        self.expireTimeEntry = Entry(self.frame2,   width=40)
+        self.expireTimeEntry.grid(row=8, column=5, columnspan=5)
         self.expireTimeEntry.configure(state=DISABLED)
 
         self.readButton = Button(self.frame2)
-        self.readButton["text"] = u"读取ukey信息"
+        self.readButton["text"] = u"读取UKey"
         self.readButton["command"] = self.readUkeyInfo
-        self.readButton.grid(row=9, column=0, padx=30,pady=5, sticky=SW)
+        self.readButton.grid(row=9, column=5,pady=10, sticky=SE)
 
         self.getButton = Button(self.frame2)
-        self.getButton["text"] = u"查询信息"
+        self.getButton["text"] = u"确认工单"
         # self.getButton["command"] = self.getVersionINfo
         self.getButton["command"] = self.checkWorkOrderInfo
-        self.getButton.grid(row=9, column=1, padx=30,pady=5, sticky=SW)
+        self.getButton.grid(row=9, column=6,pady=10)
+
         self.submitButton = Button(self.frame2)
-        self.submitButton["text"] = u"写入"
+        self.submitButton["text"] = u"写入UKey"
         self.submitButton["command"] = self.writeToKey
-        self.submitButton.grid(row=9, column=1,pady=5, sticky=N)
+        self.submitButton.grid(row=9, column=7,pady=10, sticky=SW)
 
         self.TextFrame()
 
     def TextFrame(self):
-        self.frame3 = LabelFrame(self.master, text=u"日志信息",width=800, height=50)
+        self.frame3 = LabelFrame(self.master, text=u"日志信息")
         #self.frame3.grid(row=10, column=6,padx=10, pady=5,ipadx=0)
-        self.frame3.pack(fill="both",padx=20,pady=20)
-        self.text = Text(self.frame3,width=126,height=10)
+        self.frame3.pack(fill="both",padx=20,pady=0)
+        self.text = Text(self.frame3,width=164,height=20)
         scr=Scrollbar(self.frame3,orient =VERTICAL,command=self.text.yview)
         scr.grid(row=11, column=6, sticky=NS)
         self.text.grid(row=11, column=0)
@@ -265,7 +268,7 @@ class LicenseManager:
 
     def writeMessage(self,msgString):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        msg = "[%s] %s\n" % (cur_time, msgString)
+        msg = "[%s]\t\t%s\n" % (cur_time, msgString)
 
         self.text.configure(state=NORMAL)
         self.text.insert(END, msg)
@@ -285,24 +288,75 @@ class LicenseManager:
     def checkWorkOrderInfo(self):
         self.work_no =  self.workNoEntry.get()
 
-        work_info = getWorkOrderInfo(self.license_server, self.port, self.work_no)
-        print work_info
+        if self.work_no == '':
+            msg = u"请填写工单号再验证"
+            self.show_info(msg)
+            return
 
+        work_info = getWorkOrderInfo(self.license_server, self.port, self.work_no)
+
+        print work_info
         os_info_list = work_info['os_info']
         license_info_list = work_info['license_info']
 
-
         if len(os_info_list) > 1:
             msg = u"非法的OS工单"
+            self.show_info(msg)
+            return
 
-        msg = u"\nOS: %s   %s\n" % (os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', ""))
+        msg = u"工单[%s]信息:\n\t\t" % (self.work_no)
+        space_str = '\t----------\t'
+        if len(os_info_list) == 0:
+            msg = msg + space_str + u"[OS]:\t-\t\t\t0个" + space_str + '\n\t\t'
+        else:
+            msg = msg + space_str + u"[OS]:\t%s\t\t\t%s个" % (os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', "")) + space_str + '\n\t\t'
 
         for each in license_info_list:
-            msg = msg + "%s\t%s" % (each.get('productType',""), each.get('sumNo', ""))
+            msg = msg + space_str + u"[License]:\t%s\t\t\t%s个" % (each.get('productType',""), each.get('sumNo', ""))+ space_str + '\n\t\t'
 
         self.writeMessage(msg)
 
+        print "self.key_id:", self.key_id
+        self.keyEntry.configure(state=NORMAL)
+        self.keyEntry.delete('0', END)
+        self.keyEntry.insert(END, self.key_id)
+        self.keyEntry.configure(state=DISABLED)
 
+        #self.getLicenseKeyInfo()
+
+        self.license_code =  work_info.get('license_code', '')
+        self.max_ap = work_info.get('max_ap_allowed', '')
+        self.max_ac = work_info.get('max_ac_allowed', '')
+        self.max_user = work_info.get('max_user_allowed', '')
+        self.expire_time = work_info.get('license_expire_time', '')
+
+        self.oneEntry.configure(state=NORMAL)
+        self.oneEntry.delete('0', END)
+        self.oneEntry.insert(END, self.license_code)
+        self.oneEntry.configure(state=DISABLED)
+
+        self.apEntry.configure(state=NORMAL)
+        self.apEntry.delete('0', END)
+        self.apEntry.insert(END, self.max_ap)
+        self.apEntry.configure(state=DISABLED)
+
+        self.acEntry.configure(state=NORMAL)
+        self.acEntry.delete('0', END)
+        self.acEntry.insert(END, self.max_ac)
+        self.acEntry.configure(state=DISABLED)
+
+        self.userEntry.configure(state=NORMAL)
+        self.userEntry.delete('0', END)
+        self.userEntry.insert(END, self.max_user)
+        self.userEntry.configure(state=DISABLED)
+
+        self.expireTimeEntry.configure(state=NORMAL)
+        self.expireTimeEntry.delete('0', END)
+        self.expireTimeEntry.insert(END, self.expire_time)
+        self.expireTimeEntry.configure(state=DISABLED)
+
+        self.writeMessage('Ukey ID: %s' % (self.key_id))
+        self.writeMessage('License Code: %s' % (self.license_code))
 
 
     def getVersionINfo(self):
@@ -314,11 +368,7 @@ class LicenseManager:
                 msg = u"请填写License Code再验证"
                 self.show_info(msg)
                 return
-        else:
-            if self.work_no == '':
-                msg = u"请填写工单号再验证"
-                self.show_info(msg)
-                return
+
 
 
         self.InitSystem()
@@ -424,7 +474,8 @@ class LicenseManager:
         params['license_expire_time']=self.expire_time
         params['write_path'] = os.path.join(BASE_DIR, 'script/usbwrite')
 
-        if not self.license_valid or params['license_key'] == '' or params['usb_key_hardwareId'] == '':
+        # if not self.license_valid or params['license_key'] == '' or params['usb_key_hardwareId'] == '':
+        if params['license_key'] == '' or params['usb_key_hardwareId'] == '':
             msg = u"请先验证License，再写入"
             self.show_info(msg)
             return
@@ -795,18 +846,36 @@ def setLoginUser(BASE_DIR, user, host,passwd='', port='8000'):
     except:
         print "write config error"
 
+
+def get_screen_size(window):
+    return window.winfo_screenwidth(),window.winfo_screenheight()
+
+def get_window_size(window):
+    return window.winfo_reqwidth(),window.winfo_reqheight()
+
+def center_window(root, width, height):
+    screenwidth = root.winfo_screenwidth()
+    screenheight = root.winfo_screenheight()
+    size = '%dx%d+%d+%d' % (width, height, (screenwidth - width)/2, (screenheight - height)/2)
+    print(size)
+    root.geometry(size)
+
 root = Tk()
 
 
 imgicon = PhotoImage(file=os.path.join(BASE_DIR, 'file/license.gif'))
 root.tk.call('wm', 'iconphoto', root._w, imgicon)
 root.title(u"BDCloud License 激活工具")
-root.geometry("820x530")
 
-root.resizable(width=FALSE, height=FALSE)
+# root.geometry("1050x650")
+# root.resizable(width=FALSE, height=FALSE)
+
+center_window(root, 1050, 650)
+root.maxsize(1050, 650)
+root.minsize(800, 450)
 
 MENU_ROOT = LicenseManager(root)
-menubar = Menu(root)
+menubar = Menu(root,bg='#D3D3D3',selectcolor="#8B0000",bd=1,font=("黑体",10,"bold"))
 menubar.add_command(label=u"用户登录", command=MENU_ROOT.SetupMenu)
 menubar.add_command(label=u"License激活", command=MENU_ROOT.LicenseMenu)
 
