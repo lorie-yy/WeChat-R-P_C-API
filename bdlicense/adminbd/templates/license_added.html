@@ -127,7 +127,7 @@
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
-                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx">博达code</label>
+                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx" checked>博达code</label>
                             <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>
                         </div>
 {#                        <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>#}
@@ -247,7 +247,7 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,lower= 0,low=0,medium=0,high= 0,higher=0;
+        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,lower= 0,low=0,medium=0,high= 0,higher= 0,bdCode;
         $('.fun_addm').eq(0).click(function(){
             license_num =$.trim($('#fun_num').val());
             if(license_num==0){
@@ -307,9 +307,15 @@
                 ji_fei="";
             }
             var btnSn=function() {};
-            if(!licenseCode ){
-                AlarmWarning("请选择code类型!",btnSn);
-            }else if(!cloud_info){
+{#            if(!licenseCode ){#}
+{#                AlarmWarning("请选择code类型!",btnSn);#}
+{#            }#}
+            if($("#bd_code").is(":checked")){
+                bdCode='0';
+            }else if($("#zx_code").is(":checked")){
+                bdCode='1';
+            }
+            if(!cloud_info){
                 AlarmWarning("请选择对应云平台!",btnSn);
             }else if (!licenseParamsID ){
                 AlarmWarning("请选择配置类型!",btnSn);
@@ -327,6 +333,7 @@
                         key_id:keyid,
                         license_code:licenseCode,
                         cloud_info:cloud_info,
+                        code_type:bdCode,
                         lower:lower,
                         low:low,
                         medium:medium,

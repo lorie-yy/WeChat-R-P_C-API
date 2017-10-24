@@ -219,22 +219,22 @@ class AddLicenseView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
-
-        if request.is_ajax():
-            print "in request.is_ajax() "
-            code_type = request.GET.get('code_type')
-            license_code = ""
-            if code_type == "0":
-                license_code = genBdCode("D")
-            elif code_type == "1":
-                license_code = genZteCode()
-            else:
-                return HttpResponse("error!!!!")
-            #response code
-            if license_code:
-                return HttpResponse(license_code)
-            else:
-                return HttpResponse("error!!!!")
+        #
+        # if request.is_ajax():
+        #     print "in request.is_ajax() "
+        #     code_type = request.GET.get('code_type')
+        #     license_code = ""
+        #     if code_type == "0":
+        #         license_code = genBdCode("D")
+        #     elif code_type == "1":
+        #         license_code = genZteCode()
+        #     else:
+        #         return HttpResponse("error!!!!")
+        #     #response code
+        #     if license_code:
+        #         return HttpResponse(license_code)
+        #     else:
+        #         return HttpResponse("error!!!!")
         return render(request, 'license_added.html',context)
 
     def post(self,request):
@@ -244,8 +244,8 @@ class AddLicenseView(View):
 
         print "in add license post func"
         params = request.POST.copy()
-        print params
-        license_code = params['license_code']
+        # print params
+        # license_code = params['license_code']
         cloud_info = params['cloud_info']
         license_time = params['license_time']
         lower = request.POST.get('lower',0)
@@ -267,14 +267,6 @@ class AddLicenseView(View):
                         result = 3
                         uu = {'res':result}
                         return JsonResponse(uu)
-        #license_code is not unique
-        licenseRecordObj = LicenseRecord.objects.filter(license_code=license_code)
-        if licenseRecordObj.count() > 0:
-            print "license_code is not unique"
-            result = 2
-            uu = {'res':result}
-            return JsonResponse(uu)
-
         #format expire time
         cur_time = datetime.now()
         print cur_time
@@ -284,12 +276,23 @@ class AddLicenseView(View):
         print cur_time
 
 
-        code_type = request.GET.get('code_type')
+        code_type = request.POST.get('code_type')
+
+        print "code_type:%s"%str(code_type)
         #根据code的类型自动生成license code
+        license_code = ""
         if code_type == "0":
             license_code = genBdCode("D")
         elif code_type == "1":
             license_code = genZteCode()
+        print "生成的license CODE",license_code,
+        #license_code is not unique
+        licenseRecordObj = LicenseRecord.objects.filter(license_code=license_code)
+        if licenseRecordObj.count() > 0:
+            print "license_code is not unique"
+            result = 2
+            uu = {'res':result}
+            return JsonResponse(uu)
 
         # add new LicenseRecord
         try:
