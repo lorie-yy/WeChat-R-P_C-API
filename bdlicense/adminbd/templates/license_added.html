@@ -123,14 +123,14 @@
 
                         <label class="col-sm-3 control-label" for="license_code" >license 码</label>
                         <div class="col-sm-4" >
-                            <input placeholder="点击右侧按钮生成license码" value="" disabled spellcheck="false" style="padding: 4px 0;margin-bottom: 0" type="text" class="create" name="license_code" id="license_code" >
+                            <input placeholder="选择类型，提交后自动生成license code" value="" disabled spellcheck="false" style="padding: 4px 0;margin-bottom: 0" type="text" class="create" name="license_code" id="license_code" >
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
                             <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx">博达code</label>
                             <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>
                         </div>
-                        <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>
+{#                        <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>#}
                     </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
@@ -308,7 +308,7 @@
             }
             var btnSn=function() {};
             if(!licenseCode ){
-                AlarmWarning("请输入或生成license code!",btnSn);
+                AlarmWarning("请选择code类型!",btnSn);
             }else if(!cloud_info){
                 AlarmWarning("请选择对应云平台!",btnSn);
             }else if (!licenseParamsID ){
@@ -323,7 +323,20 @@
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/add_license",
-                    data:{key_id:keyid, license_code:licenseCode,cloud_info:cloud_info,lower:lower,low:low,medium:medium,high:high,higher:higher,license_time:license_time,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    data:{
+                        key_id:keyid,
+                        license_code:licenseCode,
+                        cloud_info:cloud_info,
+                        lower:lower,
+                        low:low,
+                        medium:medium,
+                        high:high,
+                        higher:higher,
+                        license_time:license_time,
+                        licensePID:licenseParamsID,
+                        data_license:shu_ju,
+                        charging_license:ji_fei,
+                        csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 1){

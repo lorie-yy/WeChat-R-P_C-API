@@ -23,8 +23,13 @@
                         {% for dic in dic_list %}
                             <tr>
                                 <td>{{ code }}</td>
+
+                                {% if dic.wkNum %}
+                                    <td>{{ dic.wkNum }}</td>
+                                {% else %}
+                                    <td>暂无</td>
+                                {% endif %}
                                 <td>{{ dic.m_name }}</td>
-                                <td>{{ dic.wkNum }}</td>
                                 <td>{{ dic.m_count }}</td>
                             </tr>
                         {% endfor %}
