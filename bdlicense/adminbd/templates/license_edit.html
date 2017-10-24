@@ -38,12 +38,12 @@
             color: #fff;
         }
         #content{
-            width: 230px;
-            height: 100px;
+            width: 340px;
+            height: 240px;
             position: fixed;
             top: 50%; left: 50%;
-            margin-left: -115px;
-            margin-top: -70px;
+            margin-left: -170px;
+            margin-top: -190px;
             display: none;
             background: floralwhite;
             z-index: 99;
@@ -55,7 +55,7 @@
         }
         .alert{
             text-align: center;
-            padding: 3px 0;
+            padding: 7px 0;
             margin-bottom: 0;
         }
         #cover{
@@ -134,10 +134,13 @@
                                      <button class="fun_addm" id="confirm" style="width: 50px;">确认</button>
                                      <button class="fun_addm" style="width: 75px;">配置说明</button>
                                      <div id="content">
-                                         <p class="alert alert-warning">低配--32个AP，1个AC授权</p>
-                                         <p class="alert alert-success" >中配--128个AP，1个AC授权</p>
-                                         <p class="alert alert-info">高配--1024个AP，4个AC授权</p>
-                                     </div>
+                                     <p style="text-align: center;margin-bottom: 0;font-weight: bold;height: 35px;line-height: 35px;">配置说明</p>
+                                     <p class="alert alert-warning">最低配--32个AP，1个AC授权</p>
+                                     <p class="alert alert-info">低配--64个AP，1个AC授权</p>
+                                     <p class="alert alert-success" >中配--128，1个AC授权</p>
+                                     <p class="alert alert-info">高配--512，2个AC授权</p>
+                                     <p class="alert alert-danger">最高配--1024个AP，4个AC授权</p>
+                                 </div>
                                  </div>
                                 <div id="article"></div>
                              </div>
@@ -176,34 +179,42 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var license_id, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,low=0,medium=0,high=0;
+        var license_id, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,lower= 0,low=0,medium=0,high= 0,higher=0;
         license_num =$.trim($('#fun_num').val());
-        $('.fun_addm').eq(0).click(function(e){
+        $('.fun_addm').eq(0).click(function(){
             license_num =$.trim($('#fun_num').val());
-            if(license_num==1){
+            if(license_num==0){
                 return ;
             }
             $('#fun_num').val(--license_num);
         });
-        $('.fun_addm').eq(1).click(function(e){
+        $('.fun_addm').eq(1).click(function(){
             license_num =$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
+        lower = {{ lower }};
         low = {{ low }};
         medium = {{ mid }};
         high = {{ high }};
+        higher = {{ higher }};
         $('.fun_addm').eq(2).click(function(){
             if($("[value='11']").is(":selected")){
-                low =$.trim($('#fun_num').val());
+                lower =$.trim($('#fun_num').val());
             }else if($("[value='12']").is(":selected")){
-                medium =$.trim($('#fun_num').val());
+                low =$.trim($('#fun_num').val());
             }else if($("[value='13']").is(":selected")){
+                medium =$.trim($('#fun_num').val());
+            }else if($("[value='14']").is(":selected")){
                 high =$.trim($('#fun_num').val());
+            }else if($("[value='15']").is(":selected")){
+                higher =$.trim($('#fun_num').val());
+            }else{
+                return ;
             }
-            $("#article").text("修改配置- "+"低配："+low+"个 中配："+medium+"个 高配："+high+"个");
+            $("#article").text("最低配："+lower+"个;  低配："+low+"个;  中配："+medium+"个;  高配："+high+"个;  最高配："+higher+"个");
 {#            alert(low+"A"+medium+"B"+high+"C");#}
         });
-        $("#article").text("原始配置- "+"低配："+ {{ low }} +"个 中配："+ {{ mid }} +"个 高配："+ {{ high }}+"个");
+            $("#article").text("最低配："+ {{ lower }} +"个;  低配："+ {{ low }} +"个;  中配："+ {{ mid }} +"个;  高配："+ {{ high }} +"个;  最高配："+ {{ higher }} +"个");
 
         $('.fun_addm').eq(3).click(function(){
             $("#content").fadeIn();
@@ -249,7 +260,7 @@
                 var btnFn=function(e) {};
                $.ajax({
                     url:"/adminbd/edit_license",
-                    data:{license_id:license_id,low:low,medium:medium,high:high,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    data:{license_id:license_id,lower:lower,low:low,medium:medium,high:high,higher:higher,licensePID:licenseParamsID,data_license:shu_ju,charging_license:ji_fei,csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
                         if(data.res == 0){

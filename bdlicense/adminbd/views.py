@@ -248,9 +248,12 @@ class AddLicenseView(View):
         license_code = params['license_code']
         cloud_info = params['cloud_info']
         license_time = params['license_time']
-        low_count = request.POST.get('low',0)
-        mid_count = request.POST.get('medium',0)
-        high_count = request.POST.get('high',0)
+        lower = request.POST.get('lower',0)
+        low = request.POST.get('low',0)
+        medium = request.POST.get('medium',0)
+        high = request.POST.get('high',0)
+        higher = request.POST.get('higher',0)
+        print lower,low,medium,high,higher
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
         uu = {}
@@ -280,30 +283,23 @@ class AddLicenseView(View):
         cur_time = cur_time.replace(year=fut_year)
         print cur_time
 
+
+        code_type = request.GET.get('code_type')
+        #根据code的类型自动生成license code
+        if code_type == "0":
+            license_code = genBdCode("D")
+        elif code_type == "1":
+            license_code = genZteCode()
+
         # add new LicenseRecord
         try:
-
-            # licenseType = LicenseType(type="1")
-            # licenseType.save()
-            # if data_license:
-            #     value = int(licenseType.type) | int(data_license)
-            #     print "value=",value
-            #     licenseType.type = value
-            #     licenseType.save()
-            # if charging_license:
-            #     value = int(licenseType.type) | int(charging_license)
-            #     licenseType.type = value
-            #     print "value=",value
-            #     licenseType.save()
 
             license = LicenseRecord(licenseType="1")
             license.license_code = license_code
             license.cloudInfo_id = cloud_info
             license.expire_time = cur_time
-            license.low_counts = low_count
-            license.mid_counts = mid_count
-            license.high_counts = high_count
             license.save()
+            #license 功能
             if data_license:
                 value = int(license.licenseType) | int(data_license)
                 license.licenseType = value
@@ -312,30 +308,45 @@ class AddLicenseView(View):
                 value = int(license.licenseType) | int(charging_license)
                 license.licenseType = value
                 license.save()
-            WorkOrderInformation()
-            # if int(low_count) != 0:
-            #     lP = LicenseParams.objects.get(id=1)
-            #     license.licenseParam.add(lP)
-            # if int(mid_count) != 0:
-            #     mP = LicenseParams.objects.get(id=2)
-            #     license.licenseParam.add(mP)
-            # if int(high_count) != 0:
-            #     hP = LicenseParams.objects.get(id=3)
-            #     license.licenseParam.add(hP)
+            workNum = WorkOrderNum(license_id=license.id)
+            workNum.save()
 
+            params_dic = {
+                "BCP8200-Lic-32":lower,
+                "BCP8200-Lic-64":low,
+                "BCP8200-Lic-128":medium,
+                "BCP8200-Lic-512":high,
+                "BCP8200-Lic-1024":higher
+            }
+            basic_dict = {}
+            licensePas = LicenseParams.objects.all()
+            for licensePa in licensePas:
+                basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
+            print basic_dict
+            maxAPs = 0
+            maxACs = 0
+            maxUsers = 0
+            for key,value in params_dic.items():
+                if value in [0,'0']:
+                    continue
+                else:
+                    wkInfo = WorkOrderInformation(
+                        materiel_name=key,
+                        materiel_count=value,
+                        workordernum_id=workNum.id)
+                    wkInfo.save()
+                    if key in basic_dict.keys():
+                        maxAPs += int(value)*int(basic_dict[key][0])
+                        maxACs += int(value)*int(basic_dict[key][1])
+                        maxUsers += int(value)*int(basic_dict[key][2])
+                    else:
+                        return HttpResponse("illegal license params")
+            license.maxAps = maxAPs
+            license.maxAcs = maxACs
+            license.maxUsers = maxUsers
             license.save()
             print "save license successfully"
-            if "ZTEKPBY" in license_code:
-                license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
-                value = int(license_code[10:])
-                license_coun.update(value=str(value))
-                print "save zte_license_count in system config table successfully"
-            elif "BCPLIC" in license_code:
-                license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
-                # if license_coun.count() >0:
-                value = license_code.split("D")[1]
-                license_coun.update(value=value)
-                print "save bd_license_count in system config table successfully"
+            updateCodeCount(str(license_code))
             result = 1
             uu = {'res':result}
             return JsonResponse(uu)
@@ -357,30 +368,66 @@ class EditLicenseView(View):
         license_id = request.GET.get('id',None)
         print "license_id=",license_id
         context = {}
-        if license_id is not None:
-            licenseRecord = LicenseRecord.objects.get(id=int(license_id))
-            paramsAll = licenseRecord.licenseParam.all()
-            # paramsIdList = []
-            # for param in paramsAll:
-            #     paramsIdList.append(param.id)
-            # context['paramsIdList'] = paramsIdList
-            # print "paramsIdList=",paramsIdList
-            # context['license_id'] = license_id
-            if paramsAll.count() > 0:
-                context['high'] = licenseRecord.high_counts
-                context['mid'] = licenseRecord.mid_counts
-                context['low'] = licenseRecord.low_counts
-                print context['high']
-                print context['mid']
-                print context['low']
-            if int(licenseRecord.licenseType.type) & 4:
-                context['data_id'] = 4
-                print "计费版本"
-            if int(licenseRecord.licenseType.type) & 2:
-                context['charging_id'] = 2
-                print "大数据版本"
-            context['licenseRecord'] = licenseRecord
-        licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
+
+        try:
+            get_dic = {}
+            if license_id is not None:
+                licenseRecord = LicenseRecord.objects.get(id=int(license_id))
+                context['licenseRecord'] = licenseRecord
+
+                if int(licenseRecord.licenseType) & 4:
+                    context['data_id'] = 4
+                    print "计费版本"
+                if int(licenseRecord.licenseType) & 2:
+                    context['charging_id'] = 2
+                    print "大数据版本"
+
+                wkOrders = WorkOrderNum.objects.filter(license_id=licenseRecord.id).order_by('-id')
+                print wkOrders.count()
+                print "-id count()"
+                if wkOrders.count() >0:
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id)
+                    for wkInfo in wkInfos:
+                        get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
+
+                    print get_dic
+
+                    # basic_dic = {
+                    #         "BCP8200-Lic-32":3,
+                    #         "BCP8200-Lic-64":9,
+                    #         "BCP8200-Lic-128":"medium",
+                    #         "BCP8200-Lic-512":"high",
+                    #         "BCP8200-Lic-1024":"higher"
+                    #     }
+                    if "BCP8200-Lic-32" in get_dic.keys():
+                        context['lower'] = get_dic['BCP8200-Lic-32']
+                    else:
+                        context['lower'] = 0
+                    if "BCP8200-Lic-64" in get_dic.keys():
+                        context['low'] = get_dic['BCP8200-Lic-64']
+                    else:
+                        context['low'] = 0
+                    if "BCP8200-Lic-128" in get_dic.keys():
+                        context['mid'] = get_dic['BCP8200-Lic-128']
+                    else:
+                        context['mid'] = 0
+                    if "BCP8200-Lic-512" in get_dic.keys():
+                        context['high'] = get_dic['BCP8200-Lic-512']
+                    else:
+                        context['high'] = 0
+                    if "BCP8200-Lic-1024" in get_dic.keys():
+                        context['higher'] = get_dic['BCP8200-Lic-1024']
+                    else:
+                        context['higher'] = 0
+                    # print context['higher']
+                    # print context['high']
+                    # print context['mid']
+                    # print context['low']
+                    # print context['lower']
+        except Exception,e:
+            print e
+
+        licenseParams = LicenseParams.objects.all()
         context['licenseParams'] = licenseParams
 
         context['username'] = username
@@ -401,30 +448,59 @@ class EditLicenseView(View):
         license_id = params['license_id']
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-        low_count = request.POST.get('low',0)
-        mid_count = request.POST.get('medium',0)
-        high_count = request.POST.get('high',0)
-        print "--------"
-        print request.POST.get('low',0)
-        print request.POST.get('medium',0)
-        print request.POST.get('high',0)
+
+        lower = request.POST.get('lower',0)
+        low = request.POST.get('low',0)
+        medium = request.POST.get('medium',0)
+        high = request.POST.get('high',0)
+        higher = request.POST.get('higher',0)
+
+        params_dic = {
+                "BCP8200-Lic-32":lower,
+                "BCP8200-Lic-64":low,
+                "BCP8200-Lic-128":medium,
+                "BCP8200-Lic-512":high,
+                "BCP8200-Lic-1024":higher
+            }
+        basic_dict = {}
+        licensePas = LicenseParams.objects.all()
+        for licensePa in licensePas:
+            basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
+        print basic_dict
+
+        maxAPs = 0
+        maxACs = 0
+        maxUsers = 0
+        workNum = WorkOrderNum(license_id=license_id)
+        workNum.save()
+        for key,value in params_dic.items():
+            if value in [0,'0']:
+                continue
+            else:
+                wkInfo = WorkOrderInformation(
+                    materiel_name=key,
+                    materiel_count=value,
+                    workordernum_id=workNum.id)
+                wkInfo.save()
+                if key in basic_dict.keys():
+                    print int(value)*int(basic_dict[key][0])
+                    maxAPs += int(value)*int(basic_dict[key][0])
+                    maxACs += int(value)*int(basic_dict[key][1])
+                    maxUsers += int(value)*int(basic_dict[key][2])
+                else:
+                    return HttpResponse("illegal license params")
+
+
         uu = {}
-        #one cloud has only one valid license
         try:
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
             if licenseObj.count() > 0:
-                licenseObj.update(low_counts=low_count,mid_counts=mid_count,high_counts=high_count)
-                if int(low_count) != 0:
-                    lP = LicenseParams.objects.get(id=1)
-                    licenseObj[0].licenseParam.add(lP)
-                if int(mid_count) != 0:
-                    mP = LicenseParams.objects.get(id=2)
-                    licenseObj[0].licenseParam.add(mP)
-                if int(high_count) != 0:
-                    hP = LicenseParams.objects.get(id=3)
-                    licenseObj[0].licenseParam.add(hP)
-                type_id = licenseObj[0].licenseType.id
-                typeObj = LicenseType.objects.filter(id=type_id)
+                licenseObj.update(
+                    maxAps=maxAPs,
+                    maxAcs=maxACs,
+                    maxUsers=maxUsers
+                )
+
                 if data_license != "":
                     if charging_license != "":
                         value = 7
@@ -435,7 +511,7 @@ class EditLicenseView(View):
                         value = 3
                     else:
                         value = 1
-                typeObj.update(type=value)
+                licenseObj.update(licenseType=value)
                 result = 0
                 uu = {'res':result}
                 return JsonResponse(uu)
@@ -444,21 +520,6 @@ class EditLicenseView(View):
         result = 1
         uu = {'res':result}
         return JsonResponse(uu)
-
-# def editlicense(type_license,licenseObj):
-#     value = 1
-#     if type_license != "":
-#         value = int(type_license) | int(licenseObj[0].licenseType.type)
-#         print "add fun"
-#     else:
-#         if type_license == "data_license":
-#             value = int(licenseObj[0].licenseType.type) & 4
-#             print "dec data fun"
-#         elif type_license == "charging_license":
-#             value = int(licenseObj[0].licenseType.type) & 2
-#             print "dec charging fun"
-#     print "value=",value
-#     return value
 
 class AddCloudView(View):
     def get(self,request):
@@ -767,6 +828,23 @@ class UpdateKeyIDView(View):
 
         return HttpResponse("Error")
 
+def updateCodeCount(license_code):
+    if license_code.startswith("ZTEKPBY"):
+        license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
+        value = int(license_code[10:])
+        license_coun.update(value=str(value))
+        print "save zte_license_count in system config table successfully"
+    elif license_code.startswith("BCPLICD"):
+        license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+        value = license_code.split("D")[1]
+        license_coun.update(value=value)
+        print "save bd_license_count D in system config table successfully"
+    elif license_code.startswith("BCPLICF"):
+        license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+        value = license_code.split("F")[1]
+        license_coun.update(value=value)
+        print "save bd_license_count F in system config table successfully"
+
 def get_work_order_info(request):
     from suds import WebFault
     from suds.client import Client
@@ -872,8 +950,8 @@ def get_work_order_info(request):
                 maxAPs = maxAPs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][0])
                 maxACs = maxACs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][1])
                 maxUser = maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
-            # else:
-            #     return HttpResponse("has illegal license params")
+            else:
+                return HttpResponse("has illegal license params")
         rst_dict['max_ap_allowed'] = maxAPs
         rst_dict['max_ac_allowed'] = maxACs
         rst_dict['max_user_allowed'] = maxUser
@@ -942,11 +1020,18 @@ def get_work_order_info(request):
                 # cloudInfo.cloudUser.add(userObj)
 
                 #license相关操作,首先生成license code（新的工单号且license code信息没有，新下单的license和云平台）
-                if code_type == 'bdcode':
+
+                if code_type == "bdcode":
                     license_code = genBdCode('F')
-                elif code_type == 'ztecode':
+                elif code_type == "ztecode":
                     license_code = genZteCode()
 
+                #更新SystemConfig表
+                updateCodeCount(str(license_code))
+
+                #保证license code 的唯一性
+                if LicenseRecord.objects.filter(license_code = license_code).count() > 0:
+                    return HttpResponse("error: repeate license code")
 
                 licenseObj = LicenseRecord()
                 licenseObj.license_code = license_code
