@@ -22,14 +22,33 @@
                         </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
-                    {% for each_work in work_info %}
-                                 <tr>
-                                    <td>{{ each_work.id }}</td>
-                                    <td>{{ each_work.workOrderNum }}</td>
-                                    <td>{{ each_work.license.cloudInfo.cloudName }}</td>
-                                    <td>{{ each_work.license.license_code }}</td>
-                                 </tr>
-                    {% endfor %}
+                    {% if not wk_num %}
+                        {% for each_work in work_info %}
+                             <tr>
+                                <td>{{ each_work.id }}</td>
+
+                                 <td onclick="window.location.href='/adminbd/or_query?wk_num={{ each_work.workOrderNum }}'" >
+                                     {{ each_work.workOrderNum }}
+                                 </td>
+
+                                <td>{{ each_work.license.cloudInfo.cloudName }}</td>
+                                <td>{{ each_work.license.license_code }}</td>
+                             </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for each_work in work_info %}
+                             <tr>
+                                <td>{{ each_work.id }}</td>
+
+                                 <td >
+                                     {{ each_work.workOrderNum }}
+                                 </td>
+
+                                <td>{{ each_work.license.cloudInfo.cloudName }}</td>
+                                <td>{{ each_work.license.license_code }}</td>
+                             </tr>
+                        {% endfor %}
+                    {% endif %}
                     </tbody>
                 </table>
              </div>

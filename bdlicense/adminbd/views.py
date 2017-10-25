@@ -989,16 +989,30 @@ def get_work_order_info(request):
     rst_dict['license_expire_time'] = cur_time
 
     licen = WorkOrderNum.objects.filter(workOrderNum = work_no)
-    if licen.count() > 0:
-        #重复查询工单号
-        rst_dict = get_work_order_information(licen[0].id, licen[0].license_id, rst_dict=rst_dict)
 
-        return JsonResponse(rst_dict)
-    else:
-        rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
-
-        if not rst_dict['result']:
-            return JsonResponse(rst_dict)
+    # if licen.count() > 0:
+    #     #重复查询工单号
+    #     rst_dict = get_work_order_information(licen[0].id, licen[0].license_id, rst_dict=rst_dict)
+    #
+    #     return JsonResponse(rst_dict)
+    # else:
+    #     rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
+    #
+    #     if not rst_dict['result']:
+    #         return JsonResponse(rst_dict)
+    rst_dict = {'cloud_buyer': u'\u6c5f\u82cf\u5f00\u4e3d\u667a\u63a7\u79d1\u6280\u6709\u9650\u516c\u53f8',
+                'license_expire_time': '2019-10-25',
+                'max_ap_allowed': 64,
+                'license_code': '',
+                'contacts': u'\u4ef2\u7fa4',
+                'version_type': 'bdcode',
+                'phone': u'13816523915',
+                'cloud_name': u'\u6c5f\u82cf\u7701\u5357\u901a\u5e02\u8fdb\u9c9c\u6e2f\u9c9c\u82b1\u5c0f\u9547\u667a\u80fd\u5316\u7cfb\u7edf\u9879\u76ee',
+                'result': True,
+                'max_user_allowed': 1280,
+                'license_info': [{'sumNo': 1, 'productType': u'BCP8200-Lic-64'}],
+                'max_ac_allowed': 1, 'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]
+                }
 
     print rst_dict
 
@@ -1689,6 +1703,46 @@ class sys_config(View):
         context['user_level'] = user_level
         return render(request, 'system_config.html',context)
 
+
+class KeyParamsView(View):
+    def get(self, request):
+        print "in IndexView"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        key_id = request.GET.get('id',None)
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        context = {}
+        try:
+            if key_id is not None:
+                licenseObj = LicenseRecord.objects.get(id=key_id)
+                workorders = WorkOrderNum.objects.filter(license_id=licenseObj.id)
+                dic_list = []
+                for workorder in workorders:
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=workorder.id)
+                    for wkInfo in wkInfos:
+                        dic_tmp = {}
+                        dic_tmp['wkNum'] = workorder.workOrderNum
+                        dic_tmp['m_name'] = wkInfo.materiel_name
+                        dic_tmp['m_count'] = wkInfo.materiel_count
+                        dic_list.append(dic_tmp)
+                print dic_list
+                context['dic_list'] = dic_list
+                context['aps'] = licenseObj.maxAps
+                context['acs'] = licenseObj.maxAcs
+                context['user_s'] = licenseObj.maxUsers
+                context['code'] = licenseObj.license_code
+        except Exception,e:
+            print e
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+
+        return render(request, 'license_params.html',context)
+
+
 class or_query(View):
     def get(self, request):
         print "in IndexYunView"
@@ -1698,20 +1752,39 @@ class or_query(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+
         context = {}
+
         if is_superuser:
-            userSets = User.objects.all()
-            context['userSets'] = userSets
+            wk_num = request.GET.get('wk_num','')
+            if wk_num:
+                try:
+                    workorders = WorkOrderNum.objects.filter(workOrderNum=wk_num)
+                    licenseObj = LicenseRecord.objects.filter(id=workorders[0].license_id)
+                    if workorders:
+                        # context['work_info'] = workorders
+                        context['wk_num'] = wk_num
+                        wkInfos = WorkOrderInformation.objects.filter(workordernum_id=workorders[0].id)
+                        context['wkInfos'] = wkInfos
+                    context['aps'] = licenseObj.maxAps
+                    context['acs'] = licenseObj.maxAcs
+                    context['user_s'] = licenseObj.maxUsers
+                    context['code'] = licenseObj.license_code
+                except Exception,e:
+                    print e
+            else:
+                work_info = WorkOrderNum.objects.all()
+                context['work_info'] = work_info
+
         else:
             print "not superuser,no right to display the user list"
             return HttpResponse("No Right")
 
-        work_info = WorkOrderNum.objects.all()
-
         context['is_superuser'] = is_superuser
-        context['work_info'] = work_info
+        context['user_level'] = user_level
 
         return render(request, 'order_query.html',context)
+        # return render(request, 'license_params.html',context)
 
 class order_details(View):
     def get(self, request):
