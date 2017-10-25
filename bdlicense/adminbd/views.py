@@ -1027,9 +1027,6 @@ def get_work_order_info(request):
                 elif code_type == "ztecode":
                     license_code = genZteCode()
 
-                #更新SystemConfig表
-                updateCodeCount(str(license_code))
-
                 #保证license code 的唯一性
                 if LicenseRecord.objects.filter(license_code = license_code).count() > 0:
                     return HttpResponse("error: repeate license code")
@@ -1043,6 +1040,9 @@ def get_work_order_info(request):
                 licenseObj.maxAcs = maxACs#该license支持的最大AC
                 licenseObj.maxUsers = maxUser#该license支持的最大User
                 licenseObj.save()
+
+                #更新SystemConfig表
+                updateCodeCount(str(license_code))
 
                 #创建新的工单号
                 workNum = WorkOrderNum()
