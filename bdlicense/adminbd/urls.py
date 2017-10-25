@@ -33,4 +33,5 @@ urlpatterns = patterns(
     url(r'^work_order',views.get_work_order_info, name='work_order'),
     url(r'^sys_config',views.sys_config.as_view(), name='sys_config'),
     url(r'^or_query',views.or_query.as_view(), name='or_query'),
+    url(r'^order_details',views.order_details.as_view(), name='order_details'),
 )

@@ -17,17 +17,17 @@
                         <tr>
                             <th>编号</th>
                             <th>工单号</th>
-                            <th>云平台名称</th>
-                            <th>LicenseCode</th>
+                            <th>物料名称</th>
+                            <th>物料个数</th>
                         </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
-                    {% for each_work in work_info %}
+                    {% for each_work in order_info %}
                                  <tr>
                                     <td>{{ each_work.id }}</td>
-                                    <td>{{ each_work.workOrderNum }}</td>
-                                    <td>{{ each_work.license.cloudInfo.cloudName }}</td>
-                                    <td>{{ each_work.license.license_code }}</td>
+                                    <td>{{ each_work.workordernum.workOrderNum }}</td>
+                                    <td>{{ each_work.materiel_name }}</td>
+                                    <td>{{ each_work.materiel_count }}</td>
                                  </tr>
                     {% endfor %}
                     </tbody>
