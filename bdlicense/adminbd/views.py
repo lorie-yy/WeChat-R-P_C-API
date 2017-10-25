@@ -1706,7 +1706,27 @@ class or_query(View):
             print "not superuser,no right to display the user list"
             return HttpResponse("No Right")
 
-        context['username'] = username
+        work_info = WorkOrderNum.objects.all()
+
         context['is_superuser'] = is_superuser
-        context['user_level'] = user_level
+        context['work_info'] = work_info
+
         return render(request, 'order_query.html',context)
+
+class order_details(View):
+    def get(self, request):
+        print "[order_details]"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+        order_info = WorkOrderInformation.objects.filter()
+
+        print "2222222222"
+        context['is_superuser'] = is_superuser
+        context['order_info'] = order_info
+
+        return render(request, 'order_details.html',context)
+
