@@ -811,19 +811,17 @@ class UpdateKeyIDView(View):
                 licenses.update(license_status=LicenseRecord.OPEN)
                 print "license status updated successfully"
 
-            if license_code.startswith("ZTEKPBY"):
-
-            # if code_type == "ztecode":
-                license_coun = SystemConfig.objects.filter(attribute = "zte_license_count")
-                value = int(license_code[10:])
-                license_coun.update(value=str(value))
-            # elif code_type == "bdcode":
-            elif license_code.startswith("BCPLIC"):
-                license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
-                value = license_code.split("F")[1]
-                license_coun.update(value=value)
-            else:
-                return HttpResponse("illegal code type")
+            # if license_code.startswith("ZTEKPBY"):
+            #
+            #     license_coun = SystemConfig.objects.filter(attribute = "zte_license_count")
+            #     value = int(license_code[10:])
+            #     license_coun.update(value=str(value))
+            # elif license_code.startswith("BCPLIC"):
+            #     license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+            #     value = license_code.split("F")[1]
+            #     license_coun.update(value=value)
+            # else:
+            #     return HttpResponse("illegal code type")
 
             return HttpResponse("OK")
         except Exception,e:
