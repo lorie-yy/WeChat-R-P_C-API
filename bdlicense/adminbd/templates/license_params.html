@@ -10,39 +10,51 @@
                         <thead>
                             <tr>
                                 <th>License code</th>
-                                <th>License配置</th>
-                                <th>配置数量</th>
-                                <th>最大AP数</th>
-                                <th>最大AC数</th>
-                                <th>最大用户数</th>
+                                <th>工单号</th>
+                                <th>配置（物料）类型</th>
+                                <th>数量</th>
                             </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
                         <p class="alert alert-warning" style="padding: 7px;margin-bottom: 6px;">
-                            温馨提示：Code（<span style="font-weight: bold;color: red;">{{ code }}</span>）对应的License支持<span style="color:red;font-weight: bold;">{{ aps }}</span>个AP,<span style="color:red;font-weight: bold;">{{ acs }}</span>个AC授权
+                            温馨提示：Code（<span style="font-weight: bold;color: red;">{{ code }}</span>）对应的License支持<span style="color:red;font-weight: bold;">{{ aps }}</span>个AP,<span style="color:red;font-weight: bold;">{{ acs }}</span>个AC授权,<span style="color:red;font-weight: bold;">{{ user_s }}</span>个用户授权
                         </p>
-                        {% if paramsObj %}
-                            {% for paramsOb in paramsObj %}
-                                <tr>
-                                    <td>{{ code }}</td>
-                                    <td>{{ paramsOb.cloudRankName }}</td>
-                                    {% if paramsOb.id == 1 %}
-                                        <td class="num1">{{ low_count }}个</td>
-                                    {% elif paramsOb.id == 2 %}
-                                        <td class="num2">{{ mid_count }}个</td>
-                                    {% elif paramsOb.id == 3 %}
-                                        <td class="num3">{{ high_count }}个</td>
-                                    {% else %}
-                                        <td>暂无</td>
-                                    {% endif %}
-                                    <td>{{ paramsOb.maxAPs }}</td>
-                                    <td>{{ paramsOb.maxACs }}</td>
-                                    <td>{{ paramsOb.maxUsers }}</td>
-                                </tr>
-                            {% endfor %}
-                        {% else %}
-                            <th>{{ code }}对应的license没有配置参数</th>
-                        {% endif %}
+{#                        {{ dic_list }}#}
+                        {% for dic in dic_list %}
+                            <tr>
+                                <td>{{ code }}</td>
+
+                                {% if dic.wkNum %}
+                                    <td>{{ dic.wkNum }}</td>
+                                {% else %}
+                                    <td>暂无</td>
+                                {% endif %}
+                                <td>{{ dic.m_name }}</td>
+                                <td>{{ dic.m_count }}</td>
+                            </tr>
+                        {% endfor %}
+{#                        {% if paramsObj %}#}
+{#                            {% for paramsOb in paramsObj %}#}
+{#                                <tr>#}
+{#                                    <td>{{ code }}</td>#}
+{#                                    <td>{{ paramsOb.cloudRankName }}</td>#}
+{#                                    {% if paramsOb.id == 1 %}#}
+{#                                        <td class="num1">{{ low_count }}个</td>#}
+{#                                    {% elif paramsOb.id == 2 %}#}
+{#                                        <td class="num2">{{ mid_count }}个</td>#}
+{#                                    {% elif paramsOb.id == 3 %}#}
+{#                                        <td class="num3">{{ high_count }}个</td>#}
+{#                                    {% else %}#}
+{#                                        <td>暂无</td>#}
+{#                                    {% endif %}#}
+{#                                    <td>{{ paramsOb.maxAPs }}</td>#}
+{#                                    <td>{{ paramsOb.maxACs }}</td>#}
+{#                                    <td>{{ paramsOb.maxUsers }}</td>#}
+{#                                </tr>#}
+{#                            {% endfor %}#}
+{#                        {% else %}#}
+{#                            <th>{{ code }}对应的license没有配置参数</th>#}
+{#                        {% endif %}#}
                         </tbody>
                     </table>
                     <a style="margin: 20px 0 20px 20px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>

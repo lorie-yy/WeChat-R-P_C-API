@@ -22,15 +22,15 @@
                     <table class="table table-striped table-condensed table-hover responsive-table">
                         <thead>
                             <tr>
-                                <th>云平台名称</th>
+                                <th>云平台</th>
                                 <th>是否有效</th>
                                 <th>KEY_ID</th>
-{#                                <th>版本类型</th>#}
+                                <th>功能类型</th>
                                 <th>Code</th>
                                 <th>状态</th>
-{#                                <th>最大AP数</th>#}
-{#                                <th>最大AC数</th>#}
-{#                                <th>最大用户数</th>#}
+                                <th>AP</th>
+                                <th>AC</th>
+                                <th>用户</th>
                                 <th>购买时间</th>
                                 <th>过期时间</th>
                                 {% if is_superuser %}
@@ -61,12 +61,21 @@
                                         {% else %}
                                         <td>无效</td>
                                     {% endif %}
+
                                     {% if license.key_id %}
                                         <td>{{ license.key_id }}</td>
                                     {% else %}
                                         <td>暂无</td>
                                     {% endif %}
-{#                                    <td>{{ license.licenseType.discription }}</td>#}
+                                {% if license.licenseType == "1" %}
+                                    <td>基本功能</td>
+                                {% elif license.licenseType == "3" %}
+                                    <td>基本+计费</td>
+                                {% elif license.licenseType == "5" %}
+                                    <td>基本+大数据</td>
+                                {% elif license.licenseType == "7" %}
+                                    <td>基本+计费+大数据</td>
+                                {% endif %}
                                     <td title="{{ license.license_code }}" style="cursor: pointer;color: #00C853;text-decoration: underline;font-weight: bold" onclick="window.location.href='/adminbd/license_param?id={{ license.id }}'" >
                                         <span>
                                             {{ license.license_code }}
@@ -76,10 +85,14 @@
                                     {% if license.license_status == 1%}
                                         <td>已激活</td>
                                     {% else %}
-                                        <td>
+                                        <td style="color: red;">
                                             未激活
                                         </td>
                                     {% endif %}
+                                    <td>{{ license.maxAps }}</td>
+                                    <td>{{ license.maxAcs }}</td>
+                                    <td>{{ license.maxUsers }}</td>
+
                                     <td>{{ license.build_time }}</td>
                                     <td>{{ license.expire_time }}</td>
                                     {% if is_superuser %}
