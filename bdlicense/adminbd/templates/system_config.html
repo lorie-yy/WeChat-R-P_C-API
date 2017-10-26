@@ -10,7 +10,7 @@
                 margin-left: 50px;
             }
             .IO{
-                width: 50px;
+                width: 70px;
                 padding-bottom: 12px;
             }
             .flag1,.flag2{
@@ -28,23 +28,15 @@
             <div class="panel-body">
                 <form  role="form" id="sys_config" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
-{#                    <div class="form-group">#}
-{#                        <label for="IP" class="col-sm-1">IP：</label>#}
-{#                        <input type="text" id="IP" placeholder="ip" class="col-sm-5">#}
-{#                    </div>#}
-{#                    <div class="form-group">#}
-{#                        <label for="PORT" class="col-sm-1">PORT：</label>#}
-{#                        <input type="text" id="PORT" placeholder="port" class="col-sm-5">#}
-{#                    </div>#}
                     <table>
                         <tr>
-                            <td class="IO">IP</td>
-                            <td><input type="text" id="IP" placeholder="ip"/></td>
+                            <td class="IO">服务器IP</td>
+                            <td><input type="text" placeholder="服务器IP" id="IP" {% if server_ip %} value = {{ server_ip }} {% endif %} /></td>
                             <td class="flag1"></td>
                         </tr>
                         <tr>
-                            <td class="IO">PORT</td>
-                            <td><input type="text" id="PORT" placeholder="port"/></td>
+                            <td class="IO">端口号</td>
+                            <td><input type="text" placeholder="端口号" id="PORT" {% if server_port %} value = {{ server_port }} {% endif %}  /></td>
                             <td class="flag2"></td>
                         </tr>
                         <tr>
@@ -87,23 +79,26 @@
             }
         });
         $("#submit").click(function(){
-            var IP =$.trim($("#IP").val());
-            var PORT =$.trim($("#PORT").val());
-{#                $.get("/adminbd/sys_config",function(data){#}
-{#                    #}
-{#                });#}
-{#                $.post("/adminbd/sys_config",{#}
-{#                    name:"...",#}
-{#                    url:"..."#}
-{#                },function(data){#}
-{#                    #}
-{#                });#}
+            var $IP =$.trim($("#IP").val());
+            var $PORT =$.trim($("#PORT").val());
                 $.ajax({
                      url:"/adminbd/sys_config",
-                     data: {IP:IP,PORT:PORT},
+                     data:{
+                         server_ip:$IP,
+                         server_port:$PORT,
+                         csrfmiddlewaretoken:'{{ csrf_token }}'
+                     },
                      type:"POST",
                      success:function(data) {
-                         alert(data);
+                         if (data.result == 0){
+                             var btnSn=function(e) {
+                                window.location.href = '/adminbd/sys_config';
+                                };
+                             SuccessWarning("添加成功",btnSn);
+                         }else{
+                             alert(data);
+                              ErrorWarning("服务器错误！");
+                         }
                      },
                     error:function(){
                          ErrorWarning("服务器错误！");

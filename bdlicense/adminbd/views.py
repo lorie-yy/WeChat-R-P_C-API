@@ -1621,23 +1621,31 @@ def download_hlep_usage_file(request):
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
 
-class SysConfig(View):
 
-    def genSysConf(self,sys_type,val):
-        syss = SystemConfig.objects.filter(attribute=sys_type)
-        if syss.count() > 0:
-            syss.update(value=val)
-        else:
-            sys_conf = SystemConfig(attribute=sys_type)
-            sys_conf.value = val
-            sys_conf.save()
+def genSysConf(sys_type,val):
+    syss = SystemConfig.objects.filter(attribute=sys_type)
+    if syss.count() > 0:
+        syss.update(value=val)
+        print "update ip and port sucessfully"
+    else:
+        sys_conf = SystemConfig(attribute=sys_type)
+        sys_conf.value = val
+        sys_conf.save()
+        print "create ip and port successfully"
+
+class SysConfigView(View):
     def get(self, request):
         print "[in get sys_config]"
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
         context = {}
-
+        s_ips = SystemConfig.objects.filter(attribute= "server_ip")
+        s_ports = SystemConfig.objects.filter(attribute= "server_port")
+        if s_ips.count() > 0:
+            context['server_ip'] = s_ips[0].value
+        if s_ports.count() > 0:
+            context['server_port'] = s_ports[0].value
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
 
@@ -1646,7 +1654,6 @@ class SysConfig(View):
         context['user_level'] = user_level
         return render(request, 'system_config.html',context)
     def post(self,request):
-
         print "[in post sys_config]"
         username = request.session.get('username')
         if not username:
@@ -1662,20 +1669,24 @@ class SysConfig(View):
 
         server_ip = request.POST.get('server_ip','')
         server_port = request.POST.get('server_port','')
-        import re
-        compile_ip = re.compile("^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
-                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
-                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
-                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$")
-        if server_ip and server_port:
-            if not compile_ip.match(server_ip):
-                return HttpResponse("illegal ip")
-            self.genSysConf('server_ip',server_ip)
-            self.genSysConf('server_port',server_port)
-        else:
-            return HttpResponse("illegal ip and port")
-        return HttpResponseRedirect("sys_config")
+        try:
+            # import re
+            # compile_ip = re.compile("^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+            #                         "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+            #                         "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+            #                         "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$")
+            if server_ip and server_port:
+                # if not compile_ip.match(server_ip):
+                #     return HttpResponse("illegal ip")
+                genSysConf('server_ip',server_ip)
+                genSysConf('server_port',server_port)
+                return JsonResponse({"result":0})
+            else:
+                return HttpResponse("illegal ip and port")
 
+        except Exception,e:
+            print e
+        return JsonResponse({"result":1})
 class or_query(View):
     def get(self, request):
         print "[in or_query]"
@@ -1712,7 +1723,6 @@ class order_details(View):
 
         is_superuser = request.session.get('is_superuser')
         context = {}
-
         wk_num = request.GET.get('wk_num','')
         print wk_num
         if wk_num:

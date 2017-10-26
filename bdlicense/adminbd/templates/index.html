@@ -227,7 +227,7 @@
         $(document).ready(function(){
             var $table = $('table');
             var currentPage = 0;//当前页默认值为0
-            var pageSize = 1;//每一页显示的数目
+            var pageSize = 10;//每一页显示的数目
             $table.bind('paging',function(){
             $table.find('tbody tr').hide().slice(currentPage*pageSize,(currentPage+1)*pageSize).show()
         });

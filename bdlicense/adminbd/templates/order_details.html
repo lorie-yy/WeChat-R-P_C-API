@@ -39,23 +39,4 @@
              </div>
         </div>
 
-    <script>
-    $(document).ready(function(){
-        $("#submit").click(function(){
-            var or_num =$.trim($("#sys_url").val());
-                $.ajax({
-                    url:"/adminbd/or_query",
-                    data: {or_num:or_num},
-                    type:"POST",
-                    success:function(data) {
-                        alert(data);
-                    },
-                    error:function(){
-                         ErrorWarning("服务器错误！");
-                    }
-            })
-        });
-
-    });
-    </script>
     {% endblock %}
