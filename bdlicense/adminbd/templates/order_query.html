@@ -1,8 +1,9 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
         <style>
-            button{
+            #submit{
                 margin-bottom: 10px;
+                padding: 7px;
             }
         </style>
         <div class="panel">
@@ -12,6 +13,15 @@
             </div>
 
             <div class="panel-body">
+                <form  role="form" id="sys_config" class="form-horizontal" action="" method="post" onsubmit="return false"  >
+                     {% csrf_token %}
+                    <div>
+                        <div>工单号</div>
+                        <input type="text" placeholder="url" id="or_num"/>
+                        <a class="btn btn-turquoise" id="submit" >查询</a>
+                    </div>
+                </form>
+
                     <table class="table table-striped table-condensed table-hover" style="padding: auto 35px;">
                     <thead>
                         <tr>
