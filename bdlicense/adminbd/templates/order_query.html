@@ -26,10 +26,15 @@
                         {% for each_work in work_info %}
                              <tr>
                                 <td>{{ each_work.id }}</td>
-
-                                 <td style="cursor: pointer;color: #00C853" onclick="window.location.href='/adminbd/order_details?wk_num={{ each_work.workOrderNum }}'" >
-                                     {{ each_work.workOrderNum }}
-                                 </td>
+                                {% if each_work.workOrderNum %}
+                                     <td
+                                         style="cursor: pointer;color: #00C853"
+                                         onclick="window.location.href='/adminbd/order_details?wk_num={{ each_work.workOrderNum }}'" >
+                                         {{ each_work.workOrderNum }}
+                                     </td>
+                                 {% else %}
+                                    <td>暂无工单号</td>
+                                 {% endif %}
 
                                 <td>{{ each_work.license.cloudInfo.cloudName }}</td>
                                 <td>{{ each_work.license.license_code }}</td>
