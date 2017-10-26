@@ -1632,26 +1632,49 @@ class SysConfig(View):
             sys_conf.value = val
             sys_conf.save()
     def get(self, request):
-        print "[in sys_config]"
+        print "[in get sys_config]"
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
+        context = {}
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
-        context = {}
-        server_ip = request.GET.get('server_ip','')
-        server_port = request.GET.get('server_port','')
-        if server_ip and server_port:
-            self.genSysConf('server_ip',server_ip)
-            self.genSysConf('server_port',server_port)
-        else:
-            return HttpResponse("illegal ip and port")
 
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         return render(request, 'system_config.html',context)
+    def post(self,request):
+
+        print "[in post sys_config]"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+
+        server_ip = request.POST.get('server_ip','')
+        server_port = request.POST.get('server_port','')
+        import re
+        compile_ip = re.compile("^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$")
+        if server_ip and server_port:
+            if not compile_ip.match(server_ip):
+                return HttpResponse("illegal ip")
+            self.genSysConf('server_ip',server_ip)
+            self.genSysConf('server_port',server_port)
+        else:
+            return HttpResponse("illegal ip and port")
+        return HttpResponseRedirect("sys_config")
 
 class or_query(View):
     def get(self, request):
