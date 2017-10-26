@@ -193,6 +193,14 @@ def genBdCode(code_type):
 
     return code
 
+def genLicenseCode(code_type):
+    if code_type == 'bdcode':
+        return  genBdCode('F')
+    elif code_type == 'ztecode':
+        return genZteCode()
+    else:
+        return ""
+
 def genCloudNum(code_type):
     timestamp = str(int(time.time()))
     nonce = ''.join(random.sample(string.digits,6))
@@ -219,22 +227,22 @@ class AddLicenseView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
-
-        if request.is_ajax():
-            print "in request.is_ajax() "
-            code_type = request.GET.get('code_type')
-            license_code = ""
-            if code_type == "0":
-                license_code = genBdCode("D")
-            elif code_type == "1":
-                license_code = genZteCode()
-            else:
-                return HttpResponse("error!!!!")
-            #response code
-            if license_code:
-                return HttpResponse(license_code)
-            else:
-                return HttpResponse("error!!!!")
+        #
+        # if request.is_ajax():
+        #     print "in request.is_ajax() "
+        #     code_type = request.GET.get('code_type')
+        #     license_code = ""
+        #     if code_type == "0":
+        #         license_code = genBdCode("D")
+        #     elif code_type == "1":
+        #         license_code = genZteCode()
+        #     else:
+        #         return HttpResponse("error!!!!")
+        #     #response code
+        #     if license_code:
+        #         return HttpResponse(license_code)
+        #     else:
+        #         return HttpResponse("error!!!!")
         return render(request, 'license_added.html',context)
 
     def post(self,request):
@@ -244,13 +252,16 @@ class AddLicenseView(View):
 
         print "in add license post func"
         params = request.POST.copy()
-        print params
-        license_code = params['license_code']
+        # print params
+        # license_code = params['license_code']
         cloud_info = params['cloud_info']
         license_time = params['license_time']
-        low_count = request.POST.get('low',0)
-        mid_count = request.POST.get('medium',0)
-        high_count = request.POST.get('high',0)
+        lower = request.POST.get('lower',0)
+        low = request.POST.get('low',0)
+        medium = request.POST.get('medium',0)
+        high = request.POST.get('high',0)
+        higher = request.POST.get('higher',0)
+        print lower,low,medium,high,higher
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
         uu = {}
@@ -264,14 +275,6 @@ class AddLicenseView(View):
                         result = 3
                         uu = {'res':result}
                         return JsonResponse(uu)
-        #license_code is not unique
-        licenseRecordObj = LicenseRecord.objects.filter(license_code=license_code)
-        if licenseRecordObj.count() > 0:
-            print "license_code is not unique"
-            result = 2
-            uu = {'res':result}
-            return JsonResponse(uu)
-
         #format expire time
         cur_time = datetime.now()
         print cur_time
@@ -280,54 +283,81 @@ class AddLicenseView(View):
         cur_time = cur_time.replace(year=fut_year)
         print cur_time
 
+
+        code_type = request.POST.get('code_type')
+
+        print "code_type:%s"%str(code_type)
+        #根据code的类型自动生成license code
+        license_code = ""
+        if code_type == "0":
+            license_code = genBdCode("D")
+        elif code_type == "1":
+            license_code = genZteCode()
+        print "生成的license CODE",license_code,
+        #license_code is not unique
+        licenseRecordObj = LicenseRecord.objects.filter(license_code=license_code)
+        if licenseRecordObj.count() > 0:
+            print "license_code is not unique"
+            result = 2
+            uu = {'res':result}
+            return JsonResponse(uu)
+
         # add new LicenseRecord
         try:
 
-            licenseType = LicenseType(type="1")
-            licenseType.save()
-            if data_license:
-                value = int(licenseType.type) | int(data_license)
-                print "value=",value
-                licenseType.type = value
-                licenseType.save()
-            if charging_license:
-                value = int(licenseType.type) | int(charging_license)
-                licenseType.type = value
-                print "value=",value
-                licenseType.save()
-
-            license = LicenseRecord()
+            license = LicenseRecord(licenseType="1")
             license.license_code = license_code
-            license.licenseType_id = licenseType.id
             license.cloudInfo_id = cloud_info
             license.expire_time = cur_time
-            license.low_counts = low_count
-            license.mid_counts = mid_count
-            license.high_counts = high_count
             license.save()
-            if int(low_count) != 0:
-                lP = LicenseParams.objects.get(id=1)
-                license.licenseParam.add(lP)
-            if int(mid_count) != 0:
-                mP = LicenseParams.objects.get(id=2)
-                license.licenseParam.add(mP)
-            if int(high_count) != 0:
-                hP = LicenseParams.objects.get(id=3)
-                license.licenseParam.add(hP)
+            #license 功能
+            if data_license:
+                value = int(license.licenseType) | int(data_license)
+                license.licenseType = value
+                license.save()
+            if charging_license:
+                value = int(license.licenseType) | int(charging_license)
+                license.licenseType = value
+                license.save()
+            workNum = WorkOrderNum(license_id=license.id)
+            workNum.save()
 
+            params_dic = {
+                "BCP8200-Lic-32":lower,
+                "BCP8200-Lic-64":low,
+                "BCP8200-Lic-128":medium,
+                "BCP8200-Lic-512":high,
+                "BCP8200-Lic-1024":higher
+            }
+            basic_dict = {}
+            licensePas = LicenseParams.objects.all()
+            for licensePa in licensePas:
+                basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
+            print basic_dict
+            maxAPs = 0
+            maxACs = 0
+            maxUsers = 0
+            for key,value in params_dic.items():
+                if value in [0,'0']:
+                    continue
+                else:
+                    wkInfo = WorkOrderInformation(
+                        materiel_name=key,
+                        materiel_count=value,
+                        workordernum_id=workNum.id)
+                    wkInfo.save()
+                    if key in basic_dict.keys():
+                        maxAPs += int(value)*int(basic_dict[key][0])
+                        maxACs += int(value)*int(basic_dict[key][1])
+                        maxUsers += int(value)*int(basic_dict[key][2])
+                    else:
+                        return HttpResponse("illegal license params")
+            license.maxAps = maxAPs
+            license.maxAcs = maxACs
+            license.maxUsers = maxUsers
             license.save()
             print "save license successfully"
-            if "ZTEKPBY" in license_code:
-                license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
-                value = int(license_code[10:])
-                license_coun.update(value=str(value))
-                print "save zte_license_count in system config table successfully"
-            elif "BCPLIC" in license_code:
-                license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
-                # if license_coun.count() >0:
-                value = license_code.split("D")[1]
-                license_coun.update(value=value)
-                print "save bd_license_count in system config table successfully"
+            updateCodeCount(str(license_code))
             result = 1
             uu = {'res':result}
             return JsonResponse(uu)
@@ -349,30 +379,66 @@ class EditLicenseView(View):
         license_id = request.GET.get('id',None)
         print "license_id=",license_id
         context = {}
-        if license_id is not None:
-            licenseRecord = LicenseRecord.objects.get(id=int(license_id))
-            paramsAll = licenseRecord.licenseParam.all()
-            # paramsIdList = []
-            # for param in paramsAll:
-            #     paramsIdList.append(param.id)
-            # context['paramsIdList'] = paramsIdList
-            # print "paramsIdList=",paramsIdList
-            # context['license_id'] = license_id
-            if paramsAll.count() > 0:
-                context['high'] = licenseRecord.high_counts
-                context['mid'] = licenseRecord.mid_counts
-                context['low'] = licenseRecord.low_counts
-                print context['high']
-                print context['mid']
-                print context['low']
-            if int(licenseRecord.licenseType.type) & 4:
-                context['data_id'] = 4
-                print "计费版本"
-            if int(licenseRecord.licenseType.type) & 2:
-                context['charging_id'] = 2
-                print "大数据版本"
-            context['licenseRecord'] = licenseRecord
-        licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
+
+        try:
+            get_dic = {}
+            if license_id is not None:
+                licenseRecord = LicenseRecord.objects.get(id=int(license_id))
+                context['licenseRecord'] = licenseRecord
+
+                if int(licenseRecord.licenseType) & 4:
+                    context['data_id'] = 4
+                    print "计费版本"
+                if int(licenseRecord.licenseType) & 2:
+                    context['charging_id'] = 2
+                    print "大数据版本"
+
+                wkOrders = WorkOrderNum.objects.filter(license_id=licenseRecord.id).order_by('-id')
+                print wkOrders.count()
+                print "-id count()"
+                if wkOrders.count() >0:
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id)
+                    for wkInfo in wkInfos:
+                        get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
+
+                    print get_dic
+
+                    # basic_dic = {
+                    #         "BCP8200-Lic-32":3,
+                    #         "BCP8200-Lic-64":9,
+                    #         "BCP8200-Lic-128":"medium",
+                    #         "BCP8200-Lic-512":"high",
+                    #         "BCP8200-Lic-1024":"higher"
+                    #     }
+                    if "BCP8200-Lic-32" in get_dic.keys():
+                        context['lower'] = get_dic['BCP8200-Lic-32']
+                    else:
+                        context['lower'] = 0
+                    if "BCP8200-Lic-64" in get_dic.keys():
+                        context['low'] = get_dic['BCP8200-Lic-64']
+                    else:
+                        context['low'] = 0
+                    if "BCP8200-Lic-128" in get_dic.keys():
+                        context['mid'] = get_dic['BCP8200-Lic-128']
+                    else:
+                        context['mid'] = 0
+                    if "BCP8200-Lic-512" in get_dic.keys():
+                        context['high'] = get_dic['BCP8200-Lic-512']
+                    else:
+                        context['high'] = 0
+                    if "BCP8200-Lic-1024" in get_dic.keys():
+                        context['higher'] = get_dic['BCP8200-Lic-1024']
+                    else:
+                        context['higher'] = 0
+                    # print context['higher']
+                    # print context['high']
+                    # print context['mid']
+                    # print context['low']
+                    # print context['lower']
+        except Exception,e:
+            print e
+
+        licenseParams = LicenseParams.objects.all()
         context['licenseParams'] = licenseParams
 
         context['username'] = username
@@ -393,30 +459,59 @@ class EditLicenseView(View):
         license_id = params['license_id']
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-        low_count = request.POST.get('low',0)
-        mid_count = request.POST.get('medium',0)
-        high_count = request.POST.get('high',0)
-        print "--------"
-        print request.POST.get('low',0)
-        print request.POST.get('medium',0)
-        print request.POST.get('high',0)
+
+        lower = request.POST.get('lower',0)
+        low = request.POST.get('low',0)
+        medium = request.POST.get('medium',0)
+        high = request.POST.get('high',0)
+        higher = request.POST.get('higher',0)
+
+        params_dic = {
+                "BCP8200-Lic-32":lower,
+                "BCP8200-Lic-64":low,
+                "BCP8200-Lic-128":medium,
+                "BCP8200-Lic-512":high,
+                "BCP8200-Lic-1024":higher
+            }
+        basic_dict = {}
+        licensePas = LicenseParams.objects.all()
+        for licensePa in licensePas:
+            basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
+        print basic_dict
+
+        maxAPs = 0
+        maxACs = 0
+        maxUsers = 0
+        workNum = WorkOrderNum(license_id=license_id)
+        workNum.save()
+        for key,value in params_dic.items():
+            if value in [0,'0']:
+                continue
+            else:
+                wkInfo = WorkOrderInformation(
+                    materiel_name=key,
+                    materiel_count=value,
+                    workordernum_id=workNum.id)
+                wkInfo.save()
+                if key in basic_dict.keys():
+                    print int(value)*int(basic_dict[key][0])
+                    maxAPs += int(value)*int(basic_dict[key][0])
+                    maxACs += int(value)*int(basic_dict[key][1])
+                    maxUsers += int(value)*int(basic_dict[key][2])
+                else:
+                    return HttpResponse("illegal license params")
+
+
         uu = {}
-        #one cloud has only one valid license
         try:
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
             if licenseObj.count() > 0:
-                licenseObj.update(low_counts=low_count,mid_counts=mid_count,high_counts=high_count)
-                if int(low_count) != 0:
-                    lP = LicenseParams.objects.get(id=1)
-                    licenseObj[0].licenseParam.add(lP)
-                if int(mid_count) != 0:
-                    mP = LicenseParams.objects.get(id=2)
-                    licenseObj[0].licenseParam.add(mP)
-                if int(high_count) != 0:
-                    hP = LicenseParams.objects.get(id=3)
-                    licenseObj[0].licenseParam.add(hP)
-                type_id = licenseObj[0].licenseType.id
-                typeObj = LicenseType.objects.filter(id=type_id)
+                licenseObj.update(
+                    maxAps=maxAPs,
+                    maxAcs=maxACs,
+                    maxUsers=maxUsers
+                )
+
                 if data_license != "":
                     if charging_license != "":
                         value = 7
@@ -427,7 +522,7 @@ class EditLicenseView(View):
                         value = 3
                     else:
                         value = 1
-                typeObj.update(type=value)
+                licenseObj.update(licenseType=value)
                 result = 0
                 uu = {'res':result}
                 return JsonResponse(uu)
@@ -436,21 +531,6 @@ class EditLicenseView(View):
         result = 1
         uu = {'res':result}
         return JsonResponse(uu)
-
-# def editlicense(type_license,licenseObj):
-#     value = 1
-#     if type_license != "":
-#         value = int(type_license) | int(licenseObj[0].licenseType.type)
-#         print "add fun"
-#     else:
-#         if type_license == "data_license":
-#             value = int(licenseObj[0].licenseType.type) & 4
-#             print "dec data fun"
-#         elif type_license == "charging_license":
-#             value = int(licenseObj[0].licenseType.type) & 2
-#             print "dec charging fun"
-#     print "value=",value
-#     return value
 
 class AddCloudView(View):
     def get(self,request):
@@ -642,35 +722,7 @@ class KeyParamsView(View):
                         dic_list.append(dic_tmp)
                 print dic_list
                 context['dic_list'] = dic_list
-                # paramsObjs = licenseObj.licenseParam.all()
-                # print "paramsObjs.counts",paramsObjs.count()
-                # aps = 0
-                # acs = 0
-                # for paramsObj in paramsObjs:
-                #     if paramsObj.id == 1:
-                #         print licenseObj.low_counts
-                #         print paramsObj.maxAPs
-                #         print paramsObj.maxAPs*licenseObj.low_counts
-                #         aps += paramsObj.maxAPs*licenseObj.low_counts
-                #         acs += paramsObj.maxACs*licenseObj.low_counts
-                #         print "aps=",aps
-                #         print "acs=",acs
-                #     elif paramsObj.id == 2:
-                #         aps += paramsObj.maxAPs*licenseObj.mid_counts
-                #         acs += paramsObj.maxACs*licenseObj.mid_counts
-                #         print "aps=",aps
-                #         print "acs=",acs
-                #     else:
-                #         aps += paramsObj.maxAPs*licenseObj.high_counts
-                #         acs += paramsObj.maxACs*licenseObj.high_counts
-                context['aps'] = licenseObj.maxAps
-                context['acs'] = licenseObj.maxAcs
-                context['user_s'] = licenseObj.maxUsers
-                # context['paramsObj'] = paramsObjs
-                context['code'] = licenseObj.license_code
-                # context['low_count'] = licenseObj.low_counts
-                # context['mid_count'] = licenseObj.mid_counts
-                # context['high_count'] = licenseObj.high_counts
+                context['licenseObj'] = licenseObj
         except Exception,e:
             print e
         context['username'] = username
@@ -739,19 +791,17 @@ class UpdateKeyIDView(View):
                 licenses.update(license_status=LicenseRecord.OPEN)
                 print "license status updated successfully"
 
-            if license_code.startswith("ZTEKPBY"):
-
-            # if code_type == "ztecode":
-                license_coun = SystemConfig.objects.filter(attribute = "zte_license_count")
-                value = int(license_code[10:])
-                license_coun.update(value=str(value))
-            # elif code_type == "bdcode":
-            elif license_code.startswith("BCPLIC"):
-                license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
-                value = license_code.split("F")[1]
-                license_coun.update(value=value)
-            else:
-                return HttpResponse("illegal code type")
+            # if license_code.startswith("ZTEKPBY"):
+            #
+            #     license_coun = SystemConfig.objects.filter(attribute = "zte_license_count")
+            #     value = int(license_code[10:])
+            #     license_coun.update(value=str(value))
+            # elif license_code.startswith("BCPLIC"):
+            #     license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+            #     value = license_code.split("F")[1]
+            #     license_coun.update(value=value)
+            # else:
+            #     return HttpResponse("illegal code type")
 
             return HttpResponse("OK")
         except Exception,e:
@@ -759,15 +809,144 @@ class UpdateKeyIDView(View):
 
         return HttpResponse("Error")
 
-def get_work_order_info(request):
+def getWorkNoInfo(work_no,rst_dict={}):
+    #新的工单号,获取工单号下的物料信息，提取、保存并返回给客户端进行显示
     from suds import WebFault
     from suds.client import Client
 
-    result = {}
-    rst_dict = {'os_info':[], 'license_info':[]}
-    work_no = request.GET.get('work_no', "123448")
+    order_server_ip = '192.168.1.83'
+    order_server_port = '8002'
+    user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
+    client=Client(user_url)
 
-    license_time = '2'#license 有效期，比如1,2,3,5单位：年
+    os_ids = ['BCP8200-OS-STD']
+    license_ids = ['BCP8200-Lic-64', 'BCP8200-Lic-128']
+    # rst_dict = {'os_info':[], 'license_info':[]}
+
+    line_list = [3,11]
+    try:
+        for each in line_list:
+            print work_no
+            result=client.service.loadOrderInfoByNoiCloud(work_no, each)
+
+            result = json.loads(result)
+            details =  result['details']
+
+            license_code = result.get('license_code', '')
+            cloud_name = result.get('finalCustomerName', '')
+            install_add = ""
+            cloud_buyer = result.get('customer', '')
+            contacts = result['createEmployee'].get('realName', '')
+            phone = result['createEmployee'].get('workphone', '')
+
+            rst_dict['license_code'] = license_code
+            rst_dict['cloud_name'] = cloud_name
+            rst_dict['cloud_buyer'] = cloud_buyer
+            rst_dict['contacts'] = contacts
+            rst_dict['phone'] = phone
+
+            if details['swVersion'] == u"同博达":
+                rst_dict['version_type'] = 'bdcode'
+            else:
+                rst_dict['version_type'] = 'ztecode'
+
+            tmp_dict = {}
+            if details['productType'] in os_ids:
+                tmp_dict['productType'] = details['productType']
+                tmp_dict['sumNo'] = details['sumNo']
+
+                rst_dict['os_info'].append(tmp_dict)
+            elif details['productType'] in license_ids:
+                tmp_dict['productType'] = details['productType']
+                tmp_dict['sumNo'] = details['sumNo']
+
+                rst_dict['license_info'].append(tmp_dict)
+            else:
+                continue
+    except:
+        print "ERROR:getwork info error"
+        return rst_dict
+
+    print rst_dict
+
+    # rst_dict = {'license_info': [
+    #                             # {'sumNo': 10, 'productType': u'BCP8200-Lic-32'},
+    #                              {'sumNo': 1, 'productType': u'BCP8200-Lic-64'},
+    #                              # {'sumNo': 1, 'productType': u'BCP8200-Lic-128'},
+    #                              # {'sumNo': 53, 'productType': u'BCP8200-Lic-1024'}
+    #                             ],
+    #             'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]}
+
+    lic_info = LicenseParams.objects.all()
+
+    basic_lic_dict = {}
+    for each in lic_info:
+        basic_lic_dict[each.cloudRankName] = [each.maxAPs, each.maxACs,each.maxUsers]
+
+    print basic_lic_dict
+
+    maxAPs = 0
+    maxACs = 0
+    maxUser = 0
+
+    for each in rst_dict['license_info']:
+        print each
+        if each['productType'] in basic_lic_dict.keys():
+            print each['sumNo']
+            print each['productType']
+            print basic_lic_dict[each['productType']]
+
+            print maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
+
+            maxAPs = maxAPs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][0])
+            maxACs = maxACs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][1])
+            maxUser = maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
+        # else:
+        #     return HttpResponse("has illegal license params")
+    rst_dict['max_ap_allowed'] = maxAPs
+    rst_dict['max_ac_allowed'] = maxACs
+    rst_dict['max_user_allowed'] = maxUser
+    rst_dict['result'] = True
+    return rst_dict
+
+def updateCodeCount(license_code):
+    if license_code.startswith("ZTEKPBY"):
+        license_coun = SystemConfig.objects.filter(attribute='zte_license_count')
+        value = int(license_code[10:])
+        license_coun.update(value=str(value))
+        print "save zte_license_count in system config table successfully"
+    elif license_code.startswith("BCPLICD"):
+        license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+        value = license_code.split("D")[1]
+        license_coun.update(value=value)
+        print "save bd_license_count D in system config table successfully"
+    elif license_code.startswith("BCPLICF"):
+        license_coun = SystemConfig.objects.filter(attribute='bd_license_count')
+        value = license_code.split("F")[1]
+        license_coun.update(value=value)
+        print "save bd_license_count F in system config table successfully"
+
+def get_work_order_information(work_order_id,license_id,rst_dict = {}):
+    print "重复查询工单号"
+    wkObjs = WorkOrderInformation.objects.filter(workordernum_id=work_order_id)
+    for wkObj in wkObjs:
+        tmp_dict = {}
+        tmp_dict['productType'] = wkObj.materiel_name
+        tmp_dict['sumNo'] = wkObj.materiel_count
+        rst_dict['license_info'].append(tmp_dict)
+
+    print rst_dict
+    licenseObj = LicenseRecord.objects.filter(id=license_id)
+    rst_dict['max_ap_allowed'] = licenseObj[0].maxAps
+    rst_dict['max_ac_allowed'] = licenseObj[0].maxAcs
+    rst_dict['max_user_allowed'] = licenseObj[0].maxUsers
+    rst_dict['license_code'] = licenseObj[0].license_code
+
+    return rst_dict
+
+def get_work_order_info(request):
+    work_no = request.GET.get('work_no', "123448")
+    license_time = '2'                             #license 有效期，比如1,2,3,5单位：年
 
     #format expire time
     cur_time = datetime.now()
@@ -776,281 +955,214 @@ def get_work_order_info(request):
     fut_year = cur_year+int(license_time)
     cur_time = cur_time.replace(year=fut_year)
     cur_time =  cur_time.strftime("%Y-%m-%d")
+
+
+    rst_dict = {'result':False,'os_info':[], 'license_info':[]}
     rst_dict['license_expire_time'] = cur_time
 
     licen = WorkOrderNum.objects.filter(workOrderNum = work_no)
-    if licen.count() > 0:
-        #重复查询工单号
-        print "重复查询工单号"
-        wkObjs = WorkOrderInformation.objects.filter(workordernum_id=licen[0].id)
-        for wkObj in wkObjs:
-            tmp_dict = {}
-            tmp_dict['productType'] = wkObj.materiel_name
-            tmp_dict['sumNo'] = wkObj.materiel_count
-            rst_dict['license_info'].append(tmp_dict)
-        print "rst_dict"
-        print rst_dict
-        licenseObj = LicenseRecord.objects.filter(id=licen[0].license_id)
-        rst_dict['max_ap_allowed'] = licenseObj[0].maxAps
-        rst_dict['max_ac_allowed'] = licenseObj[0].maxAcs
-        rst_dict['max_user_allowed'] = licenseObj[0].maxUsers
-        rst_dict['license_code'] = licenseObj[0].license_code
 
-    else:
-        #新的工单号,获取工单号下的物料信息，提取、保存并返回给客户端进行显示
-
-        # order_server_ip = '192.168.1.83'
-        # order_server_port = '8002'
-        # user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
-        # client=Client(user_url)
-        #
-        # os_ids = ['BCP8200-OS-STD']
-        # license_ids = ['BCP8200-Lic-64', 'BCP8200-Lic-128']
-        # rst_dict = {'os_info':[], 'license_info':[]}
-        #
-        # line_list = [3,11]
-        # for each in line_list:
-        #     print work_no
-        #     result=client.service.loadOrderInfoByNoiCloud(work_no, each)
-        #
-        #     result = json.loads(result)
-        #     details =  result['details']
-        #
-        #     tmp_dict = {}
-        #     if details['productType'] in os_ids:
-        #         tmp_dict['productType'] = details['productType']
-        #         tmp_dict['sumNo'] = details['sumNo']
-        #
-        #         rst_dict['os_info'].append(tmp_dict)
-        #     elif details['productType'] in license_ids:
-        #         tmp_dict['productType'] = details['productType']
-        #         tmp_dict['sumNo'] = details['sumNo']
-        #
-        #         rst_dict['license_info'].append(tmp_dict)
-        #     else:
-        #         continue
-        #
-        # print rst_dict
-
-        rst_dict = {'license_info': [
-                                    # {'sumNo': 10, 'productType': u'BCP8200-Lic-32'},
-                                     {'sumNo': 1, 'productType': u'BCP8200-Lic-64'},
-                                     # {'sumNo': 1, 'productType': u'BCP8200-Lic-128'},
-                                     # {'sumNo': 53, 'productType': u'BCP8200-Lic-1024'}
-                                    ],
-                    'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]}
-
-        lic_info = LicenseParams.objects.all()
-
-        basic_lic_dict = {}
-        for each in lic_info:
-            basic_lic_dict[each.cloudRankName] = [each.maxAPs, each.maxACs,each.maxUsers]
-
-        print basic_lic_dict
-
-        maxAPs = 0
-        maxACs = 0
-        maxUser = 0
-
-        for each in rst_dict['license_info']:
-            print each
-            if each['productType'] in basic_lic_dict.keys():
-                print each['sumNo']
-                print each['productType']
-                print basic_lic_dict[each['productType']]
-
-                print maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
-
-                maxAPs = maxAPs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][0])
-                maxACs = maxACs + int(each['sumNo'])*int(basic_lic_dict[each['productType']][1])
-                maxUser = maxUser + int(each['sumNo'])*int(basic_lic_dict[each['productType']][2])
-            # else:
-            #     return HttpResponse("has illegal license params")
-        rst_dict['max_ap_allowed'] = maxAPs
-        rst_dict['max_ac_allowed'] = maxACs
-        rst_dict['max_user_allowed'] = maxUser
-
-        license_code = ''
-        # license_code = 'ZTEKPBYHAL00002'
-        code_type = 'bdcode'
-        # code_type = 'ztecode'
-        license_type = '5'#例如，1：基本版本，4：大数据版本,2：计费版本（3：基本+计费，5：基本+大数据，7：基本+计费+大数据）
-
-        if license_code == '' or not license_code:
-            #第一次验证激活
-
-            #1.云平台的管理员（即服务器保存的用户名密码，只有提供用户名，才能登陆，才能查看自己云平台以及license的相关信息）
-            #2.云平台的相关信息（云平台管理员必须有，其次云平台编号：暂时自己生成。其他包括名称、购买方、安装地址、联系人、联系电话可有可无）
-            #3.license相关信息（工单号、key_id、code、status、valid、reset、random_num、type、params、云平台、过期时间
-            #   maxaps,maxacs,maxusers ）
-
-            username = ''
-            contactor = ''
-            phone = ''
-
-            try:
-                #管理员添加的相关操作
-                # userObj = User.objects.filter(username=username)
-                # uId = 0
-                # if userObj.count() > 0:
-                #     uId = userObj[0].id
-                #     print "user exist id is %s"%uId
-                # else:
-                #     user = User.objects.create_user(username=username,password="123456")
-                #     print "create new user and inital pwd is 123456"
-                #     print user
-                #     # if super_user == 1:
-                #     #     user.is_superuser = 1
-                #     # else:
-                #     user.is_superuser = 0
-                #     user.user_level = 0
-                #     user.is_staff = 1
-                #     user.is_active = 1
-                #     user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
-                #     if contactor:
-                #         user.contacts = contactor
-                #     if phone:
-                #         user.phone_num = phone
-                #     uId = user.id
-                # print "uId %s"%uId
-
-                #云平台的相关操作
-                cloud_name = 'CloudName'
-                install_add = ''
-                cloud_buyer = ''
-                contacts = ''
-                #以上参数可有可无
-                cloudInfo = CloudInformation()
-                cloudInfo.cloudName = cloud_name
-                cloudInfo.installAddress = install_add
-                cloudInfo.buyer = cloud_buyer
-                cloudInfo.contacts = contacts
-                cloudInfo.phone = phone
-                cloud_num = genCloudNum("BUSS")
-                cloudInfo.cloudNum = cloud_num
-                cloudInfo.save()
-                # userObj = User.objects.get(id=int(uId))
-                # print "uId get user",userObj
-                # cloudInfo.cloudUser.add(userObj)
-
-                #license相关操作,首先生成license code（新的工单号且license code信息没有，新下单的license和云平台）
-                if code_type == 'bdcode':
-                    license_code = genBdCode('F')
-                elif code_type == 'ztecode':
-                    license_code = genZteCode()
-
-
-                licenseObj = LicenseRecord()
-                licenseObj.license_code = license_code
-                licenseObj.licenseType = int(license_type)#表示该license的功能
-                licenseObj.cloudInfo_id = cloudInfo.id
-                licenseObj.expire_time = cur_time
-                licenseObj.maxAps = maxAPs #该license支持的最大AP
-                licenseObj.maxAcs = maxACs#该license支持的最大AC
-                licenseObj.maxUsers = maxUser#该license支持的最大User
-                licenseObj.save()
-
-                #创建新的工单号
-                workNum = WorkOrderNum()
-                workNum.license_id = licenseObj.id
-                workNum.workOrderNum = work_no
-                workNum.save()
-
-                #工单物料信息的相关操作
-                for each in rst_dict['license_info']:
-                    woObj = WorkOrderInformation()
-                    woObj.materiel_name = each['productType']
-                    woObj.materiel_count = each['sumNo']
-                    woObj.workordernum_id = workNum.id
-                    woObj.save()
-
-                rst_dict['license_code'] = license_code
-            except Exception,e:
-                print e
-        else:
-            #扩容或者增加功能
-            print "扩容或者增加功能"
-            license_type = '7'
-            print license_type
-
-            licenseObj = LicenseRecord.objects.filter(license_code=license_code)
-            if licenseObj.count() >0:
-                licenseObj.update(
-                    maxAps = maxAPs,
-                    maxAcs=maxACs,
-                    maxUsers=maxUser,
-                    licenseType=license_type
-                )
-                #工单号增加操作
-                workNUm = WorkOrderNum(workOrderNum=work_no,license_id=licenseObj[0].id)
-                workNUm.save()
-
-                #工单表的相关操作
-                for each in rst_dict['license_info']:
-                    woObj = WorkOrderInformation()
-                    woObj.materiel_name = each['productType']
-                    woObj.materiel_count = each['sumNo']
-                    woObj.workordernum_id = workNUm.id
-                    woObj.save()
-                rst_dict['license_code'] = license_code
-            else:
-                return HttpResponse("code error!!!")
-
-            # workorders = workNUm.workordernum_set.all()
-            # print "改license下有%s个工单"%workorders.count()
-            #
-            # get_materiel_name = []
-            # for each in rst_dict['license_info']:
-            #     get_materiel_name.append(each['productType'])
-            # print "获取的全部license的物料信息为%s"%get_materiel_name
-            #
-            #
-            # basic_lic_dict = {}
-            # for each in rst_dict['license_info']:
-            #     basic_lic_dict[each['productType']] = each['sumNo']
-            # print "basic_lic_dict%s"%basic_lic_dict
-
-            # for workorder in workorders:
-            #     if workorder.materiel_name not in get_materiel_name:
-            #         #物料信息减少，无物料license配置时数量值为零
-            #         workorder.materiel_count = 0
-            #         workorder.save()
-            #         print "save 0 successfully"
-            #     else:
-            #         #物料信息更新
-            #         print "原始物料个数%s"%str(workorder.materiel_count)
-            #         workorder.materiel_count = basic_lic_dict.get(workorder.materiel_name)
-            #         workorder.save()
-            #         print "更新后物料个数%s"%str(workorder.materiel_count)
-            # #物料信息增加
-            # for key,value in basic_lic_dict.items():
-            #     workO = WorkOrderInformation.objects.filter(
-            #         materiel_name=key,
-            #         workorder_id=licenseObj[0].id
-            #     )
-            #     if workO.count() == 0:
-            #         WorkOrderInformation(workorder_id=licenseObj[0].id,
-            #                       materiel_name=key,
-            #                       materiel_count=value).save()
-            #         print "增加一条新的记录%s,%s"%(str(key),str(value))
-
-            #物料信息增加
-            # for each in rst_dict['license_info']:
-            #     for materiel_name in get_materiel_name:
-            #         worO = WorkOrder.objects.filter(workorder_id = licenseObj[0].id,
-            #                                         materiel_name=materiel_name)
-            #         if worO.count() > 0:
-            #             print "获取%s数量为%s，在数据库中有记录，更新为%s"%(str(materiel_name),str(worO[0].materiel_count),str(each['sumNo']))
-            #             worO.update(materiel_count=each['sumNo'])
-            #         else:
-            #             print "获取%s物料信息，在数据库中没有记录，新建,数量%s"%(materiel_name,each['sumNo'])
-            #             WorkOrder(workorder_id=licenseObj[0].id,
-            #                       materiel_name=materiel_name,
-            #                       materiel_count=each['sumNo']).save()
-
+    # if licen.count() > 0:
+    #     #重复查询工单号
+    #     rst_dict = get_work_order_information(licen[0].id, licen[0].license_id, rst_dict=rst_dict)
+    #
+    #     return JsonResponse(rst_dict)
+    # else:
+    #     rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
+    #
+    #     if not rst_dict['result']:
+    #         return JsonResponse(rst_dict)
+    rst_dict = {'cloud_buyer': u'\u6c5f\u82cf\u5f00\u4e3d\u667a\u63a7\u79d1\u6280\u6709\u9650\u516c\u53f8',
+                'license_expire_time': '2019-10-25',
+                'max_ap_allowed': 64,
+                'license_code': '',
+                'contacts': u'\u4ef2\u7fa4',
+                'version_type': 'bdcode',
+                'phone': u'13816523915',
+                'cloud_name': u'\u6c5f\u82cf\u7701\u5357\u901a\u5e02\u8fdb\u9c9c\u6e2f\u9c9c\u82b1\u5c0f\u9547\u667a\u80fd\u5316\u7cfb\u7edf\u9879\u76ee',
+                'result': True,
+                'max_user_allowed': 1280,
+                'license_info': [{'sumNo': 1, 'productType': u'BCP8200-Lic-64'}],
+                'max_ac_allowed': 1, 'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]
+                }
 
     print rst_dict
 
+    license_code = rst_dict.get('license_code', "")  #license_code = 'ZTEKPBYHAL00002'
+    license_type = '5'#例如，1：基本版本，4：大数据版本,2：计费版本（3：基本+计费，5：基本+大数据，7：基本+计费+大数据）
+
+    if license_code == '':
+        #第一次验证激活
+
+        #1.云平台的管理员（即服务器保存的用户名密码，只有提供用户名，才能登陆，才能查看自己云平台以及license的相关信息）
+        #2.云平台的相关信息（云平台管理员必须有，其次云平台编号：暂时自己生成。其他包括名称、购买方、安装地址、联系人、联系电话可有可无）
+        #3.license相关信息（工单号、key_id、code、status、valid、reset、random_num、type、params、云平台、过期时,maxaps,maxacs,maxusers ）
+
+        try:
+            #username = 'lijie'
+            # contactor = '李杰'
+            # phone = '15821837085'
+            #管理员添加的相关操作
+            # userObj = User.objects.filter(username=username)
+            # uId = 0
+            # if userObj.count() > 0:
+            #     uId = userObj[0].id
+            #     print "user exist id is %s"%uId
+            # else:
+            #     user = User.objects.create_user(username=username,password="123456")
+            #     print "create new user and inital pwd is 123456"
+            #     print user
+            #     # if super_user == 1:
+            #     #     user.is_superuser = 1
+            #     # else:
+            #     user.is_superuser = 0
+            #     user.user_level = 0
+            #     user.is_staff = 1
+            #     user.is_active = 1
+            #     user.date_joined = datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+            #     if contactor:
+            #         user.contacts = contactor
+            #     if phone:
+            #         user.phone_num = phone
+            #     uId = user.id
+            # print "uId %s"%uId
+
+            #云平台的相关操作
+            cloud_name = rst_dict.get('cloud_name','')
+            install_add = ''
+            cloud_buyer = rst_dict.get('cloud_buyer','')
+            contacts = rst_dict.get('contacts','')
+            contact_phone = rst_dict.get('phone','')
+            #以上参数可有可无
+
+            cloudInfo = CloudInformation()
+            cloudInfo.cloudName = cloud_name
+            cloudInfo.installAddress = install_add
+            cloudInfo.buyer = cloud_buyer
+            cloudInfo.contacts = contacts
+            cloudInfo.phone = contact_phone
+            cloud_num = genCloudNum("BUSS")
+            cloudInfo.cloudNum = cloud_num
+            cloudInfo.save()
+            # userObj = User.objects.get(id=int(uId))
+            # print "uId get user",userObj
+            # cloudInfo.cloudUser.add(userObj)
+
+            #license相关操作,首先生成license code（新的工单号且license code信息没有，新下单的license和云平台）
+            code_type = rst_dict.get("version_type", 'bdcode')                      #'bdcode':博达版本   'ztecode':ZTE版本
+            license_code = genLicenseCode(code_type)
+            print license_code
+
+            licenseObj = LicenseRecord()
+            licenseObj.license_code = license_code
+            licenseObj.licenseType = int(license_type)                                         #表示该license的功能
+            licenseObj.cloudInfo_id = cloudInfo.id
+            licenseObj.expire_time = cur_time
+            licenseObj.maxAps = rst_dict.get('max_ap_allowed',0)                                #该license支持的最大AP
+            licenseObj.maxAcs = rst_dict.get('max_ac_allowed',0)                                #该license支持的最大AC
+            licenseObj.maxUsers = rst_dict.get('max_user_allowed',0)                            #该license支持的最大User
+            licenseObj.save()
+
+            #创建新的工单号
+            workNum = WorkOrderNum()
+            workNum.license_id = licenseObj.id
+            workNum.workOrderNum = work_no
+            workNum.save()
+
+            #工单物料信息的相关操作
+            for each in rst_dict['license_info']:
+                woObj = WorkOrderInformation()
+                woObj.materiel_name = each['productType']
+                woObj.materiel_count = each['sumNo']
+                woObj.workordernum_id = workNum.id
+                woObj.save()
+
+            rst_dict['license_code'] = license_code
+        except Exception,e:
+            print e
+    else:
+        #扩容或者增加功能
+        print "扩容或者增加功能"
+        license_type = '7'
+        print license_type
+
+        licenseObj = LicenseRecord.objects.filter(license_code=license_code)
+        if licenseObj.count() >0:
+            licenseObj.update(
+                maxAps = rst_dict.get('max_ap_allowed',0),
+                maxAcs=rst_dict.get('max_ac_allowed',0),
+                maxUsers=rst_dict.get('max_user_allowed',0),
+                licenseType=license_type
+            )
+            #工单号增加操作
+            workNUm = WorkOrderNum(workOrderNum=work_no,license_id=licenseObj[0].id)
+            workNUm.save()
+
+            #工单表的相关操作
+            for each in rst_dict['license_info']:
+                woObj = WorkOrderInformation()
+                woObj.materiel_name = each['productType']
+                woObj.materiel_count = each['sumNo']
+                woObj.workordernum_id = workNUm.id
+                woObj.save()
+            rst_dict['license_code'] = license_code
+        else:
+            return HttpResponse("code error!!!")
+
+        # workorders = workNUm.workordernum_set.all()
+        # print "改license下有%s个工单"%workorders.count()
+        #
+        # get_materiel_name = []
+        # for each in rst_dict['license_info']:
+        #     get_materiel_name.append(each['productType'])
+        # print "获取的全部license的物料信息为%s"%get_materiel_name
+        #
+        #
+        # basic_lic_dict = {}
+        # for each in rst_dict['license_info']:
+        #     basic_lic_dict[each['productType']] = each['sumNo']
+        # print "basic_lic_dict%s"%basic_lic_dict
+
+        # for workorder in workorders:
+        #     if workorder.materiel_name not in get_materiel_name:
+        #         #物料信息减少，无物料license配置时数量值为零
+        #         workorder.materiel_count = 0
+        #         workorder.save()
+        #         print "save 0 successfully"
+        #     else:
+        #         #物料信息更新
+        #         print "原始物料个数%s"%str(workorder.materiel_count)
+        #         workorder.materiel_count = basic_lic_dict.get(workorder.materiel_name)
+        #         workorder.save()
+        #         print "更新后物料个数%s"%str(workorder.materiel_count)
+        # #物料信息增加
+        # for key,value in basic_lic_dict.items():
+        #     workO = WorkOrderInformation.objects.filter(
+        #         materiel_name=key,
+        #         workorder_id=licenseObj[0].id
+        #     )
+        #     if workO.count() == 0:
+        #         WorkOrderInformation(workorder_id=licenseObj[0].id,
+        #                       materiel_name=key,
+        #                       materiel_count=value).save()
+        #         print "增加一条新的记录%s,%s"%(str(key),str(value))
+
+        #物料信息增加
+        # for each in rst_dict['license_info']:
+        #     for materiel_name in get_materiel_name:
+        #         worO = WorkOrder.objects.filter(workorder_id = licenseObj[0].id,
+        #                                         materiel_name=materiel_name)
+        #         if worO.count() > 0:
+        #             print "获取%s数量为%s，在数据库中有记录，更新为%s"%(str(materiel_name),str(worO[0].materiel_count),str(each['sumNo']))
+        #             worO.update(materiel_count=each['sumNo'])
+        #         else:
+        #             print "获取%s物料信息，在数据库中没有记录，新建,数量%s"%(materiel_name,each['sumNo'])
+        #             WorkOrder(workorder_id=licenseObj[0].id,
+        #                       materiel_name=materiel_name,
+        #                       materiel_count=each['sumNo']).save()
+
+
+    print rst_dict
 
     return JsonResponse(rst_dict)
 
@@ -1509,78 +1621,118 @@ def download_hlep_usage_file(request):
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
 
-#编辑license
-class Modify_license(View):
-    def get(self,request):
-        username = request.GET.get('username')
-        pwd = request.GET.get('pwd')
-        key_id = request.GET.get('key_id')
-        if username == 'bdyun' and pwd == 'bdyun':
-            license = LicenseRecord.objects.filter(key_id = key_id)[0]
-            return render(request, 'edit_license.html',{'license':license})
-    def post(self,request):
-        yuncode=request.POST.get("yuncode")
-        key_id=request.POST.get("key_id")
-        build_time=request.POST.get("build_time")
-        is_valid=request.POST.get("is_valid")
-        is_reset=request.POST.get("is_reset")
-        expire_time=request.POST.get("expire_time")
-        license_status=request.POST.get("license_status")
-        yunname=request.POST.get("yunname")
-        licenseType=request.POST.get("licenseType")
-        try:
-            license = LicenseRecord.objects.filter(key_id = key_id)
-            license.update(
-                license_status=license_status,
-                is_valid=is_valid,
-                is_reset=is_reset
-            )
-        except Exception,e:
-            print e
-            return JsonResponse({"result":1})
-        else:
-            return JsonResponse({"result":0})
+class SysConfig(View):
 
-class sys_config(View):
+    def genSysConf(self,sys_type,val):
+        syss = SystemConfig.objects.filter(attribute=sys_type)
+        if syss.count() > 0:
+            syss.update(value=val)
+        else:
+            sys_conf = SystemConfig(attribute=sys_type)
+            sys_conf.value = val
+            sys_conf.save()
     def get(self, request):
-        print "in IndexYunView"
+        print "[in get sys_config]"
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
+        context = {}
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
-        context = {}
-        if is_superuser:
-            userSets = User.objects.all()
-            context['userSets'] = userSets
-        else:
-            print "not superuser,no right to display the user list"
-            return HttpResponse("No Right")
 
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         return render(request, 'system_config.html',context)
+    def post(self,request):
+
+        print "[in post sys_config]"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
+
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+
+        server_ip = request.POST.get('server_ip','')
+        server_port = request.POST.get('server_port','')
+        import re
+        compile_ip = re.compile("^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+                                "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$")
+        if server_ip and server_port:
+            if not compile_ip.match(server_ip):
+                return HttpResponse("illegal ip")
+            self.genSysConf('server_ip',server_ip)
+            self.genSysConf('server_port',server_port)
+        else:
+            return HttpResponse("illegal ip and port")
+        return HttpResponseRedirect("sys_config")
 
 class or_query(View):
     def get(self, request):
-        print "in IndexYunView"
+        print "[in or_query]"
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+
         context = {}
+
         if is_superuser:
-            userSets = User.objects.all()
-            context['userSets'] = userSets
+
+            work_info = WorkOrderNum.objects.all()
+            context['work_info'] = work_info
+
         else:
             print "not superuser,no right to display the user list"
             return HttpResponse("No Right")
 
-        context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+
         return render(request, 'order_query.html',context)
+
+class order_details(View):
+    def get(self, request):
+        print "[order_details]"
+        username = request.session.get('username')
+        user_level = request.session.get('user_level')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        context = {}
+
+        wk_num = request.GET.get('wk_num','')
+        print wk_num
+        if wk_num:
+            try:
+                workorders = WorkOrderNum.objects.filter(workOrderNum=wk_num)
+                print workorders[0].workOrderNum
+                print workorders[0].license_id
+                licenseObj = LicenseRecord.objects.filter(id=workorders[0].license_id)
+                if workorders:
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=workorders[0].id)
+                    context['wkInfos'] = wkInfos
+                context['licenseObj'] = licenseObj[0]
+                print licenseObj[0].license_code
+            except Exception,e:
+                print e
+        else:
+            return HttpResponse("no work num, error query!!!")
+
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+
+        return render(request, 'order_details.html',context)
+

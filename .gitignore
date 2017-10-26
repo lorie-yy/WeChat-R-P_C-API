@@ -1,7 +1,5 @@
 *.pyc
-settings.py
 .idea/
-settings.py*
 *.bak
 *.swo
-
+*/migrations/
