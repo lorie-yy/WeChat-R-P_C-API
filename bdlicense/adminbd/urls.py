@@ -15,7 +15,6 @@ urlpatterns = patterns(
     url(r'^add_user',views.AddUserView.as_view(), name='add_user'),
     url(r'^user_cloud',views.UserCloudView.as_view(), name='user_cloud'),
     url(r'^license_param',views.KeyParamsView.as_view(), name='license_param'),
-    url(r'^modify_license',views.Modify_license.as_view(), name='modify_license'),
     url(r'^modify_password',views.ModifyPasswordView.as_view(), name='modify_password'),
     url(r'^license_login',views.license_login, name='license_login'),
     url(r'^license_logout',views.license_logout, name='license_logout'),
@@ -31,7 +30,7 @@ urlpatterns = patterns(
     url(r'^download_license_client_file',views.download_license_file, name='download_license_client_file'),
     url(r'^download_license_usage_file',views.download_hlep_usage_file, name='download_license_usage_file'),
     url(r'^work_order',views.get_work_order_info, name='work_order'),
-    url(r'^sys_config',views.sys_config.as_view(), name='sys_config'),
+    url(r'^sys_config',views.SysConfig.as_view(), name='sys_config'),
     url(r'^or_query',views.or_query.as_view(), name='or_query'),
     url(r'^order_details',views.order_details.as_view(), name='order_details'),
 )
