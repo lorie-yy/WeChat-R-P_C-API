@@ -38,11 +38,13 @@ class LicenseType(models.Model):
 
 class LicenseParams(models.Model):
     id = models.AutoField(primary_key=True)
-    cloudRankName = models.CharField('云平台等级名称',max_length=255,default='', blank=False)
-    #1:lowLicense 2:middleLicense 3:highLicense
+    code = models.CharField('物料编码',max_length=255,default='', blank=False)
+    cloudRankName = models.CharField('物料名称',max_length=255,default='', blank=False)
     maxAPs = models.IntegerField('最大AP数',default=0, blank=False)
     maxACs = models.IntegerField('最大AC数',default=0, blank=False)
     maxUsers = models.IntegerField('最大用户数',default=0, blank=False)
+    vesion_type = models.IntegerField('版本类型',default=1, blank=False)
+    product_type = models.IntegerField('版本类型',default=1, blank=False)
 
 class CloudInformation(models.Model):
     id = models.AutoField(primary_key=True)
