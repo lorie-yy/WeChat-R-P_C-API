@@ -37,7 +37,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MSG={'1':u"请填写用户名和密码",
      '2':u"用户没有写权限",
      '3':u"用户名或密码错误",
-     '4':u"请先登录"}
+     '4':u"请先登录",
+     '5':u"服务器链接超时"}
 
 class LicenseManager:
     def __init__(self, master):
@@ -157,7 +158,7 @@ class LicenseManager:
 
         if self.login_user == 'root':
             self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
-            self.oneLable.grid(row=3, column=0,columnspan=4,ipadx=50)
+            self.oneLable.grid(row=3, column=0,columnspan=4,ipadx=40)
             self.oneEntry = Entry(self.frame2,width=40,bd=2,font=('Helvetica', '12'))
             self.oneEntry.insert(END, self.license_code)
             self.oneEntry.grid(row=3, column=5, columnspan=4)
@@ -235,8 +236,6 @@ class LicenseManager:
 
     def getUserInfo(self):
         info_dict = getLicenseUser(self.license_server, self.port, self.login_user,self.user_passwd)
-        print info_dict
-
         return info_dict.get('res', 10)
 
     def confirm(self):
@@ -256,6 +255,8 @@ class LicenseManager:
             return
         elif self.user_valid == 2:
             msg = MSG['2']
+        elif self.user_valid == 10:
+            msg = MSG['5']
         else:
             msg = MSG['3']
 
@@ -295,28 +296,35 @@ class LicenseManager:
 
         work_info = getWorkOrderInfo(self.license_server, self.port, self.work_no)
 
-        print work_info
         os_info_list = work_info['os_info']
         license_info_list = work_info['license_info']
 
+        work_type = work_info.get('work_type', 0)
         if len(os_info_list) > 1:
             msg = u"非法的OS工单"
             self.show_info(msg)
             return
 
+
         msg = u"工单[%s]信息:\n\t\t" % (self.work_no)
-        space_str = '\t----------\t'
-        if len(os_info_list) == 0:
-            msg = msg + space_str + u"[OS]:\t-\t\t\t0个" + space_str + '\n\t\t'
+        space_str = '\t\t\t\t'
+        if work_type == 1:
+            msg = msg + "\t\t\t\t" + u"**********\t\t\t扩容版本信息\t\t\t**********"  + '\n'
         else:
-            msg = msg + space_str + u"[OS]:\t%s\t\t\t%s个" % (os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', "")) + space_str + '\n\t\t'
+            msg = msg + "\t\t\t\t" + u"**********\t\t\t新增版本信息\t\t\t**********" + '\n'
+
+        if work_info.get('cloud_buyer', "") != "":
+            msg = msg + space_str + u"[客户信息]:\t%s" % (work_info.get('cloud_buyer')) + '\n'
+        if len(os_info_list) == 0:
+            msg = msg + space_str + u"[OS]:\t\t%s\t\t\t%s\t\t\t%s" % ("","","") + '\n'
+        else:
+            msg = msg + space_str + u"[OS]:\t\t%s\t\t\t%s\t\t\t%s个" % (os_info_list[0].get('productNo',""),os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', "")) + '\n'
 
         for each in license_info_list:
-            msg = msg + space_str + u"[License]:\t%s\t\t\t%s个" % (each.get('productType',""), each.get('sumNo', ""))+ space_str + '\n\t\t'
+            msg = msg + space_str + u"[License]:\t%s\t\t\t%s\t\t\t%s个" % (each.get('productNo',""),each.get('productType',""), each.get('sumNo', "")) + '\n'
 
         self.writeMessage(msg)
 
-        print "self.key_id:", self.key_id
         self.keyEntry.configure(state=NORMAL)
         self.keyEntry.delete('0', END)
         self.keyEntry.insert(END, self.key_id)
@@ -368,8 +376,6 @@ class LicenseManager:
                 msg = u"请填写License Code再验证"
                 self.show_info(msg)
                 return
-
-
 
         self.InitSystem()
 
@@ -451,7 +457,6 @@ class LicenseManager:
            self.license_valid = True
 
        except Exception, e:
-           print e
            msg = u"License 服务器访问错误"
            self.writeMessage(msg)
            self.show_info(msg)
@@ -593,29 +598,13 @@ class LicenseLib():
             print decodeString
 
             Max_AP_Allowed = decodeString["a"]
-            #print Max_AP_Allowed
-
             Max_AC_Allowed = decodeString["b"]
-            #print Max_AC_Allowed
-
             Max_User_Allowed = decodeString["c"]
-            #print Max_User_Allowed
-
             License_Expire_Time = decodeString["d"]
-           #print License_Expire_Time
-
             License_Valid_Mask =decodeString["e"]
-            #print License_Valid_Mask
-
             License_Key =decodeString["f"]
-            #print License_Key
-
             License_Feature_String=decodeString["g"]
-            #print License_Feature_String
-
             featureDetail = License_Feature_String["featureDetail"]
-            #print featureDetail
-
             Magic_Number="#0A0C"
             Separate_Key="#B1D1"
             License_Generate_Time= decodeString["h"]
@@ -625,16 +614,10 @@ class LicenseLib():
                +str(Max_User_Allowed)+Separate_Key+str(License_Expire_Time) \
                +str(License_Key)+str(License_Feature_String)+Separate_Key+hardwareId
 
-            #print sign
-
             License_Valid_Mask_InFile = md5.new(sign).hexdigest()
-            #print License_Valid_Mask_InFile
-
             is_license_valid = ( License_Valid_Mask_InFile == License_Valid_Mask)
 
             license_file_lastUpdateTime = timestampInFile
-
-
         except Exception, e:
             print e
             f.close()
@@ -770,49 +753,58 @@ def CPUinfo():
     return CPUinfo['proc0']
 
 def getLicenseInfo(ip, port, key_id, license_code,work_no):
-    connection_str='http://%s:%s/adminbd/license_activate?'% (ip, port)
-    connection_str = connection_str + 'key_id=' + key_id
-    connection_str = connection_str + '&license_code=' + license_code
-    connection_str = connection_str + '&work_no=' + work_no
+    try:
+        connection_str='http://%s:%s/adminbd/license_activate?'% (ip, port)
+        connection_str = connection_str + 'key_id=' + key_id
+        connection_str = connection_str + '&license_code=' + license_code
+        connection_str = connection_str + '&work_no=' + work_no
 
-    f = urllib2.urlopen(connection_str)
-    response = f.read()
+        f = urllib2.urlopen(connection_str)
+        response = f.read()
 
-    info_dict = {}
-    info_dict = json.JSONDecoder().decode(response)
+        info_dict = json.JSONDecoder().decode(response)
+    except:
+        info_dict = {}
 
     return info_dict
 
 def getWorkOrderInfo(ip, port,work_order_id):
-    connection_str='http://%s:%s/adminbd/work_order?'% (ip, port)
-    connection_str = connection_str + '&work_no=' + work_order_id
-    print connection_str
+    try:
+        connection_str='http://%s:%s/adminbd/work_order?'% (ip, port)
+        connection_str = connection_str + '&work_no=' + work_order_id
 
-    f = urllib2.urlopen(connection_str)
-    response = f.read()
+        f = urllib2.urlopen(connection_str,timeout=15)
+        response = f.read()
 
-    info_dict = {}
-    info_dict = json.JSONDecoder().decode(response)
+        info_dict = json.JSONDecoder().decode(response)
+    except:
+        info_dict = {}
 
     return info_dict
 
 def writeKeyId(ip, port, key_id, license_code):
-    connection_str='http://%s:%s/adminbd/update_key_id?'% (ip, port)
-    connection_str = connection_str + 'key_id=' + key_id
-    connection_str = connection_str + '&license_code=' + license_code
+    try:
+        connection_str='http://%s:%s/adminbd/update_key_id?'% (ip, port)
+        connection_str = connection_str + 'key_id=' + key_id
+        connection_str = connection_str + '&license_code=' + license_code
 
-    f = urllib2.urlopen(connection_str)
-    response = f.read()
+        f = urllib2.urlopen(connection_str,timeout=15)
+        response = f.read()
+    except:
+        response = {}
 
     return response
 
 
 def getLicenseUser(s_ip, s_port, user_name, passwd):
     user_url = r'http://%s:%s/adminbd/user_invalid?username=%s&password=%s' % (s_ip,s_port,user_name,passwd)
-    f = urllib2.urlopen(user_url)
-    response = f.read()
+    try:
+        f = urllib2.urlopen(user_url,timeout=15)
+        response = f.read()
+    except:
+        response = {'res':10}
+        return response
 
-    info_dict = {}
     return json.JSONDecoder().decode(response)
 
 def getLoginUser(BASE_DIR):
@@ -857,11 +849,9 @@ def center_window(root, width, height):
     screenwidth = root.winfo_screenwidth()
     screenheight = root.winfo_screenheight()
     size = '%dx%d+%d+%d' % (width, height, (screenwidth - width)/2, (screenheight - height)/2)
-    print(size)
     root.geometry(size)
 
 root = Tk()
-
 
 imgicon = PhotoImage(file=os.path.join(BASE_DIR, 'file/license.gif'))
 root.tk.call('wm', 'iconphoto', root._w, imgicon)

@@ -107,3 +107,37 @@ LOG_PATH = '/var/log/uwsgi/'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static/'
+
+LOG_PATH = '/var/log/uwsgi/'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '{pid:%(process)d | module:%(pathname)s:%(lineno)d } [%(asctime)s] [%(levelname)s]  %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level':'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard'
+        },
+    },
+    'loggers': {
+        'django.request': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+        'aaron.debug': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'console': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True
+        }
+    },
+}
