@@ -1,8 +1,9 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
         <style>
-            button{
+            #submit{
                 margin-bottom: 10px;
+                padding: 7px;
             }
         </style>
         <div class="panel">
@@ -17,7 +18,7 @@
                     <div>
                         <div>工单号</div>
                         <input type="text" placeholder="url" id="or_num"/>
-                        <button id="submit">查询</button>
+                        <a class="btn btn-turquoise" id="submit" >查询</a>
                     </div>
                 </form>
 
