@@ -430,11 +430,11 @@ class EditLicenseView(View):
                         context['higher'] = get_dic['BCP8200-Lic-1024']
                     else:
                         context['higher'] = 0
-                    # print context['higher']
-                    # print context['high']
-                    # print context['mid']
-                    # print context['low']
-                    # print context['lower']
+                    print context['higher']
+                    print context['high']
+                    print context['mid']
+                    print context['low']
+                    print context['lower']
         except Exception,e:
             print e
 
@@ -1773,6 +1773,7 @@ class or_query(View):
 
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['username'] = username
 
         return render(request, 'order_query.html',context)
 
@@ -1806,6 +1807,7 @@ class order_details(View):
 
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['username'] = username
 
         return render(request, 'order_details.html',context)
 
