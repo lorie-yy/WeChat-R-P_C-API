@@ -159,7 +159,7 @@ class LicenseManager:
         if self.login_user == 'root':
             self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
             self.oneLable.grid(row=3, column=0,columnspan=4,ipadx=40)
-            self.oneEntry = Entry(self.frame2,width=40,bd=2,font=('Helvetica', '12'))
+            self.oneEntry = Entry(self.frame2,width=40,bd=2)
             self.oneEntry.insert(END, self.license_code)
             self.oneEntry.grid(row=3, column=5, columnspan=4)
         else:
