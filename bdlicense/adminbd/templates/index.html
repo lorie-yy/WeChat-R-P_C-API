@@ -1,5 +1,25 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
+        <style>
+            #pageStyle{
+                display:inline-block;
+                width:32px;
+                height:32px;
+                border:1px solid #CCC;
+                line-height:32px;
+                text-align:center;
+                color:#999;
+                margin-top:20px;
+                text-decoration:none;
+            }
+            #pageStyle:hover{
+                background-color:#CCC;
+            }
+            #pageStyle .active{
+                background-color:#0CF;
+                color:#ffffff;
+            }
+        </style>
         <div class="panel">
                 <div class="panel-heading">
                     <h3>license列表</h3>
@@ -170,7 +190,6 @@
                 </div>
         </div>
 
-
     <script>
         var cloud_id = $('#cloud_info option:selected').val();
             if(cloud_id){
@@ -203,6 +222,48 @@
                     "</br><strong style='color:red;'>注意：重置后，原注册的云平台将不能正常运行！</strong>",btnSn);
         }
     </script>
+{#    分页效果#}
+    <script>
+        $(document).ready(function(){
+            var $table = $('table');
+            var currentPage = 0;//当前页默认值为0
+            var pageSize = 10;//每一页显示的数目
+            $table.bind('paging',function(){
+            $table.find('tbody tr').hide().slice(currentPage*pageSize,(currentPage+1)*pageSize).show()
+        });
+        var sumRows = $table.find('tbody tr').length;
+        var sumPages = Math.ceil(sumRows/pageSize);//总页数
 
+        var $pager = $('<div class="page"></div>'); //新建div，放入a标签,显示底部分页码
+        for(var pageIndex = 0 ; pageIndex<sumPages ; pageIndex++){
+            $('<a href="#" rel="external nofollow" id="pageStyle" onclick="changCss(this)"><span>'+(pageIndex+1)+'</span></a>').bind("click",{"newPage":pageIndex},function(event){
+                currentPage = event.data["newPage"];
+                $table.trigger("paging");
+                //触发分页函数
+            }).appendTo($pager);
+            $pager.append(" ");
+        }
+        $pager.insertAfter($table);
+        $table.trigger("paging");
 
+        //默认第一页的a标签效果
+        var $pagess = $('#pageStyle');
+            $pagess[0].style.backgroundColor="dodgerblue";
+            $pagess[0].style.color="#ffffff";
+        });
+
+        //a链接点击变色，再点其他回复原色
+        function changCss(obj){
+            var arr = document.getElementsByClassName("page")[0].getElementsByTagName("a");
+            for(var i=0;i<arr.length;i++){
+                if(obj==arr[i]){ //当前页样式
+                    obj.style.backgroundColor="dodgerblue";
+                    obj.style.color="#ffffff";
+                } else {
+                    arr[i].style.color="";
+                    arr[i].style.backgroundColor="";
+                }
+            }
+        }
+    </script>
     {% endblock %}

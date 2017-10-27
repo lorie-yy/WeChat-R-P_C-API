@@ -7,7 +7,7 @@
         </style>
         <div class="panel">
             <div class="panel-heading">
-                <h3>工单查询</h3>
+                <h3>物料查询</h3>
                 <hr/>
             </div>
 
@@ -17,41 +17,26 @@
                         <tr>
                             <th>编号</th>
                             <th>工单号</th>
+                            <th>code</th>
+                            <th>云平台</th>
                             <th>物料名称</th>
                             <th>物料个数</th>
                         </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
-                    {% for each_work in order_info %}
-                                 <tr>
-                                    <td>{{ each_work.id }}</td>
-                                    <td>{{ each_work.workordernum.workOrderNum }}</td>
-                                    <td>{{ each_work.materiel_name }}</td>
-                                    <td>{{ each_work.materiel_count }}</td>
-                                 </tr>
+                    {% for each_work in wkInfos %}
+                         <tr>
+                            <td>{{ each_work.id }}</td>
+                            <td>{{ each_work.workordernum.workOrderNum }}</td>
+                            <td>{{ licenseObj.license_code }}</td>
+                            <td>{{ licenseObj.cloudInfo.cloudName }}</td>
+                            <td>{{ each_work.materiel_name }}</td>
+                            <td>{{ each_work.materiel_count }}</td>
+                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
              </div>
         </div>
 
-    <script>
-    $(document).ready(function(){
-        $("#submit").click(function(){
-            var or_num =$.trim($("#sys_url").val());
-                $.ajax({
-                    url:"/adminbd/or_query",
-                    data: {or_num:or_num},
-                    type:"POST",
-                    success:function(data) {
-                        alert(data);
-                    },
-                    error:function(){
-                         ErrorWarning("服务器错误！");
-                    }
-            })
-        });
-
-    });
-    </script>
     {% endblock %}

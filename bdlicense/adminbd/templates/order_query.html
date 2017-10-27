@@ -1,8 +1,9 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
         <style>
-            button{
+            #submit{
                 margin-bottom: 10px;
+                padding: 7px;
             }
         </style>
         <div class="panel">
@@ -22,36 +23,26 @@
                         </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
-                    {% for each_work in work_info %}
-                                 <tr>
-                                    <td>{{ each_work.id }}</td>
-                                    <td>{{ each_work.workOrderNum }}</td>
-                                    <td>{{ each_work.license.cloudInfo.cloudName }}</td>
-                                    <td>{{ each_work.license.license_code }}</td>
-                                 </tr>
-                    {% endfor %}
+                        {% for each_work in work_info %}
+                             <tr>
+                                <td>{{ each_work.id }}</td>
+                                {% if each_work.workOrderNum %}
+                                     <td
+                                         style="cursor: pointer;color: #00C853"
+                                         onclick="window.location.href='/adminbd/order_details?wk_num={{ each_work.workOrderNum }}'" >
+                                         {{ each_work.workOrderNum }}
+                                     </td>
+                                 {% else %}
+                                    <td>暂无工单号</td>
+                                 {% endif %}
+
+                                <td>{{ each_work.license.cloudInfo.cloudName }}</td>
+                                <td>{{ each_work.license.license_code }}</td>
+                             </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
              </div>
         </div>
 
-    <script>
-    $(document).ready(function(){
-        $("#submit").click(function(){
-            var or_num =$.trim($("#sys_url").val());
-                $.ajax({
-                    url:"/adminbd/or_query",
-                    data: {or_num:or_num},
-                    type:"POST",
-                    success:function(data) {
-                        alert(data);
-                    },
-                    error:function(){
-                         ErrorWarning("服务器错误！");
-                    }
-            })
-        });
-
-    });
-    </script>
     {% endblock %}

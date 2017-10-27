@@ -722,35 +722,7 @@ class KeyParamsView(View):
                         dic_list.append(dic_tmp)
                 print dic_list
                 context['dic_list'] = dic_list
-                # paramsObjs = licenseObj.licenseParam.all()
-                # print "paramsObjs.counts",paramsObjs.count()
-                # aps = 0
-                # acs = 0
-                # for paramsObj in paramsObjs:
-                #     if paramsObj.id == 1:
-                #         print licenseObj.low_counts
-                #         print paramsObj.maxAPs
-                #         print paramsObj.maxAPs*licenseObj.low_counts
-                #         aps += paramsObj.maxAPs*licenseObj.low_counts
-                #         acs += paramsObj.maxACs*licenseObj.low_counts
-                #         print "aps=",aps
-                #         print "acs=",acs
-                #     elif paramsObj.id == 2:
-                #         aps += paramsObj.maxAPs*licenseObj.mid_counts
-                #         acs += paramsObj.maxACs*licenseObj.mid_counts
-                #         print "aps=",aps
-                #         print "acs=",acs
-                #     else:
-                #         aps += paramsObj.maxAPs*licenseObj.high_counts
-                #         acs += paramsObj.maxACs*licenseObj.high_counts
-                context['aps'] = licenseObj.maxAps
-                context['acs'] = licenseObj.maxAcs
-                context['user_s'] = licenseObj.maxUsers
-                # context['paramsObj'] = paramsObjs
-                context['code'] = licenseObj.license_code
-                # context['low_count'] = licenseObj.low_counts
-                # context['mid_count'] = licenseObj.mid_counts
-                # context['high_count'] = licenseObj.high_counts
+                context['licenseObj'] = licenseObj
         except Exception,e:
             print e
         context['username'] = username
@@ -1028,6 +1000,7 @@ def get_work_order_info(request):
     rst_dict['work_type'] = 0
 
     licen = WorkOrderNum.objects.filter(workOrderNum = work_no)
+
     if licen.count() > 0:
         #重复查询工单号
         rst_dict = get_work_order_information(licen[0].id, licen[0].license_id, rst_dict=rst_dict)
@@ -1036,8 +1009,22 @@ def get_work_order_info(request):
     else:
         rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
 
-        if rst_dict['result'] > 0:
+        if not rst_dict['result']:
             return JsonResponse(rst_dict)
+
+    # rst_dict = {'cloud_buyer': u'\u6c5f\u82cf\u5f00\u4e3d\u667a\u63a7\u79d1\u6280\u6709\u9650\u516c\u53f8',
+    #             'license_expire_time': '2019-10-25',
+    #             'max_ap_allowed': 64,
+    #             'license_code': '',
+    #             'contacts': u'\u4ef2\u7fa4',
+    #             'version_type': 'bdcode',
+    #             'phone': u'13816523915',
+    #             'cloud_name': u'\u6c5f\u82cf\u7701\u5357\u901a\u5e02\u8fdb\u9c9c\u6e2f\u9c9c\u82b1\u5c0f\u9547\u667a\u80fd\u5316\u7cfb\u7edf\u9879\u76ee',
+    #             'result': True,
+    #             'max_user_allowed': 1280,
+    #             'license_info': [{'sumNo': 1, 'productType': u'BCP8200-Lic-64'}],
+    #             'max_ac_allowed': 1, 'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]
+    #             }
 
     # rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
     # print rst_dict
@@ -1697,81 +1684,95 @@ def download_hlep_usage_file(request):
     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
     return response
 
-#编辑license
-class Modify_license(View):
-    def get(self,request):
-        username = request.GET.get('username')
-        pwd = request.GET.get('pwd')
-        key_id = request.GET.get('key_id')
-        if username == 'bdyun' and pwd == 'bdyun':
-            license = LicenseRecord.objects.filter(key_id = key_id)[0]
-            return render(request, 'edit_license.html',{'license':license})
-    def post(self,request):
-        yuncode=request.POST.get("yuncode")
-        key_id=request.POST.get("key_id")
-        build_time=request.POST.get("build_time")
-        is_valid=request.POST.get("is_valid")
-        is_reset=request.POST.get("is_reset")
-        expire_time=request.POST.get("expire_time")
-        license_status=request.POST.get("license_status")
-        yunname=request.POST.get("yunname")
-        licenseType=request.POST.get("licenseType")
-        try:
-            license = LicenseRecord.objects.filter(key_id = key_id)
-            license.update(
-                license_status=license_status,
-                is_valid=is_valid,
-                is_reset=is_reset
-            )
-        except Exception,e:
-            print e
-            return JsonResponse({"result":1})
-        else:
-            return JsonResponse({"result":0})
 
-class sys_config(View):
+def genSysConf(sys_type,val):
+    syss = SystemConfig.objects.filter(attribute=sys_type)
+    if syss.count() > 0:
+        syss.update(value=val)
+        print "update ip and port sucessfully"
+    else:
+        sys_conf = SystemConfig(attribute=sys_type)
+        sys_conf.value = val
+        sys_conf.save()
+        print "create ip and port successfully"
+
+class SysConfigView(View):
     def get(self, request):
-        print "in IndexYunView"
+        print "[in get sys_config]"
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
-
+        context = {}
+        s_ips = SystemConfig.objects.filter(attribute= "server_ip")
+        s_ports = SystemConfig.objects.filter(attribute= "server_port")
+        if s_ips.count() > 0:
+            context['server_ip'] = s_ips[0].value
+        if s_ports.count() > 0:
+            context['server_port'] = s_ports[0].value
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
-        context = {}
-        if is_superuser:
-            userSets = User.objects.all()
-            context['userSets'] = userSets
-        else:
-            print "not superuser,no right to display the user list"
-            return HttpResponse("No Right")
 
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         return render(request, 'system_config.html',context)
+    def post(self,request):
+        print "[in post sys_config]"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+        context = {}
 
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+
+        context['username'] = username
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+
+        server_ip = request.POST.get('server_ip','')
+        server_port = request.POST.get('server_port','')
+        try:
+            # import re
+            # compile_ip = re.compile("^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+            #                         "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+            #                         "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])"
+            #                         "\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$")
+            if server_ip and server_port:
+                # if not compile_ip.match(server_ip):
+                #     return HttpResponse("illegal ip")
+                genSysConf('server_ip',server_ip)
+                genSysConf('server_port',server_port)
+                return JsonResponse({"result":0})
+            else:
+                return HttpResponse("illegal ip and port")
+
+        except Exception,e:
+            print e
+        return JsonResponse({"result":1})
 class or_query(View):
     def get(self, request):
-        print "in IndexYunView"
+        print "[in or_query]"
         username = request.session.get('username')
         if not username:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+
         context = {}
+
         if is_superuser:
-            userSets = User.objects.all()
-            context['userSets'] = userSets
+
+            work_info = WorkOrderNum.objects.all()
+            context['work_info'] = work_info
+
         else:
             print "not superuser,no right to display the user list"
             return HttpResponse("No Right")
 
-        work_info = WorkOrderNum.objects.all()
-
         context['is_superuser'] = is_superuser
-        context['work_info'] = work_info
+        context['user_level'] = user_level
 
         return render(request, 'order_query.html',context)
 
@@ -1779,16 +1780,32 @@ class order_details(View):
     def get(self, request):
         print "[order_details]"
         username = request.session.get('username')
+        user_level = request.session.get('user_level')
         if not username:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
         context = {}
-        order_info = WorkOrderInformation.objects.filter()
+        wk_num = request.GET.get('wk_num','')
+        print wk_num
+        if wk_num:
+            try:
+                workorders = WorkOrderNum.objects.filter(workOrderNum=wk_num)
+                print workorders[0].workOrderNum
+                print workorders[0].license_id
+                licenseObj = LicenseRecord.objects.filter(id=workorders[0].license_id)
+                if workorders:
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=workorders[0].id)
+                    context['wkInfos'] = wkInfos
+                context['licenseObj'] = licenseObj[0]
+                print licenseObj[0].license_code
+            except Exception,e:
+                print e
+        else:
+            return HttpResponse("no work num, error query!!!")
 
-        print "2222222222"
         context['is_superuser'] = is_superuser
-        context['order_info'] = order_info
+        context['user_level'] = user_level
 
         return render(request, 'order_details.html',context)
 

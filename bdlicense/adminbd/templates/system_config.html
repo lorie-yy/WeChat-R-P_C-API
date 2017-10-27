@@ -1,8 +1,22 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
         <style>
-            button{
-                margin: auto 10px;
+            input[type=text]{
+                border: 1px solid lightgray;
+                padding: 0 0 0 10px;
+            }
+            table{
+                width: 60%;
+                margin-left: 50px;
+            }
+            .IO{
+                width: 70px;
+                padding-bottom: 12px;
+            }
+            .flag1,.flag2{
+                width: 100px;
+                padding-left: 20px;
+                padding-bottom: 12px;
             }
         </style>
         <div class="panel">
@@ -12,37 +26,79 @@
             </div>
 
             <div class="panel-body">
-                <form  role="form" id="sys_config" class="form-horizontal" action="" method="post" onsubmit="return false"  >
+                <form  role="form" id="sys_config" action="" method="post" onsubmit="return false"  >
                      {% csrf_token %}
-                    <div>
-                        <div>订单系统URL</div>
-                        <input type="text" placeholder="url" id="sys_url"/>
-                        <button class="right" id="submit">确认</button>
-                        <button class="right" id="change">修改</button>
-                    </div>
+                    <table>
+                        <tr>
+                            <td class="IO">服务器IP</td>
+                            <td><input type="text" placeholder="服务器IP" id="IP" {% if server_ip %} value = {{ server_ip }} {% endif %} /></td>
+                            <td class="flag1"></td>
+                        </tr>
+                        <tr>
+                            <td class="IO">端口号</td>
+                            <td><input type="text" placeholder="端口号" id="PORT" {% if server_port %} value = {{ server_port }} {% endif %}  /></td>
+                            <td class="flag2"></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><a class="btn btn-turquoise right" id="submit" >确认</a></td>
+                            <td></td>
+                        </tr>
+                    </table>
+
                 </form>
             </div>
         </div>
 
     <script>
     $(document).ready(function(){
+        $("#IP").change(function(){
+            var str=$(this).val();
+            var ret=/^(\d|[1-9]\d|1\d{2}|2[0-5][0-5])\.(\d|[1-9]\d|1\d{2}|2[0-5][0-5])\.(\d|[1-9]\d|1\d{2}|2[0-5][0-5])\.(\d|[1-9]\d|1\d{2}|2[0-5][0-5])$/;
+            if(ret.test(str)){
+                $(this).css('border-color','green');
+                $(".flag1").html('输入正确！').css('color','green');
+                $("#submit").removeAttr('disabled');
+            }else{
+                $(this).css('border-color','red');
+                $(".flag1").html('输入错误！').css('color','red');
+                $("#submit").attr('disabled','true');
+            }
+        });
+        $("#PORT").change(function(){
+            var str=$(this).val();
+            var ret=/^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-5]{2}[0-3][0-5])$/;
+            if(ret.test(str)){
+                $(this).css('border-color','green');
+                $(".flag2").html('输入正确！').css('color','green');
+                $("#submit").removeAttr('disabled');
+            }else{
+                $(this).css('border-color','red');
+                $(".flag2").html('输入错误！').css('color','red');
+                $("#submit").attr('disabled','true');
+            }
+        });
         $("#submit").click(function(){
-            var sys_url =$.trim($("#sys_url").val());
-{#                $.get("/adminbd/sys_config",function(data){#}
-{#                    #}
-{#                });#}
-{#                $.post("/adminbd/sys_config",{#}
-{#                    name:"...",#}
-{#                    url:"..."#}
-{#                },function(data){#}
-{#                    #}
-{#                });#}
+            var $IP =$.trim($("#IP").val());
+            var $PORT =$.trim($("#PORT").val());
                 $.ajax({
                      url:"/adminbd/sys_config",
-                     data: {sys_url:sys_url},
+                     data:{
+                         server_ip:$IP,
+                         server_port:$PORT,
+                         csrfmiddlewaretoken:'{{ csrf_token }}'
+                     },
                      type:"POST",
                      success:function(data) {
-                         alert(data);
+                         if (data.result == 0){
+                             var btnSn=function(e) {
+                                window.location.href = '/adminbd/sys_config';
+                                };
+                             SuccessWarning("添加成功",btnSn);
+                         }else{
+                             alert(data);
+                              ErrorWarning("服务器错误！");
+                         }
                      },
                     error:function(){
                          ErrorWarning("服务器错误！");
