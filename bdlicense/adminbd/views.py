@@ -826,7 +826,7 @@ def updateCodeCount(license_code):
         license_coun.update(value=value)
         print "save bd_license_count F in system config table successfully"
 
-def getWorkNoInfo(work_no,rst_dict={}):
+def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
     #新的工单号,获取工单号下的物料信息，提取、保存并返回给客户端进行显示
     from suds import WebFault
     from suds.client import Client
@@ -835,14 +835,16 @@ def getWorkNoInfo(work_no,rst_dict={}):
 
     order_server_ip,server_value = SystemConfig.getAttrValue('server_ip')
     if not server_value:
-        order_server_ip = '192.168.1.83'
+        #order_server_ip = '192.168.1.83'
+        order_server_ip = '180.169.230.122'
     order_server_port, port_value = SystemConfig.getAttrValue('server_port')
     if not port_value:
-        order_server_port = '8002'
+        #order_server_port = '8002'
+        order_server_port = '8091'
 
     user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
     client=Client(user_url)
-
+    print user_url
     print "[getWorkNoInfo] get product informations ......"
     lic_info = LicenseParams.objects.all()
 
@@ -872,9 +874,15 @@ def getWorkNoInfo(work_no,rst_dict={}):
     if True:
         # for each in line_list:
             # result=client.service.loadOrderInfoByNoiCloud(work_no, each)
-            result=client.service.loadOrderInfoByNoiCloud(work_no, 3)
-            result = json.loads(result)
-            # print result
+            try:
+                result=client.service.loadOrderInfoByNoiCloud('bdswer03dfd3ssdfedsjhrt', work_no, work_lineno)
+                result = json.loads(result)
+                print result
+            except Exception,e:
+                print "get Order Error:%s" % (str(e))
+                rst_dict['result'] = 1
+                print rst_dict
+                return rst_dict
 
             #details = result['details']
             # cloud_name = result.get('finalCustomerName', '')
@@ -982,10 +990,9 @@ def get_work_order_information(work_order_id,license_id,rst_dict = {}):
 #
 def get_work_order_info(request):
     print "[get_work_order_info] starting ......"
-    work_no = request.GET.get('work_no', "123448")
+    work_str = request.GET.get('work_no', "123448")
     license_time = '2'                             #license 有效期，比如1,2,3,5单位：年
 
-    #format expire time
     cur_time = datetime.now()
     cur_year = cur_time.year
     fut_year = cur_year+int(license_time)
@@ -998,6 +1005,14 @@ def get_work_order_info(request):
     rst_dict['license_expire_time'] = cur_time
     rst_dict['work_type'] = 0
 
+    work_no_list = work_str.split('-')
+    print work_no_list
+    if len(work_no_list) != 2:
+        JsonResponse(rst_dict)
+
+    work_no = work_no_list[0]
+    work_lineno = work_no_list[1]
+
     licen = WorkOrderNum.objects.filter(workOrderNum = work_no)
 
     if licen.count() > 0:
@@ -1006,7 +1021,7 @@ def get_work_order_info(request):
 
         return JsonResponse(rst_dict)
     else:
-        rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
+        rst_dict = getWorkNoInfo(work_no, work_lineno, rst_dict=rst_dict)
 
         if rst_dict['result'] !=0:
             return JsonResponse(rst_dict)
