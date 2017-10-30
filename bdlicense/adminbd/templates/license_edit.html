@@ -113,17 +113,23 @@
 {#                                </select>#}
                             </div>
                         </div>
+{#                    {{  licenseParams}}#}
                         <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
                              <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
                              <div class="col-sm-4" style="position: relative;">
                                  <select onchange="funct()" class="form-control" id="funcSet" name="funcSet" >
                                         <option value="" disabled="" selected="">选择配置类型</option>
-                                     {% for  licenseParam in licenseParams%}
-                                         {% if licenseParam.id == 4 and username != "root" %}
-                                             <option value="1{{ licenseParam.id }}" style="display: none" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>
-                                         {% else %}
-                                             <option value="1{{ licenseParam.id }}" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>
-                                         {% endif %}
+                                     {% for  licenseParam in licenseParams %}
+{#                                         {% if licenseParam.id == 4 and username != "root" %}#}
+                                             <option
+                                                     value="1{{ licenseParam.id }}" style="display: none"
+                                                     {% if licenseParam.id == licenseParam_id %}selected{% endif %}
+                                                     >
+                                                 {{ licenseParam.cloudRankName }}
+                                             </option>
+{#                                         {% else %}#}
+{#                                             <option value="1{{ licenseParam.id }}" {% if licenseParam.id == licenseParam_id %}selected{% endif %}>{{ licenseParam.cloudRankName }}</option>#}
+{#                                         {% endif %}#}
                                      {% endfor %}
                                  </select>
 {#                             license配置增减功能#}
