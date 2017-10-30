@@ -1,23 +1,13 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
         <style>
-            #pageStyle{
-                display:inline-block;
-                width:32px;
-                height:32px;
-                border:1px solid #CCC;
-                line-height:32px;
-                text-align:center;
-                color:#999;
-                margin-top:20px;
-                text-decoration:none;
+            .xzy_page{
+                white-space: nowrap;
+                position: absolute;
+                right: 160px;
             }
-            #pageStyle:hover{
-                background-color:#CCC;
-            }
-            #pageStyle .active{
-                background-color:#0CF;
-                color:#ffffff;
+            input[type=number]{
+                padding: 1px;
             }
         </style>
         <div class="panel">
@@ -189,6 +179,9 @@
                     </table>
                 </div>
         </div>
+    <div class="xzy_page">
+        <ul class="xzy_ul"></ul>
+    </div>
 
     <script>
         var cloud_id = $('#cloud_info option:selected').val();
@@ -224,46 +217,136 @@
     </script>
 {#    分页效果#}
     <script>
-        $(document).ready(function(){
-            var $table = $('table');
-            var currentPage = 0;//当前页默认值为0
-            var pageSize = 10;//每一页显示的数目
-            $table.bind('paging',function(){
-            $table.find('tbody tr').hide().slice(currentPage*pageSize,(currentPage+1)*pageSize).show()
-        });
-        var sumRows = $table.find('tbody tr').length;
-        var sumPages = Math.ceil(sumRows/pageSize);//总页数
-
-        var $pager = $('<div class="page"></div>'); //新建div，放入a标签,显示底部分页码
-        for(var pageIndex = 0 ; pageIndex<sumPages ; pageIndex++){
-            $('<a href="#" rel="external nofollow" id="pageStyle" onclick="changCss(this)"><span>'+(pageIndex+1)+'</span></a>').bind("click",{"newPage":pageIndex},function(event){
-                currentPage = event.data["newPage"];
-                $table.trigger("paging");
-                //触发分页函数
-            }).appendTo($pager);
-            $pager.append(" ");
+    $(document).ready(function () {
+        var pageNum=1;  //每页显示的tr行数
+        var index=1;      //页码，li标签里的数值，第一个'《'和最后一个'》'不计算在内
+        var $tr_len=Math.ceil(($("tr").length-1)/pageNum);  //总页数
+        $(".xzy_ul").append('<li class="pageCode prev">'+'<<'+'</li>');
+        for(var m=1;m<=$tr_len;m++){
+            $(".xzy_ul").append('<li class="pageCode">'+m+'</li>');
         }
-        $pager.insertAfter($table);
-        $table.trigger("paging");
-
-        //默认第一页的a标签效果
-        var $pagess = $('#pageStyle');
-            $pagess[0].style.backgroundColor="dodgerblue";
-            $pagess[0].style.color="#ffffff";
+        if($tr_len>5){
+            $(".pageCode").slice(6,$tr_len+1).hide();
+        }
+        $(".xzy_ul").append('<li class="pageCode next">'+'>>'+'</li>');
+//        动态添加li标签列表、鼠标移入变色
+        $(".pageCode").css({'float':'left', 'text-align':'center', 'width':'42px', 'height':'32px', 'padding':'5px', 'background':'#f7f7f7', 'color':'dodgerblue','cursor':'pointer','border':'1px solid transparent'});
+        $(".pageCode").hover(function () {
+            $(this).css('border','1px solid lightgray');
+        },function () {
+            $(this).css('border','1px solid transparent');
         });
-
-        //a链接点击变色，再点其他回复原色
-        function changCss(obj){
-            var arr = document.getElementsByClassName("page")[0].getElementsByTagName("a");
-            for(var i=0;i<arr.length;i++){
-                if(obj==arr[i]){ //当前页样式
-                    obj.style.backgroundColor="dodgerblue";
-                    obj.style.color="#ffffff";
-                } else {
-                    arr[i].style.color="";
-                    arr[i].style.backgroundColor="";
-                }
+//        点击页码数字显示内容tr
+        function pageCount(pageNum) {
+            $("tr:not(tr:first)").css('display','none');
+            for(var i=1;i<$(".pageCode").length-1;i++){
+                (function (m) {
+                    $(".pageCode")[m].onclick=function () {
+                        $(document).scrollTop(0); //滚动条至顶端
+                        index=parseInt(this.innerHTML);
+                        $("tr:not(tr:first)").css('display','none');
+                        $("tr").slice(pageNum*index-pageNum+1,pageNum*index+1).css('display','block').css('display','table-row');
+                        $(".pageList").val(index);
+                        if(index>($tr_len-2) && $tr_len>5){
+                            index=$tr_len-2;
+                            $(".pageCode").slice(1,$tr_len+1).hide();
+                            $(".pageCode").slice(index-2,index+3).show();
+                        }else if(index>3 && $tr_len>5){
+                            $(".pageCode").slice(1,$tr_len+1).hide();
+                            $(".pageCode").slice(index-2,index+3).show();
+                        }else{
+                            $(".pageCode").slice(1,$tr_len+1).hide();
+                            $(".pageCode").slice(1,6).show();
+                        }
+                        $(".pageCode").css({'color':'dodgerblue','background':'#f7f7f7'});
+                        $(this).css({'color':'white','background':'dodgerblue'});
+                    };
+                })(i);
             }
+//            第一页默认显示的tr
+            $("tr").slice(1,pageNum+1).css('display','block').css('display','table-row');
         }
-    </script>
+        pageCount(pageNum);
+//        上一页下一页效果
+        $(".prev").click(function () {
+            $(document).scrollTop(0);
+            $("tr:not(tr:first)").css('display','none');
+            index--;
+            if(index===0){ index=1; }
+            $("tr").slice(pageNum*index-pageNum+1,pageNum*index+1).css('display','block').css('display','table-row');
+            $(".pageList").val(index);
+            if(index>($tr_len-2) && $tr_len>5){
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice($tr_len-4,$tr_len+1).show();
+            }else if(index>3 && $tr_len>5){
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice(index-2,index+3).show();
+            }else{
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice(1,6).show();
+            }
+            $(".pageCode").css({'color':'dodgerblue','background':'#f7f7f7'});
+            $(".pageCode")[index].style.color='white';
+            $(".pageCode")[index].style.background='dodgerblue';
+        });
+        $(".next").click(function () {
+            $(document).scrollTop(0);
+            $("tr:not(tr:first)").css('display','none');
+            index++;
+            if(index===($tr_len+1)){ index=$tr_len; }
+            $("tr").slice(pageNum*index-pageNum+1,pageNum*index+1).css('display','block').css('display','table-row');
+            $(".pageList").val(index);
+            if(index>($tr_len-2) && $tr_len>5){
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice($tr_len-4,$tr_len+1).show();
+            }else if(index>3 && $tr_len>5){
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice(index-2,index+3).show();
+            }else{
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice(1,6).show();
+            }
+            $(".pageCode").css({'color':'dodgerblue','background':'#f7f7f7'});
+            $(".pageCode")[index].style.color='white';
+            $(".pageCode")[index].style.background='dodgerblue';
+        });
+//        添加input输入框和button按钮
+        $(".xzy_page").append('<input class="pageList" type="number" placeholder="页数" style="height: 31px;width: 60px;outline: medium;padding-left: 10px;border: none;border-bottom: 1px solid dodgerblue;text-align: center;position: relative;top: -11px;"/>');
+        $(".xzy_page").append('<button class="pageConfig" style="height: 32px;width: 60px;border: none;outline: medium;color: dodgerblue;background:#f7f7f7;cursor:pointer;position: relative;top: -11px;">'+'确认'+'</button>');
+//        点击确认显示输入数字的所在页面并判断所输入值的大小
+        $(".pageConfig").click(function () {
+            $(document).scrollTop(0);
+            index=parseInt($(".pageList").val());
+            if($(".pageList").val()<1){
+                index=1;
+                $(".pageList").val(index);
+            }else if($(".pageList").val()>$tr_len){
+                index=$tr_len;
+                $(".pageList").val(index);
+            }
+            $("tr:not(tr:first)").css('display','none');
+            $("tr").slice(pageNum*index-pageNum+1,pageNum*index+1).css('display','block').css('display','table-row');
+            if(index>($tr_len-2) && $tr_len>5){
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice($tr_len-4,$tr_len+1).show();
+            }else if(index>3 && $tr_len>5){
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice(index-2,index+3).show();
+            }else{
+                $(".pageCode").slice(1,$tr_len+1).hide();
+                $(".pageCode").slice(1,6).show();
+            }
+            $(".pageCode").css({'color':'dodgerblue','background':'#f7f7f7'});
+            $(".pageCode")[index].style.color='white';
+            $(".pageCode")[index].style.background='dodgerblue';
+        });
+        $(".pageConfig").hover(function () {
+            $(this).css({'background':'dodgerblue','color':'white'});
+        },function () {
+            $(this).css({'background':'white','color':'dodgerblue'});
+        });
+        $(".pageCode")[1].style.color='white';
+        $(".pageCode")[1].style.background='dodgerblue';
+    })
+</script>
     {% endblock %}
