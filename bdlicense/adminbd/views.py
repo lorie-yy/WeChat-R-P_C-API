@@ -832,7 +832,8 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
     from suds.client import Client
 
     print "[getWorkNoInfo] starting ......"
-
+    # print work_no
+    # work_no = 'SC20170928001'
     order_server_ip,server_value = SystemConfig.getAttrValue('server_ip')
     if not server_value:
         #order_server_ip = '192.168.1.83'
@@ -843,6 +844,7 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
         order_server_port = '8091'
 
     user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
+    print user_url
     client=Client(user_url)
     print user_url
     print "[getWorkNoInfo] get product informations ......"
@@ -931,6 +933,12 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
     #     print "ERROR:getwork info error: %s" % (e)
     #     rst_dict['result'] = 1
     #     return rst_dict
+
+    # print rst_dict
+    # rst_dict['result'] = 0
+    # rst_dict['license_type'] = "7"
+    # rst_dict['license_code'] ='BCPLICF2'
+    # print rst_dict
 
     rst_dict['license_type'] =1
     if len(rst_dict['os_info']) > 1:
@@ -1121,6 +1129,8 @@ def get_work_order_info(request):
             licenseObj.maxUsers = rst_dict.get('max_user_allowed',0)                            #该license支持的最大User
             licenseObj.save()
 
+            updateCodeCount(license_code)
+
             #创建新的工单号
             workNum = WorkOrderNum()
             workNum.license_id = licenseObj.id
@@ -1158,10 +1168,11 @@ def get_work_order_info(request):
         rst_dict['work_type'] = 1
         licenseObj = LicenseRecord.objects.filter(license_code=license_code)
         if licenseObj.count() >0:
-            max_ap_allowed = licenseObj[0].max_ap_allowed + int(rst_dict.get('max_ap_allowed',0))
-            max_ac_allowed = licenseObj[0].max_ac_allowed + int(rst_dict.get('max_ac_allowed',0))
-            max_user_allowed = licenseObj[0].max_user_allowed + int(rst_dict.get('max_user_allowed',0))
-            licenseType = licenseObj[0].license_type | int(rst_dict.get('license_type',5))
+            print
+            max_ap_allowed = licenseObj[0].maxAps + int(rst_dict.get('max_ap_allowed',0))
+            max_ac_allowed = licenseObj[0].maxAcs + int(rst_dict.get('max_ac_allowed',0))
+            max_user_allowed = licenseObj[0].maxUsers + int(rst_dict.get('max_user_allowed',0))
+            licenseType = int(licenseObj[0].licenseType) | int(rst_dict.get('license_type',5))
 
             licenseObj.update(
                 maxAps = max_ap_allowed,
@@ -1180,6 +1191,14 @@ def get_work_order_info(request):
                 woObj.materiel_count = each['sumNo']
                 woObj.workordernum_id = workNUm.id
                 woObj.save()
+
+            for each in rst_dict['buss_info']:
+                woObj = WorkOrderInformation()
+                woObj.materiel_name = each['productType']
+                woObj.materiel_count = each['sumNo']
+                woObj.workordernum_id = workNUm.id
+                woObj.save()
+
             rst_dict['license_code'] = license_code
         else:
             rst_dict['result'] = 5
