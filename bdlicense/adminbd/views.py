@@ -978,12 +978,14 @@ def get_work_order_information(work_order_id,license_id,rst_dict = {}):
     rst_dict['max_user_allowed'] = licenseObj[0].maxUsers
     rst_dict['license_code'] = licenseObj[0].license_code
     rst_dict['license_type'] = licenseObj[0].licenseType
+    rst_dict['license_status'] = licenseObj[0].license_status
 
     cloud_info_obj = licenseObj[0].cloudInfo
     rst_dict['cloud_name'] = cloud_info_obj.cloudName
     rst_dict['cloud_buyer'] = cloud_info_obj.buyer
     rst_dict['contacts'] = cloud_info_obj.contacts
     rst_dict['phone'] = cloud_info_obj.phone
+
 
     return rst_dict
 
@@ -1004,6 +1006,7 @@ def get_work_order_info(request):
     #result: 0 suc  1 order confirm error 2 os error 2 5 exp no licensecode
     rst_dict['license_expire_time'] = cur_time
     rst_dict['work_type'] = 0
+    rst_dict['license_status'] = 0
 
     work_no_list = work_str.split('-')
     print work_no_list
