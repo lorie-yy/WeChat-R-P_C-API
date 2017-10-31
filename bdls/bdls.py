@@ -69,11 +69,12 @@ class LicenseManager:
 
         self.frame = Frame(self.master)
         #self.frame.grid(row=0, column=0)
-        self.frame.pack(fill="both",padx=350)
+        self.frame.pack(fill="both")
         self.titleLabel = Label(self.frame)
         self.titleLabel['text'] =u'Bdyun License 激活工具'
         self.titleLabel["font"] = ("Arial", 20)
-        self.titleLabel.grid(row=1, column=2, sticky=SW)
+        #self.titleLabel.grid(row=1, column=2, sticky=SW)
+        self.titleLabel.pack(anchor=CENTER)
 
         self.SetupMenu()
         #self.LicenseMenu()
@@ -154,7 +155,7 @@ class LicenseManager:
         self.CleanPlan()
         self.frame2 = LabelFrame(self.master, text=u"License 信息", height=300)
         # self.frame2.grid(row=2, column=6, padx=10, pady=5,ipadx=50)
-        self.frame2.pack(fill="both",padx=20,pady=10)
+        self.frame2.pack(fill="both",padx=20,pady=0)
 
         if self.login_user == 'root':
             self.oneLable = Label(self.frame2, text=u"License Code: ", width=30, anchor="e")
@@ -220,17 +221,20 @@ class LicenseManager:
         self.submitButton["text"] = u"写入UKey"
         self.submitButton["command"] = self.writeToKey
         self.submitButton.grid(row=9, column=7,pady=10, sticky=SW)
+        self.submitButton.configure(state=DISABLED)
 
         self.TextFrame()
 
     def TextFrame(self):
         self.frame3 = LabelFrame(self.master, text=u"日志信息")
         #self.frame3.grid(row=10, column=6,padx=10, pady=5,ipadx=0)
-        self.frame3.pack(fill="both",padx=20,pady=0)
-        self.text = Text(self.frame3,width=164,height=20)
+        self.frame3.pack(fill="both",padx=20,pady=15)
+        self.text = Text(self.frame3) # ,height=17,width=156
         scr=Scrollbar(self.frame3,orient =VERTICAL,command=self.text.yview)
-        scr.grid(row=11, column=6, sticky=NS)
-        self.text.grid(row=11, column=0)
+        scr.pack(side=RIGHT,fill=Y)
+        self.text.pack(fill="both",side=LEFT,expand=YES)
+        #scr.grid(row=11, column=6, ipady=5, sticky=NS)
+        #self.text.grid(row=11, column=0)
         self.text.config(yscrollcommand=scr.set,font=('Arial', 8, 'bold', 'italic'))
         self.text.configure(state=DISABLED)
 
@@ -285,6 +289,16 @@ class LicenseManager:
             if self.key_id == "":
                 self.writeMessage(u'[错误] 没有读取到USB Key信息，请检查USB Key是否插好')
                 return
+        try:
+            if self.key_id != "":
+                self.keyEntry.configure(state=NORMAL)
+                self.keyEntry.delete('0', END)
+                self.keyEntry.insert(END, self.key_id)
+                self.keyEntry.configure(state=DISABLED)
+
+                self.checkWriteUsbKeyState()
+        except:
+            pass
 
     def checkWorkOrderInfo(self):
         self.work_no =  self.workNoEntry.get()
@@ -299,16 +313,17 @@ class LicenseManager:
         os_info_list = work_info['os_info']
         license_info_list = work_info['license_info']
 
-        work_type = work_info.get('work_type', 0)
+        self.work_type = work_info.get('work_type', 0)
+        self.license_status = work_info.get('license_status', 0)
+
         if len(os_info_list) > 1:
             msg = u"非法的OS工单"
             self.show_info(msg)
             return
 
-
         msg = u"工单[%s]信息:\n\t\t" % (self.work_no)
         space_str = '\t\t\t\t'
-        if work_type == 1:
+        if self.work_type == 1:
             msg = msg + "\t\t\t\t" + u"**********\t\t\t扩容版本信息\t\t\t**********"  + '\n'
         else:
             msg = msg + "\t\t\t\t" + u"**********\t\t\t新增版本信息\t\t\t**********" + '\n'
@@ -366,6 +381,19 @@ class LicenseManager:
         self.writeMessage('Ukey ID: %s' % (self.key_id))
         self.writeMessage('License Code: %s' % (self.license_code))
 
+        self.checkWriteUsbKeyState()
+
+    def checkWriteUsbKeyState(self):
+        if self.license_code != "" and self.key_id != "":
+            if self.work_type == 1:
+                self.writeMessage(u"扩容订单不需要写Ukey")
+                return
+
+            if int(self.license_status) == 1:
+                self.writeMessage(u"此LicenseCode已经激活，不能再次激活")
+                return
+
+            self.submitButton.configure(state=NORMAL)
 
     def getVersionINfo(self):
         self.license_code =  self.oneEntry.get()
@@ -855,14 +883,14 @@ root = Tk()
 
 imgicon = PhotoImage(file=os.path.join(BASE_DIR, 'file/license.gif'))
 root.tk.call('wm', 'iconphoto', root._w, imgicon)
-root.title(u"BDCloud License 激活工具")
+root.title(u"Bdyun License 激活工具")
 
 # root.geometry("1050x650")
 # root.resizable(width=FALSE, height=FALSE)
 
 center_window(root, 1050, 650)
 root.maxsize(1050, 650)
-root.minsize(800, 450)
+root.minsize(800, 500)
 
 MENU_ROOT = LicenseManager(root)
 menubar = Menu(root,bg='#D3D3D3',selectcolor="#8B0000",bd=1,font=("黑体",10,"bold"))
