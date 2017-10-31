@@ -934,25 +934,24 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
     #     rst_dict['result'] = 1
     #     return rst_dict
 
-    # print rst_dict
-    # rst_dict['result'] = 0
-    # rst_dict['license_type'] = "7"
-    # rst_dict['license_code'] ='BCPLICF2'
-    # print rst_dict
-
     rst_dict['license_type'] =1
     if len(rst_dict['os_info']) > 1:
         print "ERROR:work OS error: %s" % (str(rst_dict['os_info']))
         rst_dict['result'] = 2
     elif len(rst_dict['os_info']) == 1:
         os_productNo = rst_dict['os_info'][0]['productNo']
-        rst_dict['license_type'] = rst_dict['license_type'] | os_dict[os_productNo][1]
+        rst_dict['license_type'] = int(rst_dict['license_type']) | os_dict[os_productNo][1]
 
     if len(rst_dict['buss_info']) >= 1:
         buss_productNo = rst_dict['buss_info'][0]['productNo']
-        rst_dict['license_type'] = rst_dict['license_type'] | os_dict[buss_productNo][1]
+        rst_dict['license_type'] = int(rst_dict['license_type']) | os_dict[buss_productNo][1]
 
     print "[getWorkNoInfo] get return work informations ......"
+
+    # rst_dict['result'] = 0
+    # rst_dict['license_type'] = 7
+    # rst_dict['license_code'] ='BCPLICF2'
+    # print rst_dict
     maxAPs = 0
     maxACs = 0
     maxUser = 0
@@ -1067,9 +1066,9 @@ def get_work_order_info(request):
         #3.license相关信息（工单号、key_id、code、status、valid、reset、random_num、type、params、云平台、过期时,maxaps,maxacs,maxusers ）
 
         try:
-            #username = 'lijie'
-            # contactor = '李杰'
-            # phone = '15821837085'
+            #username = ''
+            # contactor = ''
+            # phone = ''
             #管理员添加的相关操作
             # userObj = User.objects.filter(username=username)
             # uId = 0
@@ -1171,17 +1170,16 @@ def get_work_order_info(request):
         rst_dict['work_type'] = 1
         licenseObj = LicenseRecord.objects.filter(license_code=license_code)
         if licenseObj.count() >0:
-            print
             max_ap_allowed = licenseObj[0].maxAps + int(rst_dict.get('max_ap_allowed',0))
             max_ac_allowed = licenseObj[0].maxAcs + int(rst_dict.get('max_ac_allowed',0))
             max_user_allowed = licenseObj[0].maxUsers + int(rst_dict.get('max_user_allowed',0))
             licenseType = int(licenseObj[0].licenseType) | int(rst_dict.get('license_type',5))
-
+            print rst_dict.get('license_type','9999999999')
             licenseObj.update(
                 maxAps = max_ap_allowed,
                 maxAcs=max_ac_allowed,
                 maxUsers=max_user_allowed,
-                licenseType=licenseType
+                licenseType=str(licenseType)
             )
             #工单号增加操作
             workNUm = WorkOrderNum(workOrderNum=work_no,license_id=licenseObj[0].id)
