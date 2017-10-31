@@ -277,6 +277,7 @@ class LicenseManager:
 
         self.text.configure(state=NORMAL)
         self.text.insert(END, msg)
+        self.text.see(END)
         self.text.configure(state=DISABLED)
 
     def readUkeyInfo(self):
