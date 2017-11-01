@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import sys
 from django.shortcuts import render
 from django.views.generic import View
 from django.contrib.auth.models import User
@@ -40,6 +41,7 @@ class IndexView(View):
         cloud_id = request.GET.get('cloud_id')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         print "cloud_id",cloud_id
 
@@ -77,7 +79,9 @@ class IndexView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         print "is_superuser=",is_superuser
+        print "all_files=",all_files
         return render(request, 'index.html',context)
 #主页yun
 class IndexViewYun(View):
@@ -88,6 +92,7 @@ class IndexViewYun(View):
             return render(request,'license_login.html')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
             # cloudInfos = CloudInformation.objects.filter(cloudNum__istartswith = "BUSS")
@@ -101,6 +106,7 @@ class IndexViewYun(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request, 'license_yun.html',context)
 
 #用户主页
@@ -113,6 +119,7 @@ class UserIndexView(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
             userSets = User.objects.all()
@@ -124,6 +131,7 @@ class UserIndexView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request, 'user_list.html',context)
 
 #zte code
@@ -212,6 +220,7 @@ class AddLicenseView(View):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         print "in add license get func"
@@ -227,6 +236,7 @@ class AddLicenseView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         #
         # if request.is_ajax():
         #     print "in request.is_ajax() "
@@ -372,6 +382,7 @@ class EditLicenseView(View):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         print "in edit license get func"
@@ -444,6 +455,7 @@ class EditLicenseView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
 
         return render(request, 'license_edit.html',context)
@@ -540,12 +552,14 @@ class AddCloudView(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         return render(request, 'license_addyun.html',context)
 
@@ -600,6 +614,7 @@ class AddUserView(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         # cloudInfos = CloudInformation.objects.all()
         # print cloudInfos.count()
@@ -610,6 +625,7 @@ class AddUserView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         print "is_superuser=",is_superuser
         return render(request, 'user_added.html',context)
 
@@ -682,6 +698,7 @@ class UserCloudView(View):
         user_id = request.GET.get('id')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
 
         if user_id:
@@ -693,6 +710,7 @@ class UserCloudView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         return render(request, 'cloud_user.html',context)
 
@@ -706,6 +724,7 @@ class KeyParamsView(View):
         key_id = request.GET.get('id',None)
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         try:
             if key_id is not None:
@@ -728,6 +747,7 @@ class KeyParamsView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         return render(request, 'license_params.html',context)
 
@@ -755,6 +775,12 @@ def license_login(request):
             request.session['username'] = user_name
             request.session['is_superuser'] = user_pass.is_superuser
             request.session['user_level'] = user_pass.user_level
+            cur_path=os.path.abspath('.')
+            print "os.path.abspath('.')",cur_path
+            target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+            print "target_path",target_path
+            all_files = os.listdir( target_path )
+            request.session['all_files'] = all_files
             result['res'] = 1
             return JsonResponse(result)
         else:
@@ -1316,12 +1342,14 @@ class ModifyPasswordView(View):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request,'modify_password.html',context)
     def post(self,request):
         param = request.POST.copy()
@@ -1693,31 +1721,49 @@ def handle_download_file(path,file_name):
             f.close()
     return down_data
 
-def download_license_file(request):
+def download_file(request):
     user_name = request.session.get('username','')
     if not user_name:
             return render(request, 'license_login.html')
-    cur_path=os.path.abspath('.')
-    print "os.path.abspath('.')",cur_path
-    #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
-    target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
-    print "os.path.join(cur_path, DOWNLOAD_FILE_PATH)",target_path
-    # /home/Portal/bdlicense/bdlicense/static/download_file/
-    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
-    response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
-    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
-    return response
 
-def download_hlep_usage_file(request):
-    user_name = request.session.get('username','')
-    if not user_name:
-            return render(request, 'license_login.html')
+    d_file = request.GET.get('file','')
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
-    response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
-    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
-    return response
+    try:
+        d_file = d_file.encode('utf-8')
+        ap_tem_data=handle_download_file(target_path,str(d_file))
+        response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
+        response["Content-Disposition"]="attachment; filename=%s" %d_file
+        return response
+    except Exception,e:
+        print e
+    return HttpResponse("download error!!!")
+
+# def download_license_file(request):
+#     user_name = request.session.get('username','')
+#     if not user_name:
+#             return render(request, 'license_login.html')
+#     cur_path=os.path.abspath('.')
+#     print "os.path.abspath('.')",cur_path
+#     #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
+#     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+#     print "os.path.join(cur_path, DOWNLOAD_FILE_PATH)",target_path
+#     # /home/Portal/bdlicense/bdlicense/static/download_file/
+#     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
+#     response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
+#     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
+#     return response
+#
+# def download_hlep_usage_file(request):
+#     user_name = request.session.get('username','')
+#     if not user_name:
+#             return render(request, 'license_login.html')
+#     cur_path=os.path.abspath('.')
+#     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+#     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
+#     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
+#     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
+#     return response
 
 
 def genSysConf(sys_type,val):
@@ -1735,6 +1781,10 @@ class SysConfigView(View):
     def get(self, request):
         print "[in get sys_config]"
         username = request.session.get('username')
+        all_files = request.session.get('all_files')
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+
         if not username:
             return render(request,'license_login.html')
         context = {}
@@ -1744,26 +1794,25 @@ class SysConfigView(View):
             context['server_ip'] = s_ips[0].value
         if s_ports.count() > 0:
             context['server_port'] = s_ports[0].value
-        is_superuser = request.session.get('is_superuser')
-        user_level = request.session.get('user_level')
 
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request, 'system_config.html',context)
     def post(self,request):
         print "[in post sys_config]"
         username = request.session.get('username')
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         context = {}
-
-        is_superuser = request.session.get('is_superuser')
-        user_level = request.session.get('user_level')
-
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         server_ip = request.POST.get('server_ip','')
         server_port = request.POST.get('server_port','')
@@ -1794,6 +1843,7 @@ class or_query(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
 
         context = {}
 
@@ -1809,6 +1859,7 @@ class or_query(View):
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['username'] = username
+        context['all_files'] = all_files
 
         return render(request, 'order_query.html',context)
 
@@ -1821,6 +1872,7 @@ class order_details(View):
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
+        all_files = request.session.get('all_files')
         context = {}
         wk_num = request.GET.get('wk_num','')
         print wk_num
@@ -1843,6 +1895,7 @@ class order_details(View):
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['username'] = username
+        context['all_files'] = all_files
 
         return render(request, 'order_details.html',context)
 

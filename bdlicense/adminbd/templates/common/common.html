@@ -112,10 +112,18 @@
                           <b>下载</b>
                         <span class="caret"></span>
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu" style="width: 222px;;">
 
-                        <li><a style="padding:21px 0 0 15px " href="/adminbd/download_license_client_file">License客户端文件</a></li>
-                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/download_license_usage_file">License帮助文档</a></li>
+{#                        <li><a style="padding:21px 0 0 15px " href="/adminbd/download_license_client_file">License客户端文件</a></li>#}
+{#                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/download_license_usage_file">License帮助文档</a></li>#}
+                        <li>
+                            {% for file in all_files %}
+                                <a style="height: 39px;line-height: 39px;"
+                                   href="/adminbd/download_file?file={{ file }}">
+                                    {{ file }}
+                                </a>
+                            {% endfor %}
+                        </li>
 
                     </ul>
                 </li>
@@ -127,8 +135,8 @@
                         <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a style="padding:21px 0 0 15px" href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
-                        <li><a style="padding:21px 0 15px 15px" href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
+                        <li><a style="height: 39px;line-height: 39px;" href="/adminbd/modify_password"><i class="fa fa-gear fa-fw"></i>修改密码</a></li>
+                        <li><a style="height: 39px;line-height: 39px;" href="/adminbd/license_logout"><i class="fa fa-sign-out fa-fw"></i>退出</a></li>
                     </ul>
                 </li>
            </ul>
