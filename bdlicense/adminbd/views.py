@@ -1729,14 +1729,15 @@ def download_file(request):
     d_file = request.GET.get('file','')
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
-    try:
-        d_file = d_file.encode('utf-8')
-        ap_tem_data=handle_download_file(target_path,str(d_file))
-        response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
-        response["Content-Disposition"]="attachment; filename=%s" %d_file
-        return response
-    except Exception,e:
-        print e
+    if d_file:
+        try:
+            d_file = d_file.encode('utf-8')
+            ap_tem_data=handle_download_file(target_path,str(d_file))
+            response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
+            response["Content-Disposition"]="attachment; filename=%s" %d_file
+            return response
+        except Exception,e:
+            print e
     return HttpResponse("download error!!!")
 
 # def download_license_file(request):
