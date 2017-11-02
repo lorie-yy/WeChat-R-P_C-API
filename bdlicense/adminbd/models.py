@@ -71,7 +71,7 @@ class LicenseRecord(models.Model):
     id = models.AutoField(primary_key=True)
     key_id = models.CharField(max_length=255, null=True, blank=False,default='')
     discription = models.CharField('云平台信息描述',max_length=255, default="")
-    license_code = models.CharField(max_length=255, null=False, blank=False)
+    license_code = models.CharField(max_length=255, null=False, blank=False,unique=True)
     license_status = models.IntegerField(choices=LicenseStatusChoices,verbose_name='license状态',default=0)#0:close;1:open
     # low_counts = models.IntegerField(null=True,default=0)
     # mid_counts = models.IntegerField(null=True,default=0)

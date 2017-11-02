@@ -66,7 +66,7 @@ class IndexView(View):
                 user_clouds = user.cloudinformation_set.all()
                 licenseList = []
                 for cloud in user_clouds:
-                    licenses = LicenseRecord.objects.filter(id=cloud.id)
+                    licenses = LicenseRecord.objects.filter(cloudInfo_id=cloud.id)
                     licenseList.append(licenses)
                 context['licenses'] = licenseList
 
@@ -227,7 +227,7 @@ class AddLicenseView(View):
 
         context = {}
 
-        licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
+        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
         print "licenseParams count",licenseParams.count()
         context['licenseParams'] = licenseParams
 
@@ -261,30 +261,26 @@ class AddLicenseView(View):
             return render(request,'license_login.html')
 
         print "in add license post func"
-        params = request.POST.copy()
-        # print params
-        # license_code = params['license_code']
-        cloud_info = params['cloud_info']
-        license_time = params['license_time']
+        license_time = request.POST.get('license_time')
         lower = request.POST.get('lower',0)
         low = request.POST.get('low',0)
         medium = request.POST.get('medium',0)
         high = request.POST.get('high',0)
         higher = request.POST.get('higher',0)
-        print lower,low,medium,high,higher
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
+        work_num = request.POST.get('work_num','')
         uu = {}
         #one cloud has only one valid license
-        if cloud_info:
-            cloudObj = CloudInformation.objects.get(id=int(cloud_info))
-            licenseRecords = cloudObj.licenserecord_set.all()
-            if licenseRecords.count() > 0:
-                for licenseRecord in licenseRecords:
-                    if licenseRecord.is_valid != 0:
-                        result = 3
-                        uu = {'res':result}
-                        return JsonResponse(uu)
+        # if cloud_info:
+        #     cloudObj = CloudInformation.objects.get(id=int(cloud_info))
+        #     licenseRecords = cloudObj.licenserecord_set.all()
+        #     if licenseRecords.count() > 0:
+        #         for licenseRecord in licenseRecords:
+        #             if licenseRecord.is_valid != 0:
+        #                 result = 3
+        #                 uu = {'res':result}
+        #                 return JsonResponse(uu)
         #format expire time
         cur_time = datetime.now()
         print cur_time
@@ -294,7 +290,7 @@ class AddLicenseView(View):
         print cur_time
 
 
-        code_type = request.POST.get('code_type')
+        code_type = request.POST.get('code_type','0')
 
         print "code_type:%s"%str(code_type)
         #根据code的类型自动生成license code
@@ -314,12 +310,26 @@ class AddLicenseView(View):
 
         # add new LicenseRecord
         try:
+            cloud_num_name = genCloudNum("BUSS")
+            cloudInfo = CloudInformation()
+            cloudInfo.cloudName = cloud_num_name
+            cloudInfo.cloudName = cloud_num_name
+            cloudInfo.installAddress = "bd306"
+            cloudInfo.buyer = "bd306"
+            cloudInfo.contacts = "root"
+            cloudInfo.cloudNum = cloud_num_name
+            cloudInfo.save()
+
+            userObj = User.objects.get(username="root")
+            cloudInfo.cloudUser.add(userObj)
+            print "cloud added user successfully"
 
             license = LicenseRecord(licenseType="1")
             license.license_code = license_code
-            license.cloudInfo_id = cloud_info
+            license.cloudInfo_id = cloudInfo.id
             license.expire_time = cur_time
             license.save()
+            updateCodeCount(license_code)
             #license 功能
             if data_license:
                 value = int(license.licenseType) | int(data_license)
@@ -329,7 +339,7 @@ class AddLicenseView(View):
                 value = int(license.licenseType) | int(charging_license)
                 license.licenseType = value
                 license.save()
-            workNum = WorkOrderNum(license_id=license.id)
+            workNum = WorkOrderNum(license_id=license.id,workOrderNum = work_num)
             workNum.save()
 
             params_dic = {
@@ -412,8 +422,6 @@ class EditLicenseView(View):
                     for wkInfo in wkInfos:
                         get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
 
-                    print get_dic
-
                     # basic_dic = {
                     #         "BCP8200-Lic-32":3,
                     #         "BCP8200-Lic-64":9,
@@ -449,7 +457,7 @@ class EditLicenseView(View):
         except Exception,e:
             print e
 
-        licenseParams = LicenseParams.objects.all()
+        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
         context['licenseParams'] = licenseParams
 
         context['username'] = username
@@ -494,28 +502,29 @@ class EditLicenseView(View):
         maxAPs = 0
         maxACs = 0
         maxUsers = 0
-        workNum = WorkOrderNum(license_id=license_id)
-        workNum.save()
-        for key,value in params_dic.items():
-            if value in [0,'0']:
-                continue
-            else:
-                wkInfo = WorkOrderInformation(
-                    materiel_name=key,
-                    materiel_count=value,
-                    workordernum_id=workNum.id)
-                wkInfo.save()
-                if key in basic_dict.keys():
-                    print int(value)*int(basic_dict[key][0])
-                    maxAPs += int(value)*int(basic_dict[key][0])
-                    maxACs += int(value)*int(basic_dict[key][1])
-                    maxUsers += int(value)*int(basic_dict[key][2])
-                else:
-                    return HttpResponse("illegal license params")
-
-
-        uu = {}
         try:
+            workNum = WorkOrderNum(license_id=license_id,workOrderNum = getRandom16Num())
+            workNum.save()
+            for key,value in params_dic.items():
+                if value in [0,'0']:
+                    continue
+                else:
+                    wkInfo = WorkOrderInformation(
+                        materiel_name=key,
+                        materiel_count=value,
+                        workordernum_id=workNum.id)
+                    wkInfo.save()
+                    if key in basic_dict.keys():
+                        print int(value)*int(basic_dict[key][0])
+                        maxAPs += int(value)*int(basic_dict[key][0])
+                        maxACs += int(value)*int(basic_dict[key][1])
+                        maxUsers += int(value)*int(basic_dict[key][2])
+                    else:
+                        return HttpResponse("illegal license params")
+
+
+            uu = {}
+
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
             if licenseObj.count() > 0:
                 licenseObj.update(
@@ -1852,9 +1861,22 @@ class or_query(View):
             context['work_info'] = work_info
 
         else:
-            print "not superuser,no right to display the user list"
-            return HttpResponse("No Right")
-
+            print "not superuser"
+            try:
+                userObj = User.objects.get(username=username)
+                if userObj:
+                    cloudInfos = userObj.cloudinformation_set.all()
+                    tmp_list = []
+                    for cloudInfo in cloudInfos:
+                        licenses = LicenseRecord.objects.filter(cloudInfo_id=cloudInfo.id)
+                        for license in licenses:
+                            tmp_dict = {}
+                            work_info = WorkOrderNum.objects.filter(license_id=license.id)
+                            tmp_dict['work_num'] = work_info
+                            tmp_list.append(work_info)
+                    context['work_info'] = tmp_list
+            except Exception,e:
+                print e
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['username'] = username
