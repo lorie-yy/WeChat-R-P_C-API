@@ -262,6 +262,7 @@ class AddLicenseView(View):
 
         print "in add license post func"
         license_time = request.POST.get('license_time')
+        cloud_info = request.POST.get('cloud_info')
         lower = request.POST.get('lower',0)
         low = request.POST.get('low',0)
         medium = request.POST.get('medium',0)
@@ -272,15 +273,15 @@ class AddLicenseView(View):
         work_num = request.POST.get('work_num','')
         uu = {}
         #one cloud has only one valid license
-        # if cloud_info:
-        #     cloudObj = CloudInformation.objects.get(id=int(cloud_info))
-        #     licenseRecords = cloudObj.licenserecord_set.all()
-        #     if licenseRecords.count() > 0:
-        #         for licenseRecord in licenseRecords:
-        #             if licenseRecord.is_valid != 0:
-        #                 result = 3
-        #                 uu = {'res':result}
-        #                 return JsonResponse(uu)
+        if cloud_info:
+            cloudObj = CloudInformation.objects.get(id=int(cloud_info))
+            licenseRecords = cloudObj.licenserecord_set.all()
+            if licenseRecords.count() > 0:
+                for licenseRecord in licenseRecords:
+                    if licenseRecord.is_valid != 0:
+                        result = 3
+                        uu = {'res':result}
+                        return JsonResponse(uu)
         #format expire time
         cur_time = datetime.now()
         print cur_time
@@ -310,23 +311,23 @@ class AddLicenseView(View):
 
         # add new LicenseRecord
         try:
-            cloud_num_name = genCloudNum("BUSS")
-            cloudInfo = CloudInformation()
-            cloudInfo.cloudName = cloud_num_name
-            cloudInfo.cloudName = cloud_num_name
-            cloudInfo.installAddress = "bd306"
-            cloudInfo.buyer = "bd306"
-            cloudInfo.contacts = "root"
-            cloudInfo.cloudNum = cloud_num_name
-            cloudInfo.save()
-
-            userObj = User.objects.get(username="root")
-            cloudInfo.cloudUser.add(userObj)
-            print "cloud added user successfully"
+            # cloud_num_name = genCloudNum("BUSS")
+            # cloudInfo = CloudInformation()
+            # cloudInfo.cloudName = cloud_num_name
+            # cloudInfo.cloudName = cloud_num_name
+            # cloudInfo.installAddress = "bd306"
+            # cloudInfo.buyer = "bd306"
+            # cloudInfo.contacts = "root"
+            # cloudInfo.cloudNum = cloud_num_name
+            # cloudInfo.save()
+            #
+            # userObj = User.objects.get(username="root")
+            # cloudInfo.cloudUser.add(userObj)
+            # print "cloud added user successfully"
 
             license = LicenseRecord(licenseType="1")
             license.license_code = license_code
-            license.cloudInfo_id = cloudInfo.id
+            license.cloudInfo_id = int(cloud_info)
             license.expire_time = cur_time
             license.save()
             updateCodeCount(license_code)
