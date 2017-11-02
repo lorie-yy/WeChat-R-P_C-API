@@ -373,6 +373,8 @@
                             ErrorWarning("license code 已存在！",btnFn);
                         }else if(data.res == 3){
                             ErrorWarning("该云平台下存在有效license，不能重复添加！",btnFn);
+                        }else if(data.res == 4){
+                            ErrorWarning("重复的工单号，请重新输入！",btnFn);
                         }else{
                             ErrorWarning("license添加失败!",btnFn);
                         }

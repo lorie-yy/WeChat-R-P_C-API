@@ -272,6 +272,11 @@ class AddLicenseView(View):
         charging_license = request.POST.get('charging_license','')
         work_num = request.POST.get('work_num','')
         uu = {}
+        wk = WorkOrderNum.objects.filter(workOrderNum = work_num)
+        if wk.count() > 0:
+            result = 4
+            uu = {'res':result}
+            return JsonResponse(uu)
         #one cloud has only one valid license
         if cloud_info:
             cloudObj = CloudInformation.objects.get(id=int(cloud_info))
@@ -340,6 +345,7 @@ class AddLicenseView(View):
                 value = int(license.licenseType) | int(charging_license)
                 license.licenseType = value
                 license.save()
+
             workNum = WorkOrderNum(license_id=license.id,workOrderNum = work_num)
             workNum.save()
 
