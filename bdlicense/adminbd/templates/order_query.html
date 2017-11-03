@@ -5,6 +5,17 @@
                 margin-bottom: 10px;
                 padding: 7px;
             }
+            .panel-body {
+                padding: 0 15px 50px;
+            }
+            .xzy_page{
+                white-space: nowrap;
+                position: absolute;
+                right: 197px;
+            }
+            input[type=number]{
+                padding: 1px;
+            }
         </style>
         <div class="panel">
             <div class="panel-heading">
@@ -23,26 +34,59 @@
                         </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
+                    {% if is_superuser %}
                         {% for each_work in work_info %}
-                             <tr>
-                                <td>{{ each_work.id }}</td>
-                                {% if each_work.workOrderNum %}
-                                     <td
-                                         style="cursor: pointer;color: #00C853"
-                                         onclick="window.location.href='/adminbd/order_details?wk_num={{ each_work.workOrderNum }}'" >
-                                         {{ each_work.workOrderNum }}
-                                     </td>
-                                 {% else %}
-                                    <td>暂无工单号</td>
-                                 {% endif %}
+                                 <tr>
+                                    <td>{{ each_work.id }}</td>
+                                    {% if each_work.workOrderNum %}
+                                         <td
+                                             style="cursor: pointer;color: #00C853"
+                                             onclick="window.location.href='/adminbd/order_details?wk_num={{ each_work.workOrderNum }}'" >
+                                             {{ each_work.workOrderNum }}
+                                         </td>
+                                     {% else %}
+                                        <td>暂无工单号</td>
+                                     {% endif %}
+                                    {% if each_work.license.cloudInfo.cloudName %}
+                                        <td>{{ each_work.license.cloudInfo.cloudName }}</td>
+                                     {% else %}
+                                        <td>暂无</td>
+                                    {% endif %}
 
-                                <td>{{ each_work.license.cloudInfo.cloudName }}</td>
-                                <td>{{ each_work.license.license_code }}</td>
-                             </tr>
+                                    <td>{{ each_work.license.license_code }}</td>
+                                 </tr>
+                            {% endfor %}
+                    {% else %}
+{#                        {{ work_info }}#}
+                        {% for each_work in work_info %}
+                            {% for each in each_work %}
+                                <tr>
+                                    <td>{{ each.id }}</td>
+                                    {% if each.workOrderNum %}
+                                         <td
+                                             style="cursor: pointer;color: #00C853"
+                                             onclick="window.location.href='/adminbd/order_details?wk_num={{ each.workOrderNum }}'" >
+                                             {{ each.workOrderNum }}
+                                         </td>
+                                     {% else %}
+                                        <td>暂无工单号</td>
+                                     {% endif %}
+                                    {% if each.license.cloudInfo.cloudName %}
+                                    <td>{{ each.license.cloudInfo.cloudName }}</td>
+                                {% else %}
+                                        <td>暂无</td>
+                                {% endif %}
+                                    <td>{{ each.license.license_code }}</td>
+                                 </tr>
+                            {% endfor %}
                         {% endfor %}
+                    {% endif %}
                     </tbody>
                 </table>
-             </div>
+            <div class="xzy_page">
+                <ul class="xzy_ul"></ul>
+            </div>
+            </div>
         </div>
-
+    <script src="../../static/js/pageCount.js"></script>
     {% endblock %}
