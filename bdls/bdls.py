@@ -47,8 +47,10 @@ class LicenseManager:
         self.max_ap = 0
         self.max_ac = 0
         self.max_user = 0
+        self.usb_state = 0
         self.expire_time = ""
         self.work_no = ""
+        self.key_dir = "/etc/keyinfo"
         self.user_valid = False
         self.license_valid = False
         self.master = master
@@ -60,7 +62,6 @@ class LicenseManager:
         self.user_passwd = ''
         self.port = login_info.get('port', '8000')
 
-        self.RemoveContent()
         self.InitSystem()
 
         self.setframe = None
@@ -79,8 +80,6 @@ class LicenseManager:
         self.SetupMenu()
         #self.LicenseMenu()
 
-
-
     def InitSystem(self):
         try:
             cmd = "ps -ef | grep %s | grep -v '$0' | grep -v 'grep' | awk '{print $2}'" % ('usbdetection')
@@ -98,13 +97,16 @@ class LicenseManager:
             print "usbdetection error"
 
         PRO_DIR = os.path.join(BASE_DIR, 'script/usbdetection &')
-        os.system(PRO_DIR)
+        print os.system(PRO_DIR)
 
     def RemoveContent(self):
-        key_dir = "/etc/keyinfo/content"
+        content_path = os.path.join(self.key_dir, 'content')
 
-        if os.path.exists(key_dir):
-            print os.system("rm %s" % (key_dir))
+        if not os.path.exists(self.key_dir):
+            os.system("mkdir %s" % (self.key_dir))
+
+        if os.path.exists(content_path):
+            os.system("rm %s" % (content_path))
 
     def SetupMenu(self):
         self.CleanPlan()
@@ -281,6 +283,7 @@ class LicenseManager:
         self.text.configure(state=DISABLED)
 
     def readUkeyInfo(self):
+        self.RemoveContent()
         KEY_INFO = self.getDataFromKey()
         self.key_id = KEY_INFO.get('usb_key_hardwareId', "")
         if self.key_id == "":
@@ -317,18 +320,37 @@ class LicenseManager:
         self.work_type = work_info.get('work_type', 0)
         self.license_status = work_info.get('license_status', 0)
 
-        if len(os_info_list) > 1:
-            msg = u"非法的OS工单"
+        result = work_info.get('result', 0)
+        if result != 0:
+            if result == 1:
+                msg = u"订单信息获取错误"
+            elif result == 2:
+                msg = u"非法的OS工单, OS版本只能有一个"
+            elif result == 3:
+                msg = u"新出工单必须有一个OS版本"
+            elif result == 4:
+                msg = u"工单号格式错误"
+            elif result == 5:
+                msg = u"扩容的LicenseCode错误"
+            self.writeMessage(msg)
             self.show_info(msg)
             return
 
         msg = u"工单[%s]信息:\n\t\t" % (self.work_no)
         space_str = '\t\t\t\t'
         if self.work_type == 1:
-            msg = msg + "\t\t\t\t" + u"**********\t\t\t扩容版本信息\t\t\t**********"  + '\n'
+            self.key_id = work_info.get('usbkey_id', '')
+            print "self.key_id:", self.key_id
+            msg = msg + "\t\t\t\t" + u"**********\t\t\t扩容工单信息\t\t\t**********"  + '\n'
         else:
-            msg = msg + "\t\t\t\t" + u"**********\t\t\t新增版本信息\t\t\t**********" + '\n'
+            msg = msg + "\t\t\t\t" + u"**********\t\t\t新增工单信息\t\t\t**********" + '\n'
 
+        version_type = work_info.get('version_type', "")
+        print version_type
+        if version_type == "bdcode":
+            msg = msg + space_str + u"[版本类型]:\t博达版本" + '\n'
+        elif version_type == "ztecode":
+            msg = msg + space_str + u"[版本类型]:\t中兴版本" + '\n'
         if work_info.get('cloud_buyer', "") != "":
             msg = msg + space_str + u"[客户信息]:\t%s" % (work_info.get('cloud_buyer')) + '\n'
         if len(os_info_list) == 0:
@@ -391,14 +413,15 @@ class LicenseManager:
                 return
 
             if int(self.license_status) == 1:
-                self.writeMessage(u"此LicenseCode已经激活，不能再次激活")
+                msg = u"此LicenseCode已经激活，不能再次激活"
+                self.writeMessage(msg)
+                self.show_info(msg)
                 return
 
             self.submitButton.configure(state=NORMAL)
 
     def getVersionINfo(self):
         self.license_code =  self.oneEntry.get()
-
 
         if self.login_user == 'root':
             if self.license_code == '':
@@ -530,11 +553,55 @@ class LicenseManager:
         self.writeMessage(msg)
         self.show_info(msg)
 
+    def execShellCmd(self,PRO_DIR):
+        cmd_out = ""
+        cmd_error = ""
+        try:
+            import subprocess
+            proc = subprocess.Popen(PRO_DIR, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            cmd_out = proc.stdout.read()
+            proc.stdout.close()
+            cmd_error = proc.stderr.read()
+            proc.stderr.close()
+
+            return cmd_out, cmd_error
+        except Exception,e:
+            print "exect shell error:%s" % (e)
+
+        return cmd_out, cmd_error
+
+    def readUsbKeyStatus(self, PRO_DIR):
+        cmd_out, cmd_error = self.execShellCmd(PRO_DIR)
+        print  cmd_out
+        print  cmd_error
+
+        try:
+            if str(cmd_error) == '':
+                self.usb_state = 0
+            else:
+                self.usb_state = int(cmd_error)
+        except:
+            self.usb_state = 1
+
+        print "self.usb_state:", self.usb_state
+
     def getDataFromKey(self,flg=1):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         PRO_DIR = os.path.join(BASE_DIR, 'script/usbread&')
-        os.system(PRO_DIR)
-        time.sleep(3)
+        #aa = os.system(PRO_DIR)
+
+        self.readUsbKeyStatus(PRO_DIR)
+
+        if self.usb_state == -2:
+            INIT_DIR = os.path.join(BASE_DIR, 'script/t_init 4 0 script/content 0')
+            cmd_out, cmd_error = self.execShellCmd(INIT_DIR)
+            print cmd_out
+            print cmd_error
+
+            self.readUsbKeyStatus(PRO_DIR)
+
+        time.sleep(1)
 
         KEY_INFO = LicenseLib.getUsbKeyContent()
         _usb_key_hardwareId = KEY_INFO.get('usb_key_hardwareId', "")
@@ -565,29 +632,26 @@ class LicenseLib():
         is_license_valid= False
         is_usb_key_present =False
         is_license_file_latest =False
+        content_path = "/etc/keyinfo/content"
+        usbFileContent={"max_ap_allowed": 0,
+                        "max_ac_allowed": 0,
+                        "max_user_allowed":0,
+                        "license_expire_time": "",
+                        "license_valid_mask": "",
+                        "license_key": "",
+                        "license_feature_string": "",
+                        "license_generate_time": "",
+                        "usb_key_hardwareId":"",
+                        "is_License_valid": False,
+                        "is_usb_key_present": False,
+                        "is_license_file_latest": False,
+                        "license_file_lastUpdateTime" : 0}
 
-
-        try:
-            statinfo = os.stat("/etc/keyinfo/content")
-        except Exception,e:
-            print e
-            usbFileContent={
-            "max_ap_allowed": 0,
-            "max_ac_allowed": 0,
-            "max_user_allowed":0,
-            "license_expire_time": "2018-10-01",
-            "license_valid_mask": "",
-            "license_key": "",
-            "license_feature_string": "",
-            "license_generate_time": "",
-            "usb_key_hardwareId":"",
-            "is_License_valid": False,
-            "is_usb_key_present": False,
-            "is_license_file_latest": False,
-            "license_file_lastUpdateTime" : 0
-            }
+        if os.path.exists(content_path):
+            statinfo = os.stat(content_path)
+        else:
+            print "Not find USB key file"
             return usbFileContent
-
 
         fileLastModifyTime = statinfo.st_ctime
 
