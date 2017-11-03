@@ -70,6 +70,16 @@ label {
 .panel{
     border-radius:0px;
 }
+#cloud_info,#funcSet,#license_time,#cloud_user,#super_user{
+    border: 1px solid #CCCCCC;
+    appearance:none;
+    -moz-appearance:none;
+    -webkit-appearance:none;
+    background: url("../../images/arrow.png") no-repeat scroll right center transparent;
+}
+#cloud_info::-ms-expand ,#funcSet::-ms-expand ,#license_time::-ms-expand,#cloud_user::-ms-expand,#super_user::-ms-expand{
+    display: none;
+}
 .navbar-side .nav > li > a > i{color: rgba(255, 255, 255, 0.62);padding: 8px;width: 20px;text-align: center;font-size: 14px;}
 .top-navbar{position: fixed;width: 100%;z-index: 300;
     /*-webkit-box-shadow: 0 3px 3px rgba(0, 0, 0, 0.05);-moz-box-shadow: 0 3px 3px rgba(0, 0, 0, 0.05);box-shadow: 0 3px 3px rgba(0, 0, 0, 0.05);box-shadow: 0 1px 3px 0 rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 2px 1px -1px rgba(0,0,0,.12);*/

@@ -1,5 +1,19 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
+        <style>
+            .panel-body {
+                padding: 0 15px 50px;
+            }
+            .xzy_page{
+                margin-top: 72px;
+                white-space: nowrap;
+                position: absolute;
+                right: 197px;
+            }
+            input[type=number]{
+                padding: 1px;
+            }
+        </style>
         <div class="panel">
                 <div class="panel-heading">
                     <h3>关联云平台</h3>
@@ -35,6 +49,9 @@
                         </tbody>
                     </table>
                     <a style="margin: 20px 0 20px 20px;" href="javascript:history.back()" class="btn btn-default btn-single pull-right">返回</a>
+                <div class="xzy_page">
+                    <ul class="xzy_ul"></ul>
+                </div>
                 </div>
         </div>
 
@@ -44,4 +61,5 @@
             window.location.href = "/adminbd?cloud_id="+cloud_id;
         }
     </script>
+    <script src="../../static/js/pageCount.js"></script>
     {% endblock %}

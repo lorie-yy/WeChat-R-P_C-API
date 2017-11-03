@@ -1,5 +1,18 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
+        <style>
+            .panel-body {
+                padding: 0 15px 50px;
+            }
+            .xzy_page{
+                white-space: nowrap;
+                position: absolute;
+                right: 197px;
+            }
+            input[type=number]{
+                padding: 1px;
+            }
+        </style>
         <div class="panel">
                 <div class="panel-heading">
                     <h3>云平台列表</h3>
@@ -63,6 +76,10 @@
                         {% endfor %}
                         </tbody>
                     </table>
+                <div class="xzy_page">
+                    <ul class="xzy_ul"></ul>
+                </div>
                 </div>
             </div>
+        <script src="../../static/js/pageCount.js"></script>
 {% endblock %}

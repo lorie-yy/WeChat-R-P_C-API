@@ -3,6 +3,9 @@
     <style>
         .form-group #license_code{height: 2rem;padding: 0.4rem 1rem 0rem 1rem;}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
+{#        label{#}
+{#            font-size: 15px;#}
+{#        }#}
         .btn{
             width: 50px;
             height: 32px;
@@ -119,19 +122,26 @@
             <form  role="form" id="licenseAdd" class="form-horizontal" action="" method="post" onsubmit="return false"  >
                  {% csrf_token %}
                 <div class="form-horizontal" style="background-color: #fff;padding-bottom: 13px;">
-                    <div class="form-group" style="padding-top: 20px;margin-bottom: 0">
 
-                        <label class="col-sm-3 control-label" for="license_code" >license 码</label>
-                        <div class="col-sm-4" >
-                            <input placeholder="选择类型，提交后自动生成license code" value="" disabled spellcheck="false" style="padding: 4px 0;margin-bottom: 0" type="text" class="create" name="license_code" id="license_code" >
+                     <div class="form-group"  style="padding-top: 20px;margin-bottom: 0">
+                        <label class="col-sm-3 control-label" for="work_num" style="padding-top: 15px;">工单号</label>
+                        <div class="col-sm-4">
+                            <input placeholder="请输入工单号" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="work_num" id="work_num" >
+                        </div>
+                    </div>
+{#                    <div class="form-group">#}
+{##}
+{#                        <label class="col-sm-3 control-label" for="license_code" >Code类型</label>#}
+{#                        <div class="col-sm-4" >#}
+{#                            <input placeholder="选择类型，提交后自动生成license code" value="" disabled spellcheck="false" style="padding: 4px 0;margin-bottom: 0" type="text" class="create" name="license_code" id="license_code" >#}
 {#                            <div class="col-sm-4">#}
 {#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
 {#                            </div>#}
-                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx" checked>博达code</label>
-                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>
-                        </div>
+{#                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx" checked>博达code</label>#}
+{#                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>#}
+{#                        </div>#}
 {#                        <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>#}
-                    </div>
+{#                    </div>#}
                     <div class="form-group">
                         <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
                         <div class="col-sm-4">
@@ -152,9 +162,9 @@
 {#                                         {% if licenseParam.id == 4 and username != "root" %}#}
 {#                                             <option value="1{{ licenseParam.id }}" style="display: none">{{ licenseParam.cloudRankName }}</option>#}
 {#                                         {% else %}#}
-                                 {% if licenseParam.id != 6 %}
+{#                                 {% if licenseParam.id != 6 %}#}
                                          <option value="1{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
-                                     {% endif %}
+{#                                     {% endif %}#}
                                  {% endfor %}
                              </select>
 {#                             license配置增减功能#}
@@ -247,7 +257,9 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var keyid, licenseCode, licenseType, licenseParamsID,cloud_info,license_num,license_time,shu_ju,ji_fei,lower= 0,low=0,medium=0,high= 0,higher= 0,bdCode;
+        var keyid, licenseCode, licenseType, licenseParamsID,
+                cloud_info,license_num,license_time,shu_ju,ji_fei,
+                lower= 0,low=0,medium=0,high= 0,higher= 0,bdCode,work_num;
         $('.fun_addm').eq(0).click(function(){
             license_num =$.trim($('#fun_num').val());
             if(license_num==0){
@@ -291,6 +303,7 @@
         $("#submit").click(function(){
             keyid =$.trim($("input[name='key_id']").val());
             licenseCode =$.trim($("input[name='license_code']").val());
+            work_num =$.trim($("input[name='work_num']").val());
             licenseType =$.trim($('#license_type').val());
             licenseParamsID =$.trim($('#funcSet').val());
             cloud_info =$.trim($('#cloud_info').val());
@@ -315,9 +328,13 @@
             }else if($("#zx_code").is(":checked")){
                 bdCode='1';
             }
-            if(!cloud_info){
-                AlarmWarning("请选择对应云平台!",btnSn);
-            }else if (!licenseParamsID ){
+            if (!work_num){
+                AlarmWarning("请输入工单号!",btnSn);
+            }
+{#            else if(!cloud_info){#}
+{#                AlarmWarning("请选择对应云平台!",btnSn);#}
+{#            }#}
+            else if (!licenseParamsID ){
                 AlarmWarning("请选择配置类型!",btnSn);
             }else if(!license_time){
                 AlarmWarning("请选择license有效时间!",btnSn);
@@ -343,6 +360,7 @@
                         licensePID:licenseParamsID,
                         data_license:shu_ju,
                         charging_license:ji_fei,
+                        work_num:work_num,
                         csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
@@ -355,6 +373,8 @@
                             ErrorWarning("license code 已存在！",btnFn);
                         }else if(data.res == 3){
                             ErrorWarning("该云平台下存在有效license，不能重复添加！",btnFn);
+                        }else if(data.res == 4){
+                            ErrorWarning("重复的工单号，请重新输入！",btnFn);
                         }else{
                             ErrorWarning("license添加失败!",btnFn);
                         }

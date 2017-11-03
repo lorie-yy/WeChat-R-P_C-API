@@ -71,7 +71,7 @@ class LicenseRecord(models.Model):
     id = models.AutoField(primary_key=True)
     key_id = models.CharField(max_length=255, null=True, blank=False,default='')
     discription = models.CharField('云平台信息描述',max_length=255, default="")
-    license_code = models.CharField(max_length=255, null=False, blank=False)
+    license_code = models.CharField(max_length=255, null=False, blank=False,unique=True)
     license_status = models.IntegerField(choices=LicenseStatusChoices,verbose_name='license状态',default=0)#0:close;1:open
     # low_counts = models.IntegerField(null=True,default=0)
     # mid_counts = models.IntegerField(null=True,default=0)
@@ -94,13 +94,15 @@ class WorkOrderNum(models.Model):
     id = models.AutoField(primary_key=True)
     workOrderNum = models.CharField(max_length=255, null=True, blank=False,default='')
     license = models.ForeignKey(LicenseRecord)
+    product_type = models.IntegerField('工单类型',default=0, blank=False)
 
 class WorkOrderInformation(models.Model):
     id = models.AutoField(primary_key=True)
     materiel_name = models.CharField(max_length=255, null=True, blank=False,default='')
     materiel_count = models.CharField(max_length=255, null=True, blank=False,default='')
     workordernum = models.ForeignKey(WorkOrderNum)
-    # params = models.ForeignKey(LicenseParams)
+    materiel_type = models.IntegerField(default=0)
+
 
 
 class SystemConfig(models.Model):

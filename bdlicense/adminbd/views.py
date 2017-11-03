@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import sys
 from django.shortcuts import render
 from django.views.generic import View
 from django.contrib.auth.models import User
@@ -40,6 +41,7 @@ class IndexView(View):
         cloud_id = request.GET.get('cloud_id')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         print "cloud_id",cloud_id
 
@@ -64,7 +66,7 @@ class IndexView(View):
                 user_clouds = user.cloudinformation_set.all()
                 licenseList = []
                 for cloud in user_clouds:
-                    licenses = LicenseRecord.objects.filter(id=cloud.id)
+                    licenses = LicenseRecord.objects.filter(cloudInfo_id=cloud.id)
                     licenseList.append(licenses)
                 context['licenses'] = licenseList
 
@@ -77,7 +79,9 @@ class IndexView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         print "is_superuser=",is_superuser
+        print "all_files=",all_files
         return render(request, 'index.html',context)
 #主页yun
 class IndexViewYun(View):
@@ -88,6 +92,7 @@ class IndexViewYun(View):
             return render(request,'license_login.html')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
             # cloudInfos = CloudInformation.objects.filter(cloudNum__istartswith = "BUSS")
@@ -101,6 +106,7 @@ class IndexViewYun(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request, 'license_yun.html',context)
 
 #用户主页
@@ -113,6 +119,7 @@ class UserIndexView(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
             userSets = User.objects.all()
@@ -124,6 +131,7 @@ class UserIndexView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request, 'user_list.html',context)
 
 #zte code
@@ -212,13 +220,14 @@ class AddLicenseView(View):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         print "in add license get func"
 
         context = {}
 
-        licenseParams = LicenseParams.objects.exclude(cloudRankName = "")
+        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
         print "licenseParams count",licenseParams.count()
         context['licenseParams'] = licenseParams
 
@@ -227,6 +236,7 @@ class AddLicenseView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         #
         # if request.is_ajax():
         #     print "in request.is_ajax() "
@@ -251,20 +261,22 @@ class AddLicenseView(View):
             return render(request,'license_login.html')
 
         print "in add license post func"
-        params = request.POST.copy()
-        # print params
-        # license_code = params['license_code']
-        cloud_info = params['cloud_info']
-        license_time = params['license_time']
+        license_time = request.POST.get('license_time')
+        cloud_info = request.POST.get('cloud_info')
         lower = request.POST.get('lower',0)
         low = request.POST.get('low',0)
         medium = request.POST.get('medium',0)
         high = request.POST.get('high',0)
         higher = request.POST.get('higher',0)
-        print lower,low,medium,high,higher
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
+        work_num = request.POST.get('work_num','')
         uu = {}
+        wk = WorkOrderNum.objects.filter(workOrderNum = work_num)
+        if wk.count() > 0:
+            result = 4
+            uu = {'res':result}
+            return JsonResponse(uu)
         #one cloud has only one valid license
         if cloud_info:
             cloudObj = CloudInformation.objects.get(id=int(cloud_info))
@@ -284,7 +296,7 @@ class AddLicenseView(View):
         print cur_time
 
 
-        code_type = request.POST.get('code_type')
+        code_type = request.POST.get('code_type','0')
 
         print "code_type:%s"%str(code_type)
         #根据code的类型自动生成license code
@@ -304,12 +316,26 @@ class AddLicenseView(View):
 
         # add new LicenseRecord
         try:
+            # cloud_num_name = genCloudNum("BUSS")
+            # cloudInfo = CloudInformation()
+            # cloudInfo.cloudName = cloud_num_name
+            # cloudInfo.cloudName = cloud_num_name
+            # cloudInfo.installAddress = "bd306"
+            # cloudInfo.buyer = "bd306"
+            # cloudInfo.contacts = "root"
+            # cloudInfo.cloudNum = cloud_num_name
+            # cloudInfo.save()
+            #
+            # userObj = User.objects.get(username="root")
+            # cloudInfo.cloudUser.add(userObj)
+            # print "cloud added user successfully"
 
             license = LicenseRecord(licenseType="1")
             license.license_code = license_code
-            license.cloudInfo_id = cloud_info
+            license.cloudInfo_id = int(cloud_info)
             license.expire_time = cur_time
             license.save()
+            updateCodeCount(license_code)
             #license 功能
             if data_license:
                 value = int(license.licenseType) | int(data_license)
@@ -319,7 +345,8 @@ class AddLicenseView(View):
                 value = int(license.licenseType) | int(charging_license)
                 license.licenseType = value
                 license.save()
-            workNum = WorkOrderNum(license_id=license.id)
+
+            workNum = WorkOrderNum(license_id=license.id,workOrderNum = work_num)
             workNum.save()
 
             params_dic = {
@@ -372,6 +399,7 @@ class EditLicenseView(View):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         print "in edit license get func"
@@ -400,8 +428,6 @@ class EditLicenseView(View):
                     wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id)
                     for wkInfo in wkInfos:
                         get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
-
-                    print get_dic
 
                     # basic_dic = {
                     #         "BCP8200-Lic-32":3,
@@ -438,12 +464,13 @@ class EditLicenseView(View):
         except Exception,e:
             print e
 
-        licenseParams = LicenseParams.objects.all()
+        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
         context['licenseParams'] = licenseParams
 
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
 
         return render(request, 'license_edit.html',context)
@@ -482,28 +509,29 @@ class EditLicenseView(View):
         maxAPs = 0
         maxACs = 0
         maxUsers = 0
-        workNum = WorkOrderNum(license_id=license_id)
-        workNum.save()
-        for key,value in params_dic.items():
-            if value in [0,'0']:
-                continue
-            else:
-                wkInfo = WorkOrderInformation(
-                    materiel_name=key,
-                    materiel_count=value,
-                    workordernum_id=workNum.id)
-                wkInfo.save()
-                if key in basic_dict.keys():
-                    print int(value)*int(basic_dict[key][0])
-                    maxAPs += int(value)*int(basic_dict[key][0])
-                    maxACs += int(value)*int(basic_dict[key][1])
-                    maxUsers += int(value)*int(basic_dict[key][2])
-                else:
-                    return HttpResponse("illegal license params")
-
-
-        uu = {}
         try:
+            workNum = WorkOrderNum(license_id=license_id,workOrderNum = getRandom16Num())
+            workNum.save()
+            for key,value in params_dic.items():
+                if value in [0,'0']:
+                    continue
+                else:
+                    wkInfo = WorkOrderInformation(
+                        materiel_name=key,
+                        materiel_count=value,
+                        workordernum_id=workNum.id)
+                    wkInfo.save()
+                    if key in basic_dict.keys():
+                        print int(value)*int(basic_dict[key][0])
+                        maxAPs += int(value)*int(basic_dict[key][0])
+                        maxACs += int(value)*int(basic_dict[key][1])
+                        maxUsers += int(value)*int(basic_dict[key][2])
+                    else:
+                        return HttpResponse("illegal license params")
+
+
+            uu = {}
+
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
             if licenseObj.count() > 0:
                 licenseObj.update(
@@ -540,12 +568,14 @@ class AddCloudView(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         return render(request, 'license_addyun.html',context)
 
@@ -600,6 +630,7 @@ class AddUserView(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         # cloudInfos = CloudInformation.objects.all()
         # print cloudInfos.count()
@@ -610,6 +641,7 @@ class AddUserView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         print "is_superuser=",is_superuser
         return render(request, 'user_added.html',context)
 
@@ -682,6 +714,7 @@ class UserCloudView(View):
         user_id = request.GET.get('id')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
 
         if user_id:
@@ -693,6 +726,7 @@ class UserCloudView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         return render(request, 'cloud_user.html',context)
 
@@ -706,6 +740,7 @@ class KeyParamsView(View):
         key_id = request.GET.get('id',None)
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         context = {}
         try:
             if key_id is not None:
@@ -728,6 +763,7 @@ class KeyParamsView(View):
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         return render(request, 'license_params.html',context)
 
@@ -755,6 +791,12 @@ def license_login(request):
             request.session['username'] = user_name
             request.session['is_superuser'] = user_pass.is_superuser
             request.session['user_level'] = user_pass.user_level
+            cur_path=os.path.abspath('.')
+            print "os.path.abspath('.')",cur_path
+            target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+            print "target_path",target_path
+            all_files = os.listdir( target_path )
+            request.session['all_files'] = all_files
             result['res'] = 1
             return JsonResponse(result)
         else:
@@ -832,21 +874,17 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
     from suds.client import Client
 
     print "[getWorkNoInfo] starting ......"
-    # print work_no
-    # work_no = 'SC20170928001'
+
+    #work_no = 'SC20170928001'
     order_server_ip,server_value = SystemConfig.getAttrValue('server_ip')
     if not server_value:
-        #order_server_ip = '192.168.1.83'
         order_server_ip = '180.169.230.122'
     order_server_port, port_value = SystemConfig.getAttrValue('server_port')
     if not port_value:
-        #order_server_port = '8002'
         order_server_port = '8091'
 
     user_url='http://%s:%s/WebService/OMGR?WSDL' % (order_server_ip, order_server_port)
-    print user_url
     client=Client(user_url)
-    print user_url
     print "[getWorkNoInfo] get product informations ......"
     lic_info = LicenseParams.objects.all()
 
@@ -862,97 +900,82 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
         else:
             business_dict[each.code] = [each.cloudRankName, each.maxAPs]
 
-    # print basic_lic_dict
-    # print os_dict
-    # print business_dict
-
     license_ids =  basic_lic_dict.keys()
     os_ids = os_dict.keys()
     buss_ids =  business_dict.keys()
-
     print "[getWorkNoInfo] process work [%s] informations ......" % (work_no)
-    # line_list = [3,11]
-    #try:
-    if True:
-        # for each in line_list:
-            # result=client.service.loadOrderInfoByNoiCloud(work_no, each)
-            try:
-                result=client.service.loadOrderInfoByNoiCloud('bdswer03dfd3ssdfedsjhrt', work_no, work_lineno)
-                result = json.loads(result)
-                print result
-            except Exception,e:
-                print "get Order Error:%s" % (str(e))
-                rst_dict['result'] = 1
-                print rst_dict
-                return rst_dict
 
-            #details = result['details']
-            # cloud_name = result.get('finalCustomerName', '')
-            # cloud_buyer = result.get('customer', '')
-            # contacts = result['createEmployee'].get('realName', '')
-            # phone = result['createEmployee'].get('workphone', '')
-            rst_dict['cloud_name'] = result.get('finalCustomerName', '')
-            rst_dict['cloud_buyer'] = result.get('customer', '')
-            rst_dict['contacts'] = result['createEmployee'].get('realName', '')
-            rst_dict['phone'] = result['createEmployee'].get('workphone', '')
+    try:
+        result=client.service.loadOrderInfoByNoiCloud('bdswer03dfd3ssdfedsjhrt', work_no, work_lineno)
+        result = json.loads(result)
+        print result
+    except Exception,e:
+        print "get Order Error:%s" % (str(e))
+        rst_dict['result'] = 1
+        print rst_dict
+        return rst_dict
+
+    rst_dict['cloud_name'] = result.get('finalCustomerName', '')
+    rst_dict['cloud_buyer'] = result.get('customer', '')
+    rst_dict['contacts'] = result['createEmployee'].get('realName', '')
+    rst_dict['phone'] = result['createEmployee'].get('workphone', '')
+    license_code = result.get('license_code', '')
+
+    for details in result['details']:
+        if license_code == '':
             license_code = result.get('license_code', '')
 
-            for details in result['details']:
-                if license_code == '':
-                    license_code = result.get('license_code', '')
+        if details['swVersion'] == u"同博达":
+            rst_dict['version_type'] = 'bdcode'
+        else:
+            rst_dict['version_type'] = 'ztecode'
 
-                if details['swVersion'] == u"同博达":
-                    rst_dict['version_type'] = 'bdcode'
-                else:
-                    rst_dict['version_type'] = 'ztecode'
+        tmp_dict = {}
+        if details['productNo'] in os_ids:
+            tmp_dict['productNo'] = details['productNo']
+            tmp_dict['productType'] = details['productType']
+            tmp_dict['sumNo'] = details['sumNo']
 
-                tmp_dict = {}
-                if details['productNo'] in os_ids:
-                    tmp_dict['productNo'] = details['productNo']
-                    tmp_dict['productType'] = details['productType']
-                    tmp_dict['sumNo'] = details['sumNo']
+            rst_dict['os_info'].append(tmp_dict)
+        elif details['productNo'] in license_ids:
+            tmp_dict['productNo'] = details['productNo']
+            tmp_dict['productType'] = details['productType']
+            tmp_dict['sumNo'] = details['sumNo']
 
-                    rst_dict['os_info'].append(tmp_dict)
-                elif details['productNo'] in license_ids:
-                    tmp_dict['productNo'] = details['productNo']
-                    tmp_dict['productType'] = details['productType']
-                    tmp_dict['sumNo'] = details['sumNo']
+            rst_dict['license_info'].append(tmp_dict)
+        elif details['productNo'] in buss_ids:
+            tmp_dict['productNo'] = details['productNo']
+            tmp_dict['productType'] = details['productType']
+            tmp_dict['sumNo'] = details['sumNo']
 
-                    rst_dict['license_info'].append(tmp_dict)
-                elif details['productNo'] in buss_ids:
-                    tmp_dict['productNo'] = details['productNo']
-                    tmp_dict['productType'] = details['productType']
-                    tmp_dict['sumNo'] = details['sumNo']
+            rst_dict['buss_info'].append(tmp_dict)
+        else:
+            continue
 
-                    rst_dict['buss_info'].append(tmp_dict)
-                else:
-                    continue
-
-            rst_dict['license_code'] = license_code
-    # except Exception,e:
-    #     print "ERROR:getwork info error: %s" % (e)
-    #     rst_dict['result'] = 1
-    #     return rst_dict
-
-    # print rst_dict
-    # rst_dict['result'] = 0
-    # rst_dict['license_type'] = "7"
-    # rst_dict['license_code'] ='BCPLICF2'
-    # print rst_dict
+    rst_dict['license_code'] = license_code
 
     rst_dict['license_type'] =1
+    if rst_dict['license_code'] == '' and len(rst_dict['os_info']) == 0:
+        print "ERROR:new work OS error: %s" % (str(rst_dict['os_info']))
+        rst_dict['result'] = 3
+
     if len(rst_dict['os_info']) > 1:
         print "ERROR:work OS error: %s" % (str(rst_dict['os_info']))
         rst_dict['result'] = 2
     elif len(rst_dict['os_info']) == 1:
         os_productNo = rst_dict['os_info'][0]['productNo']
-        rst_dict['license_type'] = rst_dict['license_type'] | os_dict[os_productNo][1]
+        rst_dict['license_type'] = int(rst_dict['license_type']) | os_dict[os_productNo][1]
 
     if len(rst_dict['buss_info']) >= 1:
         buss_productNo = rst_dict['buss_info'][0]['productNo']
-        rst_dict['license_type'] = rst_dict['license_type'] | os_dict[buss_productNo][1]
+        rst_dict['license_type'] = int(rst_dict['license_type']) | os_dict[buss_productNo][1]
 
     print "[getWorkNoInfo] get return work informations ......"
+
+    #调试
+    # rst_dict['license_type'] = 7
+    # rst_dict['license_code'] ='BCPLICF1'
+
     maxAPs = 0
     maxACs = 0
     maxUser = 0
@@ -972,12 +995,22 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
 
 def get_work_order_information(work_order_id,license_id,rst_dict = {}):
     print "重复查询工单号"
+    wkObjs = WorkOrderNum.objects.filter(id=work_order_id)
+    if wkObjs.count() > 0:
+        rst_dict['work_type'] = wkObjs[0].product_type
+
     wkObjs = WorkOrderInformation.objects.filter(workordernum_id=work_order_id)
     for wkObj in wkObjs:
         tmp_dict = {}
         tmp_dict['productType'] = wkObj.materiel_name
         tmp_dict['sumNo'] = wkObj.materiel_count
-        rst_dict['license_info'].append(tmp_dict)
+
+        if wkObj.materiel_type == 1:
+            rst_dict['os_info'].append(tmp_dict)
+        elif wkObj.materiel_type == 2:
+            rst_dict['license_info'].append(tmp_dict)
+        elif wkObj.materiel_type == 3:
+            rst_dict['buss_info'].append(tmp_dict)
 
     print rst_dict
     licenseObj = LicenseRecord.objects.filter(id=license_id)
@@ -987,6 +1020,11 @@ def get_work_order_information(work_order_id,license_id,rst_dict = {}):
     rst_dict['license_code'] = licenseObj[0].license_code
     rst_dict['license_type'] = licenseObj[0].licenseType
     rst_dict['license_status'] = licenseObj[0].license_status
+
+    if rst_dict['license_code'].find('ZTE') == 0:
+        rst_dict['version_type'] = 'ztecode'
+    else:
+        rst_dict['version_type'] = 'bdcode'
 
     cloud_info_obj = licenseObj[0].cloudInfo
     rst_dict['cloud_name'] = cloud_info_obj.cloudName
@@ -1011,7 +1049,7 @@ def get_work_order_info(request):
     print "[get_work_order_info] current time: %s" % (cur_time)
 
     rst_dict = {'result':0,'os_info':[], 'license_info':[], 'buss_info':[]}
-    #result: 0 suc  1 order confirm error 2 os error 2 5 exp no licensecode
+    #result: 0 suc  1 order confirm error 2 os error 3 license error  4 work no error 5 exp no licensecode
     rst_dict['license_expire_time'] = cur_time
     rst_dict['work_type'] = 0
     rst_dict['license_status'] = 0
@@ -1019,7 +1057,8 @@ def get_work_order_info(request):
     work_no_list = work_str.split('-')
     print work_no_list
     if len(work_no_list) != 2:
-        JsonResponse(rst_dict)
+        rst_dict['result'] = 4
+        return JsonResponse(rst_dict)
 
     work_no = work_no_list[0]
     work_lineno = work_no_list[1]
@@ -1037,26 +1076,7 @@ def get_work_order_info(request):
         if rst_dict['result'] !=0:
             return JsonResponse(rst_dict)
 
-    # rst_dict = {'cloud_buyer': u'\u6c5f\u82cf\u5f00\u4e3d\u667a\u63a7\u79d1\u6280\u6709\u9650\u516c\u53f8',
-    #             'license_expire_time': '2019-10-25',
-    #             'max_ap_allowed': 64,
-    #             'license_code': '',
-    #             'contacts': u'\u4ef2\u7fa4',
-    #             'version_type': 'bdcode',
-    #             'phone': u'13816523915',
-    #             'cloud_name': u'\u6c5f\u82cf\u7701\u5357\u901a\u5e02\u8fdb\u9c9c\u6e2f\u9c9c\u82b1\u5c0f\u9547\u667a\u80fd\u5316\u7cfb\u7edf\u9879\u76ee',
-    #             'result': True,
-    #             'max_user_allowed': 1280,
-    #             'license_info': [{'sumNo': 1, 'productType': u'BCP8200-Lic-64'}],
-    #             'max_ac_allowed': 1, 'os_info': [{'sumNo': 1, 'productType': u'BCP8200-OS-STD'}]
-    #             }
-
-    # rst_dict = getWorkNoInfo(work_no, rst_dict=rst_dict)
-    # print rst_dict
-    # return JsonResponse(rst_dict)
-
     print "[get_work_order_info] write work information to DB"
-
     license_code = rst_dict.get('license_code', "")                               # license_code = 'ZTEKPBYHAL00002'
     license_type = rst_dict.get('license_type', '5')                              # 1：基本版本，4：大数据版本,2：计费版本（3：基本+计费，5：基本+大数据，7：基本+计费+大数据）
 
@@ -1067,9 +1087,9 @@ def get_work_order_info(request):
         #3.license相关信息（工单号、key_id、code、status、valid、reset、random_num、type、params、云平台、过期时,maxaps,maxacs,maxusers ）
 
         try:
-            #username = 'lijie'
-            # contactor = '李杰'
-            # phone = '15821837085'
+            #username = ''
+            # contactor = ''
+            # phone = ''
             #管理员添加的相关操作
             # userObj = User.objects.filter(username=username)
             # uId = 0
@@ -1145,6 +1165,7 @@ def get_work_order_info(request):
                 woObj = WorkOrderInformation()
                 woObj.materiel_name = each['productType']
                 woObj.materiel_count = each['sumNo']
+                woObj.materiel_type = 2
                 woObj.workordernum_id = workNum.id
                 woObj.save()
 
@@ -1152,6 +1173,7 @@ def get_work_order_info(request):
                 woObj = WorkOrderInformation()
                 woObj.materiel_name = each['productType']
                 woObj.materiel_count = each['sumNo']
+                woObj.materiel_type = 1
                 woObj.workordernum_id = workNum.id
                 woObj.save()
 
@@ -1159,6 +1181,7 @@ def get_work_order_info(request):
                 woObj = WorkOrderInformation()
                 woObj.materiel_name = each['productType']
                 woObj.materiel_count = each['sumNo']
+                woObj.materiel_type = 3
                 woObj.workordernum_id = workNum.id
                 woObj.save()
 
@@ -1170,21 +1193,25 @@ def get_work_order_info(request):
         print "[get_work_order_info] expansion cloud information"
         rst_dict['work_type'] = 1
         licenseObj = LicenseRecord.objects.filter(license_code=license_code)
+
+        print "license_code:",license_code
+        print "license_code:",licenseObj.count()
         if licenseObj.count() >0:
-            print
             max_ap_allowed = licenseObj[0].maxAps + int(rst_dict.get('max_ap_allowed',0))
             max_ac_allowed = licenseObj[0].maxAcs + int(rst_dict.get('max_ac_allowed',0))
             max_user_allowed = licenseObj[0].maxUsers + int(rst_dict.get('max_user_allowed',0))
             licenseType = int(licenseObj[0].licenseType) | int(rst_dict.get('license_type',5))
+            print rst_dict.get('license_type','9999999999')
+            print licenseObj[0].key_id
+            licenseObj.update(maxAps = max_ap_allowed,
+                              maxAcs=max_ac_allowed,
+                              maxUsers=max_user_allowed,
+                              licenseType=str(licenseType))
 
-            licenseObj.update(
-                maxAps = max_ap_allowed,
-                maxAcs=max_ac_allowed,
-                maxUsers=max_user_allowed,
-                licenseType=licenseType
-            )
             #工单号增加操作
-            workNUm = WorkOrderNum(workOrderNum=work_no,license_id=licenseObj[0].id)
+            workNUm = WorkOrderNum(workOrderNum=work_no,
+                                   license_id=licenseObj[0].id,
+                                   product_type=rst_dict['work_type'])
             workNUm.save()
 
             #工单表的相关操作
@@ -1192,6 +1219,7 @@ def get_work_order_info(request):
                 woObj = WorkOrderInformation()
                 woObj.materiel_name = each['productType']
                 woObj.materiel_count = each['sumNo']
+                woObj.materiel_type = 2
                 woObj.workordernum_id = workNUm.id
                 woObj.save()
 
@@ -1199,13 +1227,14 @@ def get_work_order_info(request):
                 woObj = WorkOrderInformation()
                 woObj.materiel_name = each['productType']
                 woObj.materiel_count = each['sumNo']
+                woObj.materiel_type = 3
                 woObj.workordernum_id = workNUm.id
                 woObj.save()
 
             rst_dict['license_code'] = license_code
+            rst_dict['usbkey_id'] = licenseObj[0].key_id
         else:
             rst_dict['result'] = 5
-            return rst_dict
 
         # workorders = workNUm.workordernum_set.all()
         # print "改license下有%s个工单"%workorders.count()
@@ -1316,12 +1345,14 @@ class ModifyPasswordView(View):
         username = request.session.get('username')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request,'modify_password.html',context)
     def post(self,request):
         param = request.POST.copy()
@@ -1693,31 +1724,50 @@ def handle_download_file(path,file_name):
             f.close()
     return down_data
 
-def download_license_file(request):
+def download_file(request):
     user_name = request.session.get('username','')
     if not user_name:
             return render(request, 'license_login.html')
-    cur_path=os.path.abspath('.')
-    print "os.path.abspath('.')",cur_path
-    #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
-    target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
-    print "os.path.join(cur_path, DOWNLOAD_FILE_PATH)",target_path
-    # /home/Portal/bdlicense/bdlicense/static/download_file/
-    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
-    response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
-    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
-    return response
 
-def download_hlep_usage_file(request):
-    user_name = request.session.get('username','')
-    if not user_name:
-            return render(request, 'license_login.html')
+    d_file = request.GET.get('file','')
     cur_path=os.path.abspath('.')
     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
-    ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
-    response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
-    response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
-    return response
+    if d_file:
+        try:
+            d_file = d_file.encode('utf-8')
+            ap_tem_data=handle_download_file(target_path,str(d_file))
+            response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
+            response["Content-Disposition"]="attachment; filename=%s" %d_file
+            return response
+        except Exception,e:
+            print e
+    return HttpResponse("download error!!!")
+
+# def download_license_file(request):
+#     user_name = request.session.get('username','')
+#     if not user_name:
+#             return render(request, 'license_login.html')
+#     cur_path=os.path.abspath('.')
+#     print "os.path.abspath('.')",cur_path
+#     #os.path.abspath('.') /home/Portal/bdlicense/bdlicense
+#     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+#     print "os.path.join(cur_path, DOWNLOAD_FILE_PATH)",target_path
+#     # /home/Portal/bdlicense/bdlicense/static/download_file/
+#     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_CLIENT_FILE)
+#     response = HttpResponse(ap_tem_data, content_type='text/plain;charset=utf-8')
+#     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_CLIENT_FILE
+#     return response
+#
+# def download_hlep_usage_file(request):
+#     user_name = request.session.get('username','')
+#     if not user_name:
+#             return render(request, 'license_login.html')
+#     cur_path=os.path.abspath('.')
+#     target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
+#     ap_tem_data=handle_download_file(target_path,DOWNLOAD_FILE_LICENSE_USAGE_FILE)
+#     response = HttpResponse(ap_tem_data, content_type='application/vnd.ms-excel;charset=utf-8')
+#     response["Content-Disposition"]="attachment; filename=%s" %DOWNLOAD_FILE_LICENSE_USAGE_FILE
+#     return response
 
 
 def genSysConf(sys_type,val):
@@ -1735,6 +1785,10 @@ class SysConfigView(View):
     def get(self, request):
         print "[in get sys_config]"
         username = request.session.get('username')
+        all_files = request.session.get('all_files')
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+
         if not username:
             return render(request,'license_login.html')
         context = {}
@@ -1744,26 +1798,25 @@ class SysConfigView(View):
             context['server_ip'] = s_ips[0].value
         if s_ports.count() > 0:
             context['server_port'] = s_ports[0].value
-        is_superuser = request.session.get('is_superuser')
-        user_level = request.session.get('user_level')
 
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
         return render(request, 'system_config.html',context)
     def post(self,request):
         print "[in post sys_config]"
         username = request.session.get('username')
+        is_superuser = request.session.get('is_superuser')
+        user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
         if not username:
             return render(request,'license_login.html')
         context = {}
-
-        is_superuser = request.session.get('is_superuser')
-        user_level = request.session.get('user_level')
-
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
+        context['all_files'] = all_files
 
         server_ip = request.POST.get('server_ip','')
         server_port = request.POST.get('server_port','')
@@ -1794,6 +1847,7 @@ class or_query(View):
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
+        all_files = request.session.get('all_files')
 
         context = {}
 
@@ -1803,12 +1857,26 @@ class or_query(View):
             context['work_info'] = work_info
 
         else:
-            print "not superuser,no right to display the user list"
-            return HttpResponse("No Right")
-
+            print "not superuser"
+            try:
+                userObj = User.objects.get(username=username)
+                if userObj:
+                    cloudInfos = userObj.cloudinformation_set.all()
+                    tmp_list = []
+                    for cloudInfo in cloudInfos:
+                        licenses = LicenseRecord.objects.filter(cloudInfo_id=cloudInfo.id)
+                        for license in licenses:
+                            tmp_dict = {}
+                            work_info = WorkOrderNum.objects.filter(license_id=license.id)
+                            tmp_dict['work_num'] = work_info
+                            tmp_list.append(work_info)
+                    context['work_info'] = tmp_list
+            except Exception,e:
+                print e
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['username'] = username
+        context['all_files'] = all_files
 
         return render(request, 'order_query.html',context)
 
@@ -1821,6 +1889,7 @@ class order_details(View):
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
+        all_files = request.session.get('all_files')
         context = {}
         wk_num = request.GET.get('wk_num','')
         print wk_num
@@ -1843,6 +1912,35 @@ class order_details(View):
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['username'] = username
+        context['all_files'] = all_files
 
         return render(request, 'order_details.html',context)
 
+class TmpCloud(View):
+    def get(self,request):
+        print "[tmp cloud]"
+        username = request.session.get('username')
+        user_level = request.session.get('user_level')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        all_files = request.session.get('all_files')
+        context = {}
+
+        if is_superuser:
+            licenses = LicenseRecord.objects.filter(license_code__istartswith="TEMP")
+            context['licenses'] = licenses
+        else:
+            user = User.objects.get(username=username)
+            cloudInfos = user.cloudinformation_set.filter(cloudNum__istartswith="TEMP:")
+            for cloudInfo in cloudInfos:
+                licenses = LicenseRecord.objects.filter(cloudInfo_id=cloudInfo.id)
+                context['licenses'] = licenses
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+        context['username'] = username
+        context['all_files'] = all_files
+
+
+        return render(request,'tmp_cloud.html',context)
