@@ -1916,3 +1916,31 @@ class order_details(View):
 
         return render(request, 'order_details.html',context)
 
+class TmpCloud(View):
+    def get(self,request):
+        print "[tmp cloud]"
+        username = request.session.get('username')
+        user_level = request.session.get('user_level')
+        if not username:
+            return render(request,'license_login.html')
+
+        is_superuser = request.session.get('is_superuser')
+        all_files = request.session.get('all_files')
+        context = {}
+
+        if is_superuser:
+            licenses = LicenseRecord.objects.filter(license_code__istartswith="TEMP")
+            context['licenses'] = licenses
+        else:
+            user = User.objects.get(username=username)
+            cloudInfos = user.cloudinformation_set.filter(cloudNum__istartswith="TEMP:")
+            for cloudInfo in cloudInfos:
+                licenses = LicenseRecord.objects.filter(cloudInfo_id=cloudInfo.id)
+                context['licenses'] = licenses
+        context['is_superuser'] = is_superuser
+        context['user_level'] = user_level
+        context['username'] = username
+        context['all_files'] = all_files
+
+
+        return render(request,'tmp_cloud.html',context)

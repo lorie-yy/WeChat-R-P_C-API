@@ -70,9 +70,9 @@
                                     {% if license.is_valid  == 1%}
                                         <td>有效</td>
                                     {% elif license.is_valid  == 2 %}
-                                        <td>已注册</td>
+                                        <td style="color: #00E676">已注册</td>
                                         {% else %}
-                                        <td>无效</td>
+                                        <td style="color: red">无效</td>
                                     {% endif %}
 
                                     {% if license.key_id %}
@@ -140,9 +140,9 @@
                                         {% if license.is_valid  == 1%}
                                             <td>有效</td>
                                         {% elif license.is_valid  == 2 %}
-                                            <td>已注册</td>
+                                            <td style="color: #00E676">已注册</td>
                                             {% else %}
-                                            <td>无效</td>
+                                            <td style="color: red">无效</td>
                                         {% endif %}
                                         {% if license.key_id %}
                                             <td title="{{ license.key_id }}">{{ license.key_id }}</td>
