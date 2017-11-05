@@ -1020,6 +1020,7 @@ def get_work_order_information(work_order_id,license_id,rst_dict = {}):
     rst_dict['license_code'] = licenseObj[0].license_code
     rst_dict['license_type'] = licenseObj[0].licenseType
     rst_dict['license_status'] = licenseObj[0].license_status
+    rst_dict['usbkey_id'] = licenseObj[0].key_id
 
     if rst_dict['license_code'].find('ZTE') == 0:
         rst_dict['version_type'] = 'ztecode'

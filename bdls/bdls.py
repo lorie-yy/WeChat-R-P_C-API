@@ -353,10 +353,12 @@ class LicenseManager:
             msg = msg + space_str + u"[版本类型]:\t中兴版本" + '\n'
         if work_info.get('cloud_buyer', "") != "":
             msg = msg + space_str + u"[客户信息]:\t%s" % (work_info.get('cloud_buyer')) + '\n'
-        if len(os_info_list) == 0:
-            msg = msg + space_str + u"[OS 信息]:\t%s\t\t\t%s\t\t\t%s" % ("","","") + '\n'
-        else:
-            msg = msg + space_str + u"[OS 信息]:\t%s\t\t\t%s\t\t\t%s个" % (os_info_list[0].get('productNo',""),os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', "")) + '\n'
+
+        if self.work_type != 1:
+            if len(os_info_list) == 0:
+                msg = msg + space_str + u"[OS 信息]:\t%s\t\t\t%s\t\t\t%s" % ("","","") + '\n'
+            else:
+                msg = msg + space_str + u"[OS 信息]:\t%s\t\t\t%s\t\t\t%s个" % (os_info_list[0].get('productNo',""),os_info_list[0].get('productType',""), os_info_list[0].get('sumNo', "")) + '\n'
 
         for each in license_info_list:
             msg = msg + space_str + u"[License]:\t%s\t\t\t%s\t\t\t%s个" % (each.get('productNo',""),each.get('productType',""), each.get('sumNo', "")) + '\n'
