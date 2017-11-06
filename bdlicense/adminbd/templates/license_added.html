@@ -126,7 +126,9 @@
                      <div class="form-group"  style="padding-top: 20px;margin-bottom: 0">
                         <label class="col-sm-3 control-label" for="work_num" style="padding-top: 15px;">工单号</label>
                         <div class="col-sm-4">
-                            <input placeholder="请输入工单号" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="work_num" id="work_num" >
+                            <input placeholder="请输入工单号" style="padding-right:0;padding-left: 0;margin-bottom: 0 " type="text" class="form-control" name="work_num" id="work_num" >
+                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx" onclick="proCode(code_type='0')">博达code</label>
+                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx" onclick="proCode(code_type='1')">中兴code</label>
                         </div>
                     </div>
 {#                    <div class="form-group">#}
@@ -158,14 +160,19 @@
                          <div class="col-sm-4" style="position: relative;">
                              <select class="form-control" id="funcSet" name="funcSet" >
                                     <option value="" disabled="" selected="">选择配置类型</option>
-                                 {% for  licenseParam in licenseParams%}
-{#                                         {% if licenseParam.id == 4 and username != "root" %}#}
-{#                                             <option value="1{{ licenseParam.id }}" style="display: none">{{ licenseParam.cloudRankName }}</option>#}
-{#                                         {% else %}#}
-{#                                 {% if licenseParam.id != 6 %}#}
-                                         <option value="1{{ licenseParam.id }}">{{ licenseParam.cloudRankName }}</option>
-{#                                     {% endif %}#}
-                                 {% endfor %}
+
+                                     {% for licenseParam in licenseParams %}
+                                         {% if licenseParam.vesion_type == 1 %}
+                                             <option value="1{{ licenseParam.id }}" class="bd_pz" style="display: none;">
+                                                 {{ licenseParam.cloudRankName }}
+                                             </option>
+                                         {% elif licenseParam.vesion_type == 2 %}
+                                             <option value="1{{ licenseParam.id }}" class="zx_pz" style="display: none;">
+                                                 {{ licenseParam.cloudRankName }}
+                                             </option>
+                                         {% endif %}
+                                     {% endfor %}
+
                              </select>
 {#                             license配置增减功能#}
                              <div id="fun_all">
@@ -197,7 +204,7 @@
                                     <option id="five" value="5">五年</option>
                             </select>
                         </div>
-                  </div>
+                    </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label" >License功能</label>
                         <label class="check_add"><input type="checkbox" value="4" id="shu_ju">大数据</label>
@@ -214,42 +221,17 @@
         </div>
     </div>
     <script>
-{#        function proCode(){#}
-{#            var bdCode;#}
-{#            if($("#bd_code").is(":checked")){#}
-{#                bdCode='0';#}
-{#            }#}
-{#            if($("#zx_code").is(":checked")){#}
-{#                bdCode='1';#}
-{#            }#}
-{#            #}
-{#            $.get("{% url 'adminbd:add_license' %}",{'code_type':bdCode},function(code){#}
-{#                if($("#bd_code").is(":checked")){#}
-{#                    $(".create").val(code);#}
-{#                }#}
-{#                if($("#zx_code").is(":checked")){#}
-{#                    $(".create").val(code);#}
-{#                }#}
-{#                $("#license_code").attr("disabled","disabled").css('color','black');#}
-{#            })#}
-{##}
-{#        }#}
-        function proCode(){
-            var bdCode;
-            if($("#bd_code").is(":checked")){
-                bdCode='0';
-                $("#zx_code").attr('disabled','disabled');
-            }else if($("#zx_code").is(":checked")){
-                bdCode='1';
-                $("#bd_code").attr('disabled','disabled');
-            }else{
-                alert("请选择code类型!");
-                return;
+        function proCode(code_type){
+            if (code_type == "0"){
+                $(".zx_pz").css('display','none');
+                $(".bd_pz").css('display','block');
+{#                $("#zx_code").css('display','none');#}
+            }else {
+                $(".bd_pz").css('display','none');
+                $(".zx_pz").css('display','block');
+{#                $("#bd_code").css('display','none');#}
             }
-            $("#create").css('display','none');
-            $.get("{% url 'adminbd:add_license' %}",{'code_type':bdCode},function(code){
-                $(".create").val(code);
-                $("#license_code").attr("disabled","disabled").css('color','black');
+            $.get("{% url 'adminbd:add_license' %}",{'code_type':code_type},function(){
             })
         }
 
@@ -259,7 +241,7 @@
         $(".fa-dashboard").css('color','#f44336');
         var keyid, licenseCode, licenseType, licenseParamsID,
                 cloud_info,license_num,license_time,shu_ju,ji_fei,
-                lower= 0,low=0,medium=0,high= 0,higher= 0,bdCode,work_num;
+                bd64= 0,bd128=0,bd1024=0,zx1024= 0,zx32= 0,zx128= 0,bdCode,work_num;
         $('.fun_addm').eq(0).click(function(){
             license_num =$.trim($('#fun_num').val());
             if(license_num==0){
@@ -272,20 +254,30 @@
             $('#fun_num').val(++license_num);
         });
         $('.fun_addm').eq(2).click(function(){
-            if($("[value='11']").is(":selected")){
-                lower =$.trim($('#fun_num').val());
-            }else if($("[value='12']").is(":selected")){
-                low =$.trim($('#fun_num').val());
+            if($("[value='12']").is(":selected")){
+                bd64 =$.trim($('#fun_num').val());
             }else if($("[value='13']").is(":selected")){
-                medium =$.trim($('#fun_num').val());
+                bd128 =$.trim($('#fun_num').val());
             }else if($("[value='14']").is(":selected")){
-                high =$.trim($('#fun_num').val());
-            }else if($("[value='15']").is(":selected")){
-                higher =$.trim($('#fun_num').val());
+                bd1024 =$.trim($('#fun_num').val());
+            }else if($("[value='18']").is(":selected")){
+                zx1024 =$.trim($('#fun_num').val());
+            }else if($("[value='19']").is(":selected")){
+                zx32 =$.trim($('#fun_num').val());
+            }else if($("[value='110']").is(":selected")){
+                zx128 =$.trim($('#fun_num').val());
             }else{
                 return ;
             }
-            $("#article").text("最低配："+lower+"个;  低配："+low+"个;  中配："+medium+"个;  高配："+high+"个;  最高配："+higher+"个");
+            if($(".bd_pz").css('display')=='block'){
+                $("#article").text("BCP8200-Lic-64："+bd64+"个;  BCP8200-Lic-128："+bd128+"个;  BCP8200-Lic-1024："
+                    +bd1024+"个;");
+            }else if($(".zx_pz").css('display')=='block'){
+                $("#article").text("ZXWL OMCP-License-1024："+zx1024+"个;  ZXWL OMCP-License-32："+zx32+"个;  ZXWL OMCP-License-128："
+                    +zx128+"个;");
+            }
+{#            $("#article").text("BCP8200-Lic-64："+lower+"个;  BCP8200-Lic-128："+low+"个;  BCP8200-Lic-1024："#}
+{#                    +medium+"个;  高配："+high+"个;  最高配："+higher+"个");#}
 {#            alert(low+"A"+medium+"B"+high+"C");#}
         });
 
@@ -338,7 +330,7 @@
                 AlarmWarning("请选择配置类型!",btnSn);
             }else if(!license_time){
                 AlarmWarning("请选择license有效时间!",btnSn);
-            }else if(lower==0 && low==0 && medium == 0 && high == 0 && higher == 0){
+            }else if(bd64==0 && bd128==0 && bd1024==0 && zx1024==0 && zx32==0 && zx128==0){
                 AlarmWarning("请选择配置个数并点击确认!")
             }
             else{
@@ -351,11 +343,12 @@
                         license_code:licenseCode,
                         cloud_info:cloud_info,
                         code_type:bdCode,
-                        lower:lower,
-                        low:low,
-                        medium:medium,
-                        high:high,
-                        higher:higher,
+                        bd64:bd64,
+                        bd128:bd128,
+                        bd1024:bd1024,
+                        zx1024:zx1024,
+                        zx32:zx32,
+                        zx128:zx128,
                         license_time:license_time,
                         licensePID:licenseParamsID,
                         data_license:shu_ju,

@@ -226,17 +226,30 @@ class AddLicenseView(View):
         print "in add license get func"
 
         context = {}
-
-        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
-        print "licenseParams count",licenseParams.count()
+        code_type = request.GET.get('code_type','0')
+        print code_type
+        print "00000000"
+        # if code_type in [0,"0"]:
+        #     licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
+        #     context['licenseParams'] = licenseParams
+        #     print "licenseParams count",licenseParams.count()
+        #     for licenseParam in licenseParams:
+        #         print licenseParam.cloudRankName
+        # elif code_type in [1,"1"]:
+        #     licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=2)
+        #     print "licenseParams count",licenseParams.count()
+        #     context['license_Params'] = licenseParams
+        #     for licenseParam in licenseParams:
+        #         print licenseParam.cloudRankName
+        licenseParams = LicenseParams.objects.filter(product_type = 2)
         context['licenseParams'] = licenseParams
-
         cloudInfos = CloudInformation.objects.exclude(cloudName = "")
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['all_files'] = all_files
+
         #
         # if request.is_ajax():
         #     print "in request.is_ajax() "
