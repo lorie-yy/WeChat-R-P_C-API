@@ -1,11 +1,8 @@
 {% extends "common/common.html" %}
     {% block page-inner %}
     <style>
-        .form-group #license_code{height: 2rem;padding: 0.4rem 1rem 0rem 1rem;}
+{#        .form-group #license_code{height: 2rem;padding: 0.4rem 1rem 0rem 1rem;}#}
         .form-group label{padding: 0.5rem 1rem 0.2rem 1rem;}
-{#        label{#}
-{#            font-size: 15px;#}
-{#        }#}
         .btn{
             width: 50px;
             height: 32px;
@@ -51,12 +48,12 @@
             color: #fff;
         }
         #content{
-            width: 340px;
-            height: 240px;
+            width: 420px;
+            height: 282px;
             position: fixed;
             top: 50%; left: 50%;
-            margin-left: -170px;
-            margin-top: -190px;
+            margin-left: -210px;
+            margin-top: -211px;
             display: none;
             background: floralwhite;
             z-index: 99;
@@ -90,27 +87,27 @@
             text-align: center;
             margin-left: 5px;
         }
-        input[type=checkbox]{
-            margin: 0;
-            position: relative;
-            top: 2px;
-        }
-        input::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-            color:    #909;
-            font-size: 13px;
-        }
-        input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-           color:    #909;
-           font-size: 13px;
-        }
-        input::-moz-placeholder { /* Mozilla Firefox 19+ */
-           color:    #909;
-           font-size: 13px;
-        }
-        input:-ms-input-placeholder { /* Internet Explorer 10-11 */
-           color:    #909;
-           font-size: 13px;
-        }
+{#        input[type=checkbox]{#}
+{#            margin: 0;#}
+{#            position: relative;#}
+{#            top: 2px;#}
+{#        }#}
+{#        input::-webkit-input-placeholder { /* WebKit, Blink, Edge */#}
+{#            color:    #909;#}
+{#            font-size: 13px;#}
+{#        }#}
+{#        input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */#}
+{#           color:    #909;#}
+{#           font-size: 13px;#}
+{#        }#}
+{#        input::-moz-placeholder { /* Mozilla Firefox 19+ */#}
+{#           color:    #909;#}
+{#           font-size: 13px;#}
+{#        }#}
+{#        input:-ms-input-placeholder { /* Internet Explorer 10-11 */#}
+{#           color:    #909;#}
+{#           font-size: 13px;#}
+{#        }#}
     </style>
     <div id="cover" style=""></div>
     <div class="panel">
@@ -132,19 +129,6 @@
                             <input placeholder="请输入工单号" style="padding-right:0;padding-left: 0;" type="text" class="form-control" name="work_num" id="work_num" >
                         </div>
                     </div>
-{#                    <div class="form-group">#}
-{##}
-{#                        <label class="col-sm-3 control-label" for="license_code" >Code类型</label>#}
-{#                        <div class="col-sm-4" >#}
-{#                            <input placeholder="选择类型，提交后自动生成license code" value="" disabled spellcheck="false" style="padding: 4px 0;margin-bottom: 0" type="text" class="create" name="license_code" id="license_code" >#}
-{#                            <div class="col-sm-4">#}
-{#                                <input placeholder="请输入license 码" style="padding-right:0;padding-left: 0; " type="text" class="form-control" name="license_code" id="license_code" >#}
-{#                            </div>#}
-{#                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="bd" id="bd_code" name="bd_zx" checked>博达code</label>#}
-{#                            <label style="width: 120px;cursor:pointer;"><input type="radio" value="zx" id="zx_code" name="bd_zx">中兴code</label>#}
-{#                        </div>#}
-{#                        <a class="col-sm-1 btn btn-turquoise" id="create" onclick="proCode()">生成</a>#}
-{#                    </div>#}
                     <div class="form-group">
                         <label class="col-sm-3 control-label" for="cloud_info" >对应云平台</label>
                         <div class="col-sm-4">
@@ -156,24 +140,22 @@
                             </select>
                         </div>
                     </div>
-                    <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
+                    <div class="form-group" id="setting">
                          <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
                          <div class="col-sm-4" style="position: relative;">
                              <select class="form-control" id="funcSet" name="funcSet" >
                                     <option value="" disabled="" selected="">选择配置类型</option>
-
                                      {% for licenseParam in licenseParams %}
                                          {% if licenseParam.vesion_type == 1 %}
-                                             <option value="1{{ licenseParam.id }}" class="bd_pz aaa" style="display: none;">
+                                             <option value="1{{ licenseParam.id }}" class="bd_pz bd_zx" style="display: none;">
                                                  {{ licenseParam.cloudRankName }}
                                              </option>
                                          {% elif licenseParam.vesion_type == 2 %}
-                                             <option value="1{{ licenseParam.id }}" class="zx_pz aaa" style="display: none;">
+                                             <option value="1{{ licenseParam.id }}" class="zx_pz bd_zx" style="display: none;">
                                                  {{ licenseParam.cloudRankName }}
                                              </option>
                                          {% endif %}
                                      {% endfor %}
-
                              </select>
 {#                             license配置增减功能#}
                              <div id="fun_all">
@@ -184,11 +166,6 @@
                                  <button class="fun_addm" style="width: 75px;">配置说明</button>
                                  <div id="content">
                                      <p style="text-align: center;margin-bottom: 0;font-weight: bold;height: 35px;line-height: 35px;">配置说明</p>
-{#                                     <p class="alert alert-warning">最低配--32个AP，1个AC授权</p>#}
-{#                                     <p class="alert alert-info">低配--64个AP，1个AC授权</p>#}
-{#                                     <p class="alert alert-success" >中配--128，1个AC授权</p>#}
-{#                                     <p class="alert alert-info">高配--512，2个AC授权</p>#}
-{#                                     <p class="alert alert-danger">最高配--1024个AP，4个AC授权</p>#}
                                      <p class="alert alert-info">BCP8200-Lic-64支持64个AP，1个AC授权</p>
                                      <p class="alert alert-success" >BCP8200-Lic-128支持128，1个AC授权</p>
                                      <p class="alert alert-warning"> BCP8200-Lic-1024支持1024个AP，4个AC授权</p>
@@ -228,59 +205,49 @@
         </div>
     </div>
     <script>
-        function proCode(code_type){
-            if (code_type == "0"){
-                $(".zx_pz").css('display','none');
-                $(".bd_pz").css('display','block');
-{#                $("#zx_code").css('display','none');#}
-            }else {
-                $(".bd_pz").css('display','none');
-                $(".zx_pz").css('display','block');
-{#                $("#bd_code").css('display','none');#}
-            }
-            $.get("{% url 'adminbd:add_license' %}",{'code_type':code_type},function(){
-            })
+    function proCode(code_type){
+        if (code_type == "0"){
+            $(".zx_pz").css('display','none');
+            $(".bd_pz").css('display','block');
+{#            $("#zx_code").attr('disabled','false');#}
+        }else {
+            $(".bd_pz").css('display','none');
+            $(".zx_pz").css('display','block');
+{#            $("#bd_code").attr('disabled','false');#}
         }
-
-    </script>
-    <script>
+    }
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var keyid, licenseCode, licenseType, licenseParamsID,
-                cloud_info,license_num,license_time,shu_ju,ji_fei,bdCode,work_num,bbb=[],ccc=[],ddd=[],fff=[];
+        var licenseParamsID,cloud_info,license_time,shu_ju,ji_fei,bdCode,
+                work_num,bz_content=[],bz_num=[],bz_article=[],bz_cn=[];
+        var license_num =$.trim(parseInt($('#fun_num').val()));
         $('.fun_addm').eq(0).click(function(){
-            license_num =$.trim($('#fun_num').val());
             if(license_num==0){
                 return ;
             }
             $('#fun_num').val(--license_num);
         });
         $('.fun_addm').eq(1).click(function(){
-            license_num =$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
         $('.fun_addm').eq(2).click(function(){
-            var list =$(".aaa");
-            for(var i=0;i<list.length;i++){
+            var bz_list =$(".bd_zx");
+            for(var i=0;i<bz_list.length;i++){
                 (function (m) {
-                    if(list[m].selected==true){
-                        bbb[m]=$.trim($(".aaa")[m].innerHTML);
-                        ccc[m]=$.trim(parseInt($('#fun_num').val()));
-                        ddd[m]=(bbb[m]+' : '+ccc[m]+'个<br>');
-                        fff[m]=(bbb[m]+':'+ccc[m]);
+                    if(bz_list[m].selected==true){
+                        bz_content[m]=$.trim(bz_list[m].innerHTML);
+                        bz_num[m]=license_num;
+                        bz_article[m]=(bz_content[m]+' : '+bz_num[m]+'个<br>');
+                        bz_cn[m]=(bz_content[m]+':'+bz_num[m]);
                     }
                 })(i);
             }
             if($(".bd_pz").css('display')=='block'){
-{#                $("#article").text("BCP8200-Lic-64："+bd64+"个;  BCP8200-Lic-128："+bd128+"个;  BCP8200-Lic-1024："#}
-{#                    +bd1024+"个;");#}
-{#                $("#article").append('<div>'+ddd.bbb+':'+ddd.ccc+'</div>');#}
-                $("#article").html(ddd);
+                $("#article").html(bz_article);
             }else if($(".zx_pz").css('display')=='block'){
-                $("#article").html(ddd);
+                $("#article").html(bz_article);
             }
         });
-
         $('.fun_addm').eq(3).click(function(){
             $("#content").fadeIn();
             $("#cover").css('display','block');
@@ -293,15 +260,10 @@
         });
 
         $("#submit").click(function(){
-
-            keyid =$.trim($("input[name='key_id']").val());
-            licenseCode =$.trim($("input[name='license_code']").val());
             work_num =$.trim($("input[name='work_num']").val());
-            licenseType =$.trim($('#license_type').val());
             licenseParamsID =$.trim($('#funcSet').val());
             cloud_info =$.trim($('#cloud_info').val());
             license_time =$.trim($('#license_time').val());
-{#            license_num =$.trim($('#fun_num').val());#}
             if($("#shu_ju").is(":checked")){
                 shu_ju=$("#shu_ju").val();
             }else{
@@ -313,9 +275,6 @@
                 ji_fei="";
             }
             var btnSn=function() {};
-{#            if(!licenseCode ){#}
-{#                AlarmWarning("请选择code类型!",btnSn);#}
-{#            }#}
             if($("#bd_code").is(":checked")){
                 bdCode='0';
             }else if($("#zx_code").is(":checked")){
@@ -323,30 +282,27 @@
             }
             if (!work_num){
                 AlarmWarning("请输入工单号!",btnSn);
-            }
-            else if(!cloud_info){
+            }else if(!cloud_info){
                 AlarmWarning("请选择对应云平台!",btnSn);
-            }
-            else if (!licenseParamsID ){
+            }else if (!licenseParamsID ){
                 AlarmWarning("请选择配置类型!",btnSn);
+            }else if(license_num=='' || license_num==null || license_num==0){
+                AlarmWarning("请选择license数量并点击确认!",btnSn);
             }else if(!license_time){
                 AlarmWarning("请选择license有效时间!",btnSn);
             }
             else{
                 var btnFn=function(e) {};
                 var tmp_list = [];
-                for (var i=0;i<fff.length;i++){
-                    if (fff[i] != null){
-                        tmp_list.push(fff[i])
+                for (var i=0;i<bz_cn.length;i++){
+                    if (bz_cn[i] != null){
+                        tmp_list.push(bz_cn[i])
                     }
-
                 }
-               $.ajax({
+                $.ajax({
                     url:"/adminbd/add_license",
                     dataType:"json",
                     data:{
-                        key_id:keyid,
-                        license_code:licenseCode,
                         cloud_info:cloud_info,
                         code_type:bdCode,
                         licensePZ:String(tmp_list),
@@ -358,9 +314,8 @@
                         csrfmiddlewaretoken:'{{ csrf_token }}'},
                     type:"POST",
                     success:function(data) {
-
                         if(data.res == 1){
-                            var btnSn=function(e) {
+                            var btnSn=function() {
                                 window.location.href = '/adminbd/add_license';
                             };
                             SuccessWarning("license添加成功",btnSn);
@@ -374,16 +329,12 @@
                             ErrorWarning("license添加失败!",btnFn);
                         }
                     },
-                   error:function(){
+                    error:function(){
                         ErrorWarning("服务器错误！",btnFn);
-                   }
-            })
+                    }
+                })
             }
         });
-
     });
-
     </script>
-
-
     {% endblock %}
