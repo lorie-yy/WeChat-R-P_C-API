@@ -8,7 +8,7 @@ import subprocess
 import commands
 
 def get_process_id(pro_name): 
-    cmd = "ps -ef | grep %s | grep -v '$0' | grep -v 'grep' | awk '{print $2}'" % (pro_name)
+    cmd = "ps -ef | grep %s | grep -v '$0' | grep -v 'grep' | grep -v 'portalbd'| awk '{print $2}'" % (pro_name)
     #aa=subprocess.Popen(cmd, shell=True)
     aa = commands.getoutput(cmd) 
     return str(aa).split()

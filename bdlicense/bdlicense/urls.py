@@ -21,4 +21,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$',IndexView.as_view(),name='index'),
     url(r'^adminbd/', include('adminbd.urls', namespace='adminbd')),
+    url(r'^wechatfans/', include('wechatfans.urls', namespace='adminbd')),
 ]
