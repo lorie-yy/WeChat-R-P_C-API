@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from django.db import models
 
 
@@ -9,3 +10,4 @@ class TwechatOffline(models.Model):
     subscribe = models.CharField(max_length=1,default='0')
     shopid = models.IntegerField()
     cloudid = models.CharField(max_length=32,null=True,blank=True)
+    authtime = models.DateTimeField('认证时间',auto_now_add=True)
