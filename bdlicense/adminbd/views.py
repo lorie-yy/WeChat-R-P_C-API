@@ -142,10 +142,10 @@ def genZteCode():
                     "2017":"H","2018":"J","2019":"K","2020":"L","2021":"M","2022":"N","2023":"P",
                     "2024":"Q","2025":"R","2026":"T","2027":"U","2028":"V","2029":"W","2030":"X",
                     "2031":"Y"}
-    month_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+    month_context = {"01":"1","02":"2","03":"3","04":"4","05":"5","06":"6","07":"7","08":"8","09":"9",
                      "10":"A","11":"B","12":"C"}
 
-    day_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+    day_context = {"01":"1","02":"2","03":"3","04":"4","05":"5","06":"6","07":"7","08":"8","09":"9",
                      "10":"A","11":"B","12":"C","13":"D","14":"E","15":"F","16":"G","17":"H",
                    "18":"I","19":"J","20":"K","21":"L","22":"M","23":"N","24":"O","25":"P",
                    "26":"Q","27":"R","28":"S","29":"T","30":"U","31":"V"
@@ -226,33 +226,16 @@ class AddLicenseView(View):
         print "in add license get func"
 
         context = {}
-
-        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
-        print "licenseParams count",licenseParams.count()
+        code_type = request.GET.get('code_type','0')
+        licenseParams = LicenseParams.objects.filter(product_type = 2)
         context['licenseParams'] = licenseParams
-
         cloudInfos = CloudInformation.objects.exclude(cloudName = "")
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['all_files'] = all_files
-        #
-        # if request.is_ajax():
-        #     print "in request.is_ajax() "
-        #     code_type = request.GET.get('code_type')
-        #     license_code = ""
-        #     if code_type == "0":
-        #         license_code = genBdCode("D")
-        #     elif code_type == "1":
-        #         license_code = genZteCode()
-        #     else:
-        #         return HttpResponse("error!!!!")
-        #     #response code
-        #     if license_code:
-        #         return HttpResponse(license_code)
-        #     else:
-        #         return HttpResponse("error!!!!")
+
         return render(request, 'license_added.html',context)
 
     def post(self,request):
@@ -262,12 +245,18 @@ class AddLicenseView(View):
 
         print "in add license post func"
         license_time = request.POST.get('license_time')
+        print license_time
         cloud_info = request.POST.get('cloud_info')
-        lower = request.POST.get('lower',0)
-        low = request.POST.get('low',0)
-        medium = request.POST.get('medium',0)
-        high = request.POST.get('high',0)
-        higher = request.POST.get('higher',0)
+        print cloud_info
+        licensePZ = request.POST.get('licensePZ','')
+        tmp_param_dic = {}
+        if licensePZ:
+            licenseParamList = str(licensePZ).split(",")
+            for l in licenseParamList:
+                tmp = l.split(":")
+                tmp_param_dic[tmp[0]] = tmp[1]
+            print tmp_param_dic
+
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
         work_num = request.POST.get('work_num','')
@@ -349,13 +338,6 @@ class AddLicenseView(View):
             workNum = WorkOrderNum(license_id=license.id,workOrderNum = work_num)
             workNum.save()
 
-            params_dic = {
-                "BCP8200-Lic-32":lower,
-                "BCP8200-Lic-64":low,
-                "BCP8200-Lic-128":medium,
-                "BCP8200-Lic-512":high,
-                "BCP8200-Lic-1024":higher
-            }
             basic_dict = {}
             licensePas = LicenseParams.objects.all()
             for licensePa in licensePas:
@@ -364,21 +346,18 @@ class AddLicenseView(View):
             maxAPs = 0
             maxACs = 0
             maxUsers = 0
-            for key,value in params_dic.items():
-                if value in [0,'0']:
-                    continue
+            for key,value in tmp_param_dic.items():
+                wkInfo = WorkOrderInformation(
+                    materiel_name=key,
+                    materiel_count=value,
+                    workordernum_id=workNum.id)
+                wkInfo.save()
+                if key in basic_dict.keys():
+                    maxAPs += int(value)*int(basic_dict[key][0])
+                    maxACs += int(value)*int(basic_dict[key][1])
+                    maxUsers += int(value)*int(basic_dict[key][2])
                 else:
-                    wkInfo = WorkOrderInformation(
-                        materiel_name=key,
-                        materiel_count=value,
-                        workordernum_id=workNum.id)
-                    wkInfo.save()
-                    if key in basic_dict.keys():
-                        maxAPs += int(value)*int(basic_dict[key][0])
-                        maxACs += int(value)*int(basic_dict[key][1])
-                        maxUsers += int(value)*int(basic_dict[key][2])
-                    else:
-                        return HttpResponse("illegal license params")
+                    return HttpResponse("illegal license params")
             license.maxAps = maxAPs
             license.maxAcs = maxACs
             license.maxUsers = maxUsers
