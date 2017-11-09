@@ -120,7 +120,6 @@
 {#                                </select>#}
                             </div>
                         </div>
-{#                    {{  licenseParams }}#}
                         <div {% comment %}style="display: none"{% endcomment %} class="form-group" id="setting">
                              <label class="col-sm-3 control-label" for="funcSet" >License配置</label>
                              <div class="col-sm-4" style="position: relative;">
@@ -192,19 +191,21 @@
     <script>
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var licenseParamsID,license_id,shu_ju,ji_fei,bdCode,
+        var licenseParamsID,license_id,shu_ju,ji_fei,bdCode,license_num,
                 bz_content=[],bz_num=[],bz_article=[],bz_cn=[];
-        var license_num =$.trim(parseInt($('#fun_num').val()));
         $('.fun_addm').eq(0).click(function(){
+            license_num =$.trim($('#fun_num').val());
             if(license_num==0){
                 return ;
             }
             $('#fun_num').val(--license_num);
         });
         $('.fun_addm').eq(1).click(function(){
+            license_num =$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
         $('.fun_addm').eq(2).click(function(){
+            license_num =$.trim($('#fun_num').val());
             var bz_list =$(".bd_zx");
             for(var i=0;i<bz_list.length;i++){
                 (function (m) {
@@ -216,12 +217,16 @@
                     }
                 })(i);
             }
-            if($(".bd_pz").css('display')=='block'){
-                $("#article").html(bz_article);
-            }else if($(".zx_pz").css('display')=='block'){
-                $("#article").html(bz_article);
-            }
+            $("#article").html(bz_article);
         });
+        if('{{ code_type }}' == "0" ){
+            $(".zx_pz").css('display','none');
+            $(".bd_pz").css('display','block');
+        }else if('{{ code_type }}' == "1"){
+            $(".bd_pz").css('display','none');
+            $(".zx_pz").css('display','block');
+        }
+
         $('.fun_addm').eq(3).click(function(){
             $("#content").fadeIn();
             $("#cover").css('display','block');
@@ -233,13 +238,8 @@
             }
         });
         $("#submit").click(function(){
-{#            keyid =$.trim($("input[name='key_id']").val());#}
-{#            licenseCode =$.trim($("input[name='license_code']").val());#}
-{#            licenseType =$.trim($('#license_type').val());#}
             licenseParamsID =$.trim($('#funcSet').val());
             license_id =$.trim($('#license_id').val());
-{#            license_time =$.trim($('#license_time').val());#}
-{#            license_num =$.trim($('#fun_num').val());#}
             if($("#shu_ju").is(":checked")){
                 shu_ju=$("#shu_ju").val();
             }else{
@@ -256,19 +256,11 @@
             }else if($("#zx_code").is(":checked")){
                 bdCode='1';
             }
-{#            if(!licenseCode ){#}
-{#                AlarmWarning("请输入license code!",btnSn);#}
-{#            }else if(!cloud_info){#}
-{#                AlarmWarning("请选择对应云平台!",btnSn);#}
-{#            }else #}
             if (!licenseParamsID ){
                 AlarmWarning("请选择配置类型!",btnSn);
             }else if(license_num=='' || license_num==null || license_num==0){
                 AlarmWarning("请选择license数量并点击确认!",btnSn);
             }
-{#            else if(!license_time){#}
-{#                AlarmWarning("请选择license有效时间!",btnSn);#}
-{#            }#}
             else{
                 var btnFn=function(e) {};
                 var tmp_list = [];
@@ -308,17 +300,6 @@
         });
 
     });
-
-{#        function func(){#}
-{#            //获取被选中的option标签#}
-{#            var vs = $('#license_type option:selected').val();#}
-{#            console.log(vs);#}
-{#            if(vs==1){#}
-{#                $('#setting').show();#}
-{#            }else{#}
-{#                $('#setting').hide();#}
-{#            }#}
-{#        }#}
 
     </script>
 

@@ -218,19 +218,21 @@
     }
     $(document).ready(function(){
         $(".fa-dashboard").css('color','#f44336');
-        var licenseParamsID,cloud_info,license_time,shu_ju,ji_fei,bdCode,
+        var licenseParamsID,cloud_info,license_time,shu_ju,ji_fei,bdCode,license_num,
                 work_num,bz_content=[],bz_num=[],bz_article=[],bz_cn=[];
-        var license_num =$.trim(parseInt($('#fun_num').val()));
         $('.fun_addm').eq(0).click(function(){
+            license_num=$.trim($('#fun_num').val());
             if(license_num==0){
                 return ;
             }
             $('#fun_num').val(--license_num);
         });
         $('.fun_addm').eq(1).click(function(){
+            license_num=$.trim($('#fun_num').val());
             $('#fun_num').val(++license_num);
         });
         $('.fun_addm').eq(2).click(function(){
+            license_num=$.trim($('#fun_num').val());
             var bz_list =$(".bd_zx");
             for(var i=0;i<bz_list.length;i++){
                 (function (m) {

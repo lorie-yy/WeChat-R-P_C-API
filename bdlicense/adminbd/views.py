@@ -392,6 +392,10 @@ class EditLicenseView(View):
             if license_id is not None:
                 licenseRecord = LicenseRecord.objects.get(id=int(license_id))
                 context['licenseRecord'] = licenseRecord
+                if str(licenseRecord.license_code).startswith("BCPLICF"):
+                    context['code_type'] = "0"
+                elif str(licenseRecord.license_code).startswith("ZTE"):
+                    context['code_type'] = "1"
 
                 if int(licenseRecord.licenseType) & 4:
                     context['data_id'] = 4
@@ -404,46 +408,16 @@ class EditLicenseView(View):
                 print wkOrders.count()
                 print "-id count()"
                 if wkOrders.count() >0:
-                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id)
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id,
+                                                                  materiel_type=0)
                     for wkInfo in wkInfos:
                         get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
-
-                    # basic_dic = {
-                    #         "BCP8200-Lic-32":3,
-                    #         "BCP8200-Lic-64":9,
-                    #         "BCP8200-Lic-128":"medium",
-                    #         "BCP8200-Lic-512":"high",
-                    #         "BCP8200-Lic-1024":"higher"
-                    #     }
-                    if "BCP8200-Lic-32" in get_dic.keys():
-                        context['lower'] = get_dic['BCP8200-Lic-32']
-                    else:
-                        context['lower'] = 0
-                    if "BCP8200-Lic-64" in get_dic.keys():
-                        context['low'] = get_dic['BCP8200-Lic-64']
-                    else:
-                        context['low'] = 0
-                    if "BCP8200-Lic-128" in get_dic.keys():
-                        context['mid'] = get_dic['BCP8200-Lic-128']
-                    else:
-                        context['mid'] = 0
-                    if "BCP8200-Lic-512" in get_dic.keys():
-                        context['high'] = get_dic['BCP8200-Lic-512']
-                    else:
-                        context['high'] = 0
-                    if "BCP8200-Lic-1024" in get_dic.keys():
-                        context['higher'] = get_dic['BCP8200-Lic-1024']
-                    else:
-                        context['higher'] = 0
-                    print context['higher']
-                    print context['high']
-                    print context['mid']
-                    print context['low']
-                    print context['lower']
+                    context['get_dic'] = json.dumps(get_dic)
+                    print type(json.dumps(get_dic))
         except Exception,e:
             print e
 
-        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
+        licenseParams = LicenseParams.objects.filter(product_type = 2)
         context['licenseParams'] = licenseParams
 
         context['username'] = username
