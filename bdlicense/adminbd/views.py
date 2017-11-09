@@ -339,7 +339,7 @@ class AddLicenseView(View):
             workNum.save()
 
             basic_dict = {}
-            licensePas = LicenseParams.objects.all()
+            licensePas = LicenseParams.objects.filter(product_type=2)
             for licensePa in licensePas:
                 basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
             print basic_dict
@@ -347,17 +347,22 @@ class AddLicenseView(View):
             maxACs = 0
             maxUsers = 0
             for key,value in tmp_param_dic.items():
-                wkInfo = WorkOrderInformation(
-                    materiel_name=key,
-                    materiel_count=value,
-                    workordernum_id=workNum.id)
-                wkInfo.save()
-                if key in basic_dict.keys():
-                    maxAPs += int(value)*int(basic_dict[key][0])
-                    maxACs += int(value)*int(basic_dict[key][1])
-                    maxUsers += int(value)*int(basic_dict[key][2])
+                if value in [0,"0"]:
+                    continue
                 else:
-                    return HttpResponse("illegal license params")
+                    wkInfo = WorkOrderInformation(
+                        materiel_name=key,
+                        materiel_count=value,
+                        workordernum_id=workNum.id,
+                        materiel_type = 2
+                    )
+                    wkInfo.save()
+                    if key in basic_dict.keys():
+                        maxAPs += int(value)*int(basic_dict[key][0])
+                        maxACs += int(value)*int(basic_dict[key][1])
+                        maxUsers += int(value)*int(basic_dict[key][2])
+                    else:
+                        return HttpResponse("illegal license params")
             license.maxAps = maxAPs
             license.maxAcs = maxACs
             license.maxUsers = maxUsers
@@ -392,6 +397,10 @@ class EditLicenseView(View):
             if license_id is not None:
                 licenseRecord = LicenseRecord.objects.get(id=int(license_id))
                 context['licenseRecord'] = licenseRecord
+                if str(licenseRecord.license_code).startswith("BCPLICF"):
+                    context['code_type'] = "0"
+                elif str(licenseRecord.license_code).startswith("ZTE"):
+                    context['code_type'] = "1"
 
                 if int(licenseRecord.licenseType) & 4:
                     context['data_id'] = 4
@@ -404,46 +413,16 @@ class EditLicenseView(View):
                 print wkOrders.count()
                 print "-id count()"
                 if wkOrders.count() >0:
-                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id)
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id,
+                                                                  materiel_type=0)
                     for wkInfo in wkInfos:
                         get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
-
-                    # basic_dic = {
-                    #         "BCP8200-Lic-32":3,
-                    #         "BCP8200-Lic-64":9,
-                    #         "BCP8200-Lic-128":"medium",
-                    #         "BCP8200-Lic-512":"high",
-                    #         "BCP8200-Lic-1024":"higher"
-                    #     }
-                    if "BCP8200-Lic-32" in get_dic.keys():
-                        context['lower'] = get_dic['BCP8200-Lic-32']
-                    else:
-                        context['lower'] = 0
-                    if "BCP8200-Lic-64" in get_dic.keys():
-                        context['low'] = get_dic['BCP8200-Lic-64']
-                    else:
-                        context['low'] = 0
-                    if "BCP8200-Lic-128" in get_dic.keys():
-                        context['mid'] = get_dic['BCP8200-Lic-128']
-                    else:
-                        context['mid'] = 0
-                    if "BCP8200-Lic-512" in get_dic.keys():
-                        context['high'] = get_dic['BCP8200-Lic-512']
-                    else:
-                        context['high'] = 0
-                    if "BCP8200-Lic-1024" in get_dic.keys():
-                        context['higher'] = get_dic['BCP8200-Lic-1024']
-                    else:
-                        context['higher'] = 0
-                    print context['higher']
-                    print context['high']
-                    print context['mid']
-                    print context['low']
-                    print context['lower']
+                    context['get_dic'] = json.dumps(get_dic)
+                    print type(json.dumps(get_dic))
         except Exception,e:
             print e
 
-        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
+        licenseParams = LicenseParams.objects.filter(product_type = 2)
         context['licenseParams'] = licenseParams
 
         context['username'] = username
@@ -465,22 +444,17 @@ class EditLicenseView(View):
         license_id = params['license_id']
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-
-        lower = request.POST.get('lower',0)
-        low = request.POST.get('low',0)
-        medium = request.POST.get('medium',0)
-        high = request.POST.get('high',0)
-        higher = request.POST.get('higher',0)
-
-        params_dic = {
-                "BCP8200-Lic-32":lower,
-                "BCP8200-Lic-64":low,
-                "BCP8200-Lic-128":medium,
-                "BCP8200-Lic-512":high,
-                "BCP8200-Lic-1024":higher
-            }
+        licensePZ = request.POST.get('licensePZ')
+        print licensePZ
+        tmp_param_dic = {}
+        if licensePZ:
+            licenseParamList = str(licensePZ).split(",")
+            for l in licenseParamList:
+                tmp = l.split(":")
+                tmp_param_dic[tmp[0]] = tmp[1]
+            print tmp_param_dic
         basic_dict = {}
-        licensePas = LicenseParams.objects.all()
+        licensePas = LicenseParams.objects.filter(product_type=2)
         for licensePa in licensePas:
             basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
         print basic_dict
@@ -491,8 +465,8 @@ class EditLicenseView(View):
         try:
             workNum = WorkOrderNum(license_id=license_id,workOrderNum = getRandom16Num())
             workNum.save()
-            for key,value in params_dic.items():
-                if value in [0,'0']:
+            for key,value in tmp_param_dic.items():
+                if value in [0,"0"]:
                     continue
                 else:
                     wkInfo = WorkOrderInformation(
@@ -507,8 +481,6 @@ class EditLicenseView(View):
                         maxUsers += int(value)*int(basic_dict[key][2])
                     else:
                         return HttpResponse("illegal license params")
-
-
             uu = {}
 
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
@@ -1924,3 +1896,31 @@ class TmpCloud(View):
 
 
         return render(request,'tmp_cloud.html',context)
+
+class delCloudView(View):
+    def get(self,request):
+        print "[ delCloudView ]"
+        username = request.session.get('username')
+        if not username:
+            return render(request,'license_login.html')
+
+        cloud_id = request.GET.get('cloud_id')
+        try:
+            if cloud_id:
+                licenses = LicenseRecord.objects.filter(cloudInfo_id=int(cloud_id))
+                if licenses.count() > 0:
+                    wkOrders = WorkOrderNum.objects.filter(license_id = licenses[0].id)
+                    for wkOrder in wkOrders:
+                        wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrder.id)
+                        for wkInfo in wkInfos:
+                            wkInfo.delete()
+                        wkOrder.delete()
+                    licenses[0].delete()
+
+                cloud = CloudInformation.objects.get(id=int(cloud_id))
+                cloud.delete()
+                return JsonResponse({"result":0})
+            else:
+                return JsonResponse({"result":1})
+        except Exception,e:
+            print e

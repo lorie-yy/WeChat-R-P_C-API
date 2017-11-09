@@ -34,6 +34,10 @@
                                 <th>安装地址</th>
                                 <th>联系人</th>
                                 <th>联系电话</th>
+                                {% if is_superuser and username == "root" %}
+                                    <th>删除云平台</th>
+                                {% endif %}
+
                             </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
@@ -71,6 +75,14 @@
                                 {% else %}
                                     <td>暂无</td>
                                 {% endif %}
+                                {% if is_superuser and username == "root" %}
+                                    <td>
+                                        <a class="btn btn-sm btn-danger"
+                                           title="删除云平台"
+                                           onclick="delCloud({{ cloudInfo.id }})"
+                                           style="height: 28px;border-color: transparent">删除</a>
+                                    </td>
+                                {% endif %}
 
                             </tr>
                         {% endfor %}
@@ -81,5 +93,28 @@
                 </div>
                 </div>
             </div>
+        <script>
+            function delCloud(cloud_id){
+            var btnSn = function(e){
+                $.ajax({
+                        url:"/adminbd/del_cloud",
+                        data:{cloud_id:cloud_id},
+                        type:"GET",
+                        success:function(data) {
+                            if(data.result == 0){
+                                SuccessWarning("删除成功！",reloadPage);
+                            }else{
+                                ErrorWarning("删除失败！",reloadPage);
+                            }
+                        },
+                       error:function(){
+                           ErrorWarning("服务器错误！",reloadPage);
+                       }
+                });
+            };
+            ConfirmWarning("确认","确认删除该云平台吗?"+
+                    "</br><strong style='color:red;'>注意：删除后，原注册的云平台将不能正常运行！</strong>",btnSn);
+        }
+        </script>
         <script src="../../static/js/pageCount.js"></script>
 {% endblock %}

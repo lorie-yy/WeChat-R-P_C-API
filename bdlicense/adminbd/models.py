@@ -43,8 +43,8 @@ class LicenseParams(models.Model):
     maxAPs = models.IntegerField('最大AP数',default=0, blank=False)
     maxACs = models.IntegerField('最大AC数',default=0, blank=False)
     maxUsers = models.IntegerField('最大用户数',default=0, blank=False)
-    vesion_type = models.IntegerField('版本类型',default=1, blank=False)
-    product_type = models.IntegerField('版本类型',default=1, blank=False)
+    vesion_type = models.IntegerField('版本类型',default=1, blank=False)#1:博达, 2:中兴
+    product_type = models.IntegerField('产品类型',default=1, blank=False)#1：OS，2：license 3：增值功能
 
 class CloudInformation(models.Model):
     id = models.AutoField(primary_key=True)
@@ -101,7 +101,7 @@ class WorkOrderInformation(models.Model):
     materiel_name = models.CharField(max_length=255, null=True, blank=False,default='')
     materiel_count = models.CharField(max_length=255, null=True, blank=False,default='')
     workordernum = models.ForeignKey(WorkOrderNum)
-    materiel_type = models.IntegerField(default=0)
+    materiel_type = models.IntegerField(default=0) #3：增值 2：license 1：OS
 
 
 
