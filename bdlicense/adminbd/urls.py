@@ -8,6 +8,7 @@ urlpatterns = patterns(
     url(r'^$',views.IndexView.as_view(), name='index'),
     url(r'^index',views.IndexView.as_view(), name='index'),
     url(r'^license_yun',views.IndexViewYun.as_view(), name='license_yun'),
+    url(r'^del_cloud',views.delCloudView.as_view(), name='del_cloud'),
     url(r'^user_list',views.UserIndexView.as_view(), name='user_list'),
     url(r'^add_license',views.AddLicenseView.as_view(), name='add_license'),
     url(r'^edit_license',views.EditLicenseView.as_view(), name='edit_license'),
