@@ -37,7 +37,6 @@ class TAuthdata(View):
         if wechatsign == newwechatsign:#核对签名
             newtimestamp = (int(time.time() * 1000))
             timestamp = int(timestamp)
-            print newtimestamp,timestamp,(newtimestamp - timestamp)/300000
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
                 context={}
                 print '[INFO]type & extend:',type,extend
@@ -55,58 +54,61 @@ class Getfansnumber(View):
     '''
     接收私有云的查询请求，并调用bigwifi的接口，获取用户关注与否的信息并返回给私有云
     '''
-    def post(self,request):
-        _keys = request.POST.keys()
+    def get(self,request):
+        _keys = request.GET.keys()
         result = {}
         result['error']='1'
-        cloudid = request.POST.get('cloudid','')
-        shopid = request.POST.get('shopid',0)
-        usermac = request.POST.get('usermac','')
-        type = request.POST.get('type','')
-        oid = request.POST.get('oid','')
-        openid = request.POST.get('openid','')
+        cloudid = request.GET.get('cloudid','')
+        shopid = request.GET.get('shopid',0)
+        usermac = request.GET.get('usermac','')
+        type = request.GET.get('type','')
+        oid = request.GET.get('oid','')
+        openid = request.GET.get('openid','')
 
-        ssid = request.POST.get('ssid','')
-        nasid = request.POST.get('nasid','')
-        wlanuserip = request.POST.get('wlanuserip','')
-        wlanacip = request.POST.get('wlanacip','')
-        wlanapmac = request.POST.get('wlanapmac','')
-        timestamp = request.POST.get('timestamp','')
+        ssid = request.GET.get('ssid','')
+        nasid = request.GET.get('nasid','')
+        wlanuserip = request.GET.get('wlanuserip','')
+        wlanacip = request.GET.get('wlanacip','')
+        wlanapmac = request.GET.get('wlanapmac','')
+        timestamp = request.GET.get('timestamp','')
         stringparm=[]
         for key in _keys:
             if key != 'sign':
-                stringparm.append(key+'='+unicode(request.POST[key]))
+                stringparm.append(key+'='+unicode(request.GET[key]))
         newsign = self.direct_sign_md5(stringparm)
         sign = request.GET.get('sign','')
-        print newsign,sign
-        if newsign == sign:
 
-            userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
-            if userlist.count() == 0:
-                userlist = TwechatOffline(orderid=oid,
-                                          openid=openid,
-                                          shopid=int(shopid),
-                                          usermac=usermac,
-                                          apmac=wlanapmac,
-                                          type=type,
-                                          cloudid=cloudid)
-            else:
-                userlist = userlist[0]
-            url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
-            response = requests.get(url)
-            text = eval(response.text)
-            print '[INFO] result:',text
-            if text["error"] in [0,'0']:
-                if text['subscribe'] in [0,'0']:
-                    userlist.subscribe='0'
-                    result['subscribe']='0'
-                    result['error']='0'
+        if newsign == sign:
+            newtimestamp = (int(time.time() * 1000))
+            timestamp = int(timestamp)
+            print newtimestamp,timestamp
+            if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+                userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
+                if userlist.count() == 0:
+                    userlist = TwechatOffline(orderid=oid,
+                                              openid=openid,
+                                              shopid=int(shopid),
+                                              usermac=usermac,
+                                              apmac=wlanapmac,
+                                              type=type,
+                                              cloudid=cloudid)
                 else:
-                    userlist.subscribe='1'
-                    result['subscribe']='1'
-                    result['error']='0'
-                userlist.save()
-            return HttpResponse(json.dumps(result))
+                    userlist = userlist[0]
+                url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
+                response = requests.get(url)
+                text = eval(response.text)
+                print '[INFO] result:',text
+                if text["error"] in [0,'0']:
+                    if text['subscribe'] in [0,'0']:
+                        userlist.subscribe='0'
+                        result['subscribe']='0'
+                        result['error']='0'
+                    else:
+                        userlist.subscribe='1'
+                        result['subscribe']='1'
+                        result['error']='0'
+                    userlist.save()
+        return HttpResponse(json.dumps(result))
     def direct_sign_md5(self,parameters):
         s = '&'.join(sorted(parameters))
         m = hashlib.md5()
