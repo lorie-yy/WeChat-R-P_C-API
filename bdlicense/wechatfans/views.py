@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import hashlib
 import json
 import datetime
 from django.http import HttpResponse
@@ -6,8 +7,13 @@ from django.shortcuts import render
 from django.views.generic import View
 import requests
 from wechatfans.models import TwechatOffline
+import time
 
-
+def md5(str):
+    import hashlib
+    m = hashlib.md5()
+    m.update(str)
+    return m.hexdigest()
 
 class TAuthdata(View):
     '''
@@ -17,60 +23,95 @@ class TAuthdata(View):
 
         cloudid = request.GET.get('cloudid','')
         shopid = request.GET.get('shopid','')
+        wechatsign = request.GET.get('wechatsign','')
+        timestamp = request.GET.get('timestamp','')
+        extend = request.GET.get('extend','')
+        type = request.GET.get('wechatAuthvalue','')
         mac = request.GET.get('mac','')
         bmac = request.GET.get('bmac','')
         wlanacport = request.GET.get('wlanacport','')
         portocol = request.GET.get('portocol','')
         authUrl = request.GET.get('authUrl','')
-        context={}
+        newwechatsign = md5('df2424efb7548eaa'+extend+timestamp+authUrl+mac+type+bmac+wlanacport+portocol)
+        print newwechatsign,wechatsign
+        if wechatsign == newwechatsign:#核对签名
+            newtimestamp = (int(time.time() * 1000))
+            timestamp = int(timestamp)
+            print newtimestamp,timestamp,(newtimestamp - timestamp)/300000
+            if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+                context={}
+                print '[INFO]type & extend:',type,extend
+                if type == '2':#bigwifi
+                    context['mac'] = mac
+                    context['bmac'] = bmac
+                    context['wlanacport'] = wlanacport
+                    context['portocol'] = portocol
+                    context['authUrl'] = authUrl
 
-        context['mac'] = mac
-        context['bmac'] = bmac
-        context['wlanacport'] = wlanacport
-        context['portocol'] = portocol
-        context['authUrl'] = authUrl
-
-        return render(request,'wechatfans/transition.html',context)
+                return render(request,'wechatfans/transition.html',context)
+        return HttpResponse('签名失败')
 
 class Getfansnumber(View):
     '''
     接收私有云的查询请求，并调用bigwifi的接口，获取用户关注与否的信息并返回给私有云
     '''
-    def get(self,request):
+    def post(self,request):
+        _keys = request.POST.keys()
         result = {}
         result['error']='1'
-        cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid','')
-        usermac = request.GET.get('usermac','')
-        type = request.GET.get('type','')
-        oid = request.GET.get('oid','')
-        openid = request.GET.get('openid','')
+        cloudid = request.POST.get('cloudid','')
+        shopid = request.POST.get('shopid',0)
+        usermac = request.POST.get('usermac','')
+        type = request.POST.get('type','')
+        oid = request.POST.get('oid','')
+        openid = request.POST.get('openid','')
 
-        userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
-        if userlist.count() == 0:
-            userlist = TwechatOffline(orderid=oid,
-                                      openid=openid,
-                                      shopid=shopid,
-                                      usermac=usermac,
-                                      type=type,
-                                      cloudid=cloudid)
-        else:
-            userlist = userlist[0]
-        url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
-        response = requests.get(url)
-        text = eval(response.text)
-        print '[INFO] result:',text
-        if text["error"] in [0,'0']:
-            if text['subscribe'] in [0,'0']:
-                userlist.subscribe='0'
-                result['subscribe']='0'
-                result['error']='0'
+        ssid = request.POST.get('ssid','')
+        nasid = request.POST.get('nasid','')
+        wlanuserip = request.POST.get('wlanuserip','')
+        wlanacip = request.POST.get('wlanacip','')
+        wlanapmac = request.POST.get('wlanapmac','')
+        timestamp = request.POST.get('timestamp','')
+        stringparm=[]
+        for key in _keys:
+            if key != 'sign':
+                stringparm.append(key+'='+unicode(request.POST[key]))
+        newsign = self.direct_sign_md5(stringparm)
+        sign = request.GET.get('sign','')
+        print newsign,sign
+        if newsign == sign:
+
+            userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
+            if userlist.count() == 0:
+                userlist = TwechatOffline(orderid=oid,
+                                          openid=openid,
+                                          shopid=int(shopid),
+                                          usermac=usermac,
+                                          apmac=wlanapmac,
+                                          type=type,
+                                          cloudid=cloudid)
             else:
-                userlist.subscribe='1'
-                result['subscribe']='1'
-                result['error']='0'
-            userlist.save()
-        return HttpResponse(json.dumps(result))
+                userlist = userlist[0]
+            url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
+            response = requests.get(url)
+            text = eval(response.text)
+            print '[INFO] result:',text
+            if text["error"] in [0,'0']:
+                if text['subscribe'] in [0,'0']:
+                    userlist.subscribe='0'
+                    result['subscribe']='0'
+                    result['error']='0'
+                else:
+                    userlist.subscribe='1'
+                    result['subscribe']='1'
+                    result['error']='0'
+                userlist.save()
+            return HttpResponse(json.dumps(result))
+    def direct_sign_md5(self,parameters):
+        s = '&'.join(sorted(parameters))
+        m = hashlib.md5()
+        m.update(s.encode('utf-8'))
+        return "".join("{:02x}".format(ord(c)) for c in m.digest())
 
 class Sub_detail(View):
     '''
@@ -86,7 +127,7 @@ class Sub_detail(View):
         page = 1
         page_size = 100
         t =  int(time.time())
-        apis = self.md5('yft_6l4twiir4jms87w4'+'_'+str(t))
+        apis = md5('yft_6l4twiir4jms87w4'+'_'+str(t))
 
         context ={}
         context['sd']=startdate
@@ -114,11 +155,7 @@ class Sub_detail(View):
                         self.saveinfo(text_page['list'])
 
         return HttpResponse(response.text)
-    def  md5(self,str):
-        import hashlib
-        m = hashlib.md5()
-        m.update(str)
-        return m.hexdigest()
+
 
     def saveinfo(self,infolist):
         for item in infolist:
