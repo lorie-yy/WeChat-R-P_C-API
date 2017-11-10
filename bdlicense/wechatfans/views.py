@@ -149,3 +149,46 @@ class Sub_detail(View):
                                    type='1',
                                )
                 to.save()
+
+def showfans(request):
+    cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
+    shopid = request.GET.get('shopid', '2')
+    startdate=datetime.datetime.now().strftime('%Y-%m-%d')
+    startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
+    endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
+    # endDate = datetime.datetime(int(startDate[:4]), int(startDate[5:7]), int(startDate[8:10]), 23, 59,59)
+    print startDate
+    print endDate
+    context ={}
+    # 调用函数
+    totalprofit,totalfans=earnings(cloudid,shopid,'','')
+    todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
+    context['cloudid']=cloudid
+    context['shopid']=shopid
+    context['todayprofit']=todayprofit
+    context['totalprofit']=totalprofit
+    context['totalfans']=totalfans
+    context['todayfans']=todayfans
+    return render(request, 'wechatfans/showfans.html',context)
+
+# 计算收益量和粉丝量
+def earnings(cloudid,shopid,startDate,enddate):
+    if (not startDate) and (not enddate):
+        userobject = TwechatOffline.objects.filter(cloudid=cloudid,
+                                          shopid=shopid
+                                          )
+    else:
+        userobject = TwechatOffline.objects.filter(cloudid=cloudid,
+                                          shopid=shopid,
+                                        authtime__range=(startDate,enddate)
+                                          )
+    print userobject
+    profit=0
+    for item in userobject:
+        print 'usermac',item.id
+        print 'usermac',item.price
+        profit += float(item.price)
+
+    return profit,userobject.count()
+
+

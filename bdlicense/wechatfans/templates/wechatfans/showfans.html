@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>WeChatfans收益</title>
+
+    {% load i18n %}
+    {% load staticfiles %}
+    <!-- Styles-->
+	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+	<link rel="stylesheet" href="{% static 'css/layui.css' %}">
+    <!-- jQuery Js -->
+    <script src="{% static 'js/jquery.3.2.1.js' %}"></script>
+    <script src="{% static 'js/echarts.simple.min.js' %}"></script>
+    <style>
+        .data-detail{
+            background-color: #fbfbfb;
+            margin: 3% 0 1% 0;
+            padding: 20px;
+        }
+        .data-detail div dl{
+            display: inline-block;
+            text-align: center;
+            width: 15%;
+            height: 40px;
+            border-right: 1px solid #b8b8b8;
+        }
+        .data-detail div dl:last-child{
+            border-right:none;
+        }
+        .data-detail div dl dt:last-child{
+            color: #2ddad1;
+        }
+        .data-chart{
+            border: 1px solid #b8b8b8;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 收益数据展示 -->
+    <div class="data-detail">
+        <div>
+            <dl>
+                <dt>今日收益(元)</dt>
+                <dt>{{ todayprofit }}</dt>
+            </dl>
+            <dl>
+                <dt>总收益(元)</dt>
+                <dt>{{ totalprofit }}</dt>
+            </dl>
+            <dl>
+                <dt>今日粉丝(个)</dt>
+                <dt>{{ todayfans }}</dt>
+            </dl>
+            <dl>
+                <dt>总粉丝(个)</dt>
+                <dt>{{ todayfans }}</dt>
+            </dl>
+        </div>
+    </div>
+    <div class="data-chart">
+        <div id="main" style="height:400px;">
+            <div class="panel-heading">
+                <h3>收益统计</h3>
+
+            </div>
+            <div class="panel-body">
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
