@@ -75,6 +75,7 @@ class Getfansnumber(View):
         for key in _keys:
             if key != 'sign':
                 stringparm.append(key+'='+unicode(request.GET[key]))
+        stringparm.append('key=1qazxsw23edcvfr4')
         newsign = self.direct_sign_md5(stringparm)
         sign = request.GET.get('sign','')
 
