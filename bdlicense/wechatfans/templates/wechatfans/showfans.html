@@ -10,10 +10,12 @@
     {% load staticfiles %}
     <!-- Styles-->
 	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
-	<link rel="stylesheet" href="{% static 'css/layui.css' %}">
+	<link rel="stylesheet" href="{% static 'css/daterangepicker.css' %}">
     <!-- jQuery Js -->
     <script src="{% static 'js/jquery.3.2.1.js' %}"></script>
-    <script src="{% static 'js/echarts.simple.min.js' %}"></script>
+    <script src="{% static 'js/moment.min.js' %}"></script>
+    <script src="{% static 'js/daterangepicker.js' %}"></script>
+    <script src="{% static 'js/echarts.min.js' %}"></script>
     <style>
         .data-detail{
             background-color: #fbfbfb;
@@ -22,6 +24,7 @@
         }
         .data-detail div dl{
             display: inline-block;
+            margin: 0;
             text-align: center;
             width: 15%;
             height: 40px;
@@ -29,12 +32,16 @@
         }
         .data-detail div dl:last-child{
             border-right:none;
+            position: relative;
+            top: -10px;
         }
         .data-detail div dl dt:last-child{
             color: #2ddad1;
         }
         .data-chart{
             border: 1px solid #b8b8b8;
+            padding: 0 30px;
+            margin: 30px 0;
         }
 
     </style>
@@ -43,7 +50,7 @@
 <div class="container">
     <!-- 收益数据展示 -->
     <div class="data-detail">
-        <div>
+        <div style="height: 40px;">
             <dl>
                 <dt>今日收益(元)</dt>
                 <dt>{{ todayprofit }}</dt>
@@ -60,17 +67,110 @@
                 <dt>总粉丝(个)</dt>
                 <dt>{{ totalfans }}</dt>
             </dl>
+            <dl style="border-right:none;">
+                <dt>可提现(元)</dt>
+                <dt>{{ totalprofit }}</dt>
+            </dl>
+            <dl>
+                <dt><a href="#" class="btn btn-info" style="padding:9px 20px;top: -10px;background-color:#2ddad1;border-color:#2ddad1;">提现</a></dt>
+            </dl>
         </div>
     </div>
     <div class="data-chart">
-        <div id="main" style="height:400px;">
-            <div class="panel-heading">
-                <h3>收益统计</h3>
-
+        <div >
+            <div class="panel-heading" style="padding-top: 30px;">
+                <span style="font-size: x-large;">粉丝收益统计</span>
+                <div style="width: 25%;float: right;margin-right: 5%" class="input-group">
+                    <input class="form-control" type="text" placeholder="请选择日期范围" name="daterange" id="daterange">
+                    <span class="input-group-addon btn">查询</span>
+                </div>
             </div>
             <div class="panel-body">
-
+                <div id="main" style="height:400px;"></div>
             </div>
+            <script type="text/javascript">
+                $(function() {
+                    //日期范围选择器
+                    var daterange1=$('#daterange');
+                    daterange1.daterangepicker({
+                        autoUpdateInput: false,
+                        locale: {format: 'YYYY/MM/DD'}
+                    });
+                    daterange1.on('apply.daterangepicker', function(ev, picker) {
+                        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+                    });                                                  //apply事件，格式如2017/05/04 - 2017/06/03
+                    daterange1.on('cancel.daterangepicker', function() {
+                        $(this).val('');                                //清除事件
+                    });
+                });
+
+                //折线图
+{#                $.ajax({#}
+{#                    type:"GET",#}
+{#                    url:"wechatfans:showfans",#}
+{#                    data:{'startDate': startDate, 'endDate': endDate },#}
+{#                    success:function(arg){#}
+                        // 基于准备好的dom，初始化echarts实例,定义折线图显示的位置对象
+                        var myChart = echarts.init(document.getElementById('main'));
+                        // 指定图表的配置项和数据
+                        var option = {
+                            title: {
+                                //text: '粉丝收益统计'
+                            },
+                            //工具提示
+                            tooltip: {
+                                trigger: 'axis'
+                            },
+                            //图例
+                            legend: {
+                                data:['粉丝量','收益量']
+                            },
+                            //网格位置
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '3%',
+                                containLabel: true
+                            },
+                            toolbox: {
+                                feature: {
+                                    //保存为图片
+                                    saveAsImage: {}
+                                }
+                            },
+                            xAxis: {
+                                type: 'category',
+                                boundaryGap: false,
+                                data: ['周一','周二','周三','周四','周五','周六','周日']
+                            },
+                            yAxis: {
+                                type: 'value'
+                            },
+                            series: [
+                                {
+                                    name:'粉丝量',
+                                    type:'line',
+                                    stack: '总量',
+                                    data:[120, 132, 101, 134, 90, 230, 210]
+                                },
+                                {
+                                    name:'收益量',
+                                    type:'line',
+                                    stack: '总量',
+                                    data:[220, 182, 191, 234, 290, 330, 310]
+                                }
+                            ]
+                        };
+                        // 使用刚指定的配置项和数据显示图表。
+                        myChart.setOption(option);
+{#                    }#}
+{#                });#}
+
+
+
+
+
+            </script>
         </div>
 
     </div>

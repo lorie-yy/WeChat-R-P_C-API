@@ -169,6 +169,7 @@ def showfans(request):
     context['totalprofit']=totalprofit
     context['totalfans']=totalfans
     context['todayfans']=todayfans
+    # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/showfans.html',context)
 
 # 计算收益量和粉丝量
