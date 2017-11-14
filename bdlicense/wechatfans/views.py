@@ -2,6 +2,7 @@
 import hashlib
 import json
 import datetime
+from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -11,7 +12,7 @@ from adminbd.models import SystemConfig
 from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords
 
 from adminbd.models import CloudInformation
-from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig
+from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig, cloudtouser
 import time
 
 def md5(str):
@@ -92,6 +93,9 @@ class Getfansnumber(View):
             timestamp = int(timestamp)
             print newtimestamp,timestamp
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+                cloud = CloudConfig.objects.filter(cloudid=cloudid)
+                if cloud.count() > 0:
+                    type = cloud[0].thirdpart.type
                 userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
                 if userlist.count() == 0:
                     userlist = TwechatOffline(orderid=oid,
@@ -378,8 +382,8 @@ def getCloudname(request):
 
 def saveCloudconfig(request):
     cloudname = request.GET.get('cloudname')
+    cloudid = request.GET.get('cloudid')
     thirdpartid = request.GET.get('thirdpart')
-    type = request.GET.get('type')
     result = {}
     result['error']=1
     iteminfo = CloudConfig.objects.filter(cloudname = cloudname)
@@ -387,11 +391,11 @@ def saveCloudconfig(request):
     try:
     # if True:
         if iteminfo.count() == 0:
-            iteminfo = ThridPartyConfig(cloudname = cloudname,thirdpart=thirdpart[0],type=type)
+            iteminfo = CloudConfig(cloudname = cloudname,thirdpart=thirdpart[0],cloudid=cloudid)
             iteminfo.save()
             result['error']=0
         else:
-            iteminfo.update(thirdpart=thirdpart[0],type=type)
+            iteminfo.update(thirdpart=thirdpart[0])
             result['error']=0
     except Exception,e:
         result['error']=2
@@ -406,3 +410,50 @@ def getCloudConfig(request):
         itemdict['thirdpart_name']=item.thirdpart.thirdpartname
         cloudinfolist.append(itemdict)
     return HttpResponse(json.dumps(cloudinfolist))
+
+class Register(View):
+    def get(self,request):
+        user_name = request.GET.get('username')
+        password = request.GET.get('password')
+        cloudid = request.GET.get('cloudid')
+        shopid = request.GET.get('shopid')
+        super_user = request.GET.get('super_user',0)
+
+        userSet = User.objects.filter(username=user_name)
+        if userSet.count() > 0:
+            print "user exists"
+            result = 2
+            uu = {'res':result}
+            return JsonResponse(uu)
+
+        try:
+            user = User.objects.create_user(username=user_name,password=password,user_type = 1)
+            print "create new user and inital pwd is 123456"
+            print user
+            if super_user == 1:
+                user.is_superuser = 1
+            else:
+                user.is_superuser = 0
+            user.user_level = super_user
+
+            user.is_staff = 1
+            user.is_active = 1
+            user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+
+            clouduser = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
+            #add cloud admin
+            if clouduser.count() == 0:
+                co = cloudtouser(username=user_name,password=password,cloudid=cloudid,shopid=shopid)
+                co.save()
+                result = 0
+                uu = {'res':result}
+                return JsonResponse(uu)
+            else:
+                result = 1
+                uu = {'res':result}
+                return JsonResponse(uu)
+        except Exception,e:
+            print e
+        result = 3
+        uu = {'res':result}
+        return JsonResponse(uu)
