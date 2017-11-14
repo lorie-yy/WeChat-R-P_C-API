@@ -22,6 +22,7 @@ class ProfileUser(object):
 
 class AuthUser(ProfileUser):
     user_level = models.IntegerField('用户等级',default=0, blank=False)#0：销售用户 1：超级用户  2：工厂用户
+    user_type = models.IntegerField('用户类型',default=0, blank=False)#0：销售用户 1：超级用户  2：工厂用户
     phone_num = models.CharField(max_length=254,default='')
     contacts = models.CharField(max_length=254,default='')
     class Meta:

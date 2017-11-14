@@ -24,6 +24,7 @@ class ThridPartyConfig(models.Model):
 
 class CloudConfig(models.Model):
     cloudname = models.CharField('云平台名称',max_length=64)
+    cloudid = models.CharField('云平台编号',max_length=64)
     thirdpart = models.ForeignKey(ThridPartyConfig)
 
 class ApplyforWithdrawalRecords(models.Model):
@@ -51,3 +52,9 @@ class ApplyforWithdrawalRecords(models.Model):
     paymentresult = models.IntegerField(choices=PaymentResultChoices, verbose_name='支付结果')
     flag = models.IntegerField('标签',default=0)
     note = models.TextField(blank=True, verbose_name='备注')
+
+class cloudtouser(models.Model):
+    username = models.CharField('用户名',max_length=32)
+    password = models.CharField('密码',max_length=32)
+    cloudid = models.CharField('云平台编号',max_length=64)
+    shopid = models.IntegerField('云平台商铺id')

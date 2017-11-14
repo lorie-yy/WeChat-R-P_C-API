@@ -18,7 +18,7 @@ import pytz
 import json
 from adminbd.models import SystemConfig
 # Create your views here.
-
+from wechatfans.models import cloudtouser
 
 DOWNLOAD_FILE_PATH = "static/download_file/"
 DOWNLOAD_FILE_LICENSE_CLIENT_FILE = "bdls_1.0.tar.gz"
@@ -797,7 +797,16 @@ def license_login(request):
             print "target_path",target_path
             all_files = os.listdir( target_path )
             request.session['all_files'] = all_files
-            result['res'] = 1
+            if user_pass.user_type == 0:#bdlicense用户
+                result['res'] = 1
+            elif user_pass.user_type == 1:#商城用户
+                clouduser = cloudtouser.objects.filter(username=user_name)
+                if clouduser.count() > 0:
+                    request.session['sc_cloudid'] = clouduser[0].cloudid
+                    request.session['sc_shopid'] = clouduser[0].shopid
+                    result['res'] = 3
+                else:
+                    result['res'] = 4
             return JsonResponse(result)
         else:
             result['res'] = 0
