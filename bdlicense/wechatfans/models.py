@@ -35,6 +35,7 @@ class ApplyforWithdrawalRecords(models.Model):
 		)
     paymentmode = models.IntegerField(choices=PaymentModeChoices, verbose_name='支付方式')
     cloudname = models.CharField('云平台名称',max_length=64)
+    cloudid = models.CharField('云平台编号',max_length=64)
     shopid = models.IntegerField('云平台商铺id',default=0)
     username = models.CharField('用户名',max_length=32)
     applyfortime = models.DateTimeField('申请时间',auto_now_add=True)

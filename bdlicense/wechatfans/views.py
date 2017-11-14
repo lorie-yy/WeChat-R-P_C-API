@@ -2,12 +2,13 @@
 import hashlib
 import json
 import datetime
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 import requests
 from adminbd.models import SystemConfig
-from wechatfans.models import TwechatOffline
+from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords
 
 from adminbd.models import CloudInformation
 from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig
@@ -277,6 +278,44 @@ def takemoney(request):
     print takemoney
     # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/takemoney.html',context)
+
+# 取款记录
+@csrf_exempt
+def apply_for_withdrawal(request):
+    cloudid = request.POST.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
+    shopid = request.POST.get('shopid', '2')
+    paymentmode = request.POST.get('paymentmode')
+    getmoney = request.POST.get('getmoney', 0.00)
+    # 支付宝
+    alipay_name = request.POST.get('alipay_name')
+    alipaynum = request.POST.get('alipaynum')
+    # 银行卡
+    company = request.POST.get('company')
+    bank_name = request.POST.get('bank_name')
+    banknum = request.POST.get('banknum')
+    history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=102)
+    if history.count()>0:
+        result=2
+    else:
+        # 创建表的实例对象(取款记录)
+        applyrecords = ApplyforWithdrawalRecords(paymentresult=102)
+        applyrecords.cloudid = cloudid
+        applyrecords.shopid = shopid
+        applyrecords.paymentmode = paymentmode
+        applyrecords.getmoney = getmoney
+        applyrecords.alipay_name = alipay_name
+        applyrecords.alipaynum = alipaynum
+        applyrecords.company = company
+        applyrecords.bank_name = bank_name
+        applyrecords.banknum = banknum
+        applyrecords.save()
+        result = 1
+
+    context ={}
+    context['result']=result
+    print result
+    return JsonResponse({'result':result})
+    # return render(request, 'wechatfans/takemoney.html',context)
 
 
 def getThirdpartInfo(request):

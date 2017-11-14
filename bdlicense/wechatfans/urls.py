@@ -13,4 +13,5 @@ urlpatterns = patterns(
     url(r'^getcloudname',views.getCloudname, name='getCloudname'),
     url(r'^savecloudconfig',views.saveCloudconfig, name='savecloudconfig'),
     url(r'^getcloudconfig',views.getCloudConfig, name='getcloudconfig'),
+    url(r'^apply_for_withdrawal',views.apply_for_withdrawal, name='apply_for_withdrawal'),
 )
