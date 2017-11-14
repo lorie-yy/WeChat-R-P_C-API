@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic import View
 import requests
+from adminbd.models import SystemConfig
 from wechatfans.models import TwechatOffline
 
 
@@ -163,6 +164,7 @@ def showfans(request):
     # 调用函数
     totalprofit,totalfans=earnings(cloudid,shopid,'','')
     todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
+
     context['cloudid']=cloudid
     context['shopid']=shopid
     context['todayprofit']=todayprofit
@@ -184,12 +186,30 @@ def earnings(cloudid,shopid,startDate,enddate):
                                         authtime__range=(startDate,enddate)
                                           )
     print userobject
+    # 用户权限收益打折扣
+    discountlist=SystemConfig.objects.filter(attribute='discount')
+    if discountlist.count()==0:
+        discount=0.9
+    else:
+        discount=discountlist[0].value
     profit=0
     for item in userobject:
         print 'usermac',item.id
         print 'usermac',item.price
         profit += float(item.price)
+    # profit_dis=round(profit*float(discount), 3)
+    profit_dis=profit*float(discount)
 
-    return profit,userobject.count()
+    return profit_dis,userobject.count()
 
-
+def takemoney(request):
+    cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
+    shopid = request.GET.get('shopid', '2')
+    totalprofit,totalfans=earnings(cloudid,shopid,'','')
+    context ={}
+    context['cloudid']=cloudid
+    context['shopid']=shopid
+    context['totalprofit']=totalprofit
+    print totalprofit
+    # return HttpResponse(json.dumps(context))
+    return render(request, 'wechatfans/takemoney.html',context)
