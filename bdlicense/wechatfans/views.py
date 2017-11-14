@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import hashlib
 import json
 import datetime
 from django.http import HttpResponse
@@ -8,7 +9,15 @@ import requests
 from adminbd.models import SystemConfig
 from wechatfans.models import TwechatOffline
 
+from adminbd.models import CloudInformation
+from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig
+import time
 
+def md5(str):
+    import hashlib
+    m = hashlib.md5()
+    m.update(str)
+    return m.hexdigest()
 
 class TAuthdata(View):
     '''
@@ -17,61 +26,102 @@ class TAuthdata(View):
     def get(self,request):
 
         cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid','')
+        # shopid = request.GET.get('shopid','')
+        wechatsign = request.GET.get('wechatsign','')
+        timestamp = request.GET.get('timestamp','')
+        extend = request.GET.get('extend','')
+        wechatAuthvalue = request.GET.get('wechatAuthvalue','')
         mac = request.GET.get('mac','')
         bmac = request.GET.get('bmac','')
         wlanacport = request.GET.get('wlanacport','')
         portocol = request.GET.get('portocol','')
         authUrl = request.GET.get('authUrl','')
-        context={}
+        newwechatsign = md5('df2424efb7548eaa'+extend+timestamp+authUrl+mac+wechatAuthvalue+bmac+wlanacport+portocol)
+        print newwechatsign,wechatsign
+        if wechatsign == newwechatsign:#核对签名
+            newtimestamp = (int(time.time() * 1000))
+            timestamp = int(timestamp)
+            if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+                cloudconfig = CloudConfig.objects.filter(cloudname=cloudid)
+                if cloudconfig.count() > 0:
+                    context={}
+                    context['url'] = cloudconfig[0].thirdpart.url
 
-        context['mac'] = mac
-        context['bmac'] = bmac
-        context['wlanacport'] = wlanacport
-        context['portocol'] = portocol
-        context['authUrl'] = authUrl
+                    if cloudconfig[0].thirdpart.type == '2':#bigwifi
+                        context['mac'] = mac
+                        context['bmac'] = bmac
+                        context['wlanacport'] = wlanacport
+                        context['portocol'] = portocol
+                        context['authUrl'] = authUrl
 
-        return render(request,'wechatfans/transition.html',context)
+                    return render(request,'wechatfans/transition.html',context)
+        return HttpResponse('签名失败')
 
 class Getfansnumber(View):
     '''
     接收私有云的查询请求，并调用bigwifi的接口，获取用户关注与否的信息并返回给私有云
     '''
     def get(self,request):
+        _keys = request.GET.keys()
         result = {}
         result['error']='1'
         cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid','')
+        shopid = request.GET.get('shopid',0)
         usermac = request.GET.get('usermac','')
         type = request.GET.get('type','')
         oid = request.GET.get('oid','')
         openid = request.GET.get('openid','')
 
-        userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
-        if userlist.count() == 0:
-            userlist = TwechatOffline(orderid=oid,
-                                      openid=openid,
-                                      shopid=shopid,
-                                      usermac=usermac,
-                                      type=type,
-                                      cloudid=cloudid)
-        else:
-            userlist = userlist[0]
-        url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
-        response = requests.get(url)
-        text = eval(response.text)
-        print '[INFO] result:',text
-        if text["error"] in [0,'0']:
-            if text['subscribe'] in [0,'0']:
-                userlist.subscribe='0'
-                result['subscribe']='0'
-                result['error']='0'
-            else:
-                userlist.subscribe='1'
-                result['subscribe']='1'
-                result['error']='0'
-            userlist.save()
+        ssid = request.GET.get('ssid','')
+        nasid = request.GET.get('nasid','')
+        wlanuserip = request.GET.get('wlanuserip','')
+        wlanacip = request.GET.get('wlanacip','')
+        wlanapmac = request.GET.get('wlanapmac','')
+        timestamp = request.GET.get('timestamp','')
+        stringparm=[]
+        for key in _keys:
+            if key != 'sign':
+                stringparm.append(key+'='+unicode(request.GET[key]))
+        stringparm.append('key=1qazxsw23edcvfr4')
+        newsign = self.direct_sign_md5(stringparm)
+        sign = request.GET.get('sign','')
+
+        if newsign == sign:
+            newtimestamp = (int(time.time() * 1000))
+            timestamp = int(timestamp)
+            print newtimestamp,timestamp
+            if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+                userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
+                if userlist.count() == 0:
+                    userlist = TwechatOffline(orderid=oid,
+                                              openid=openid,
+                                              shopid=int(shopid),
+                                              usermac=usermac,
+                                              apmac=wlanapmac,
+                                              type=type,
+                                              cloudid=cloudid)
+                else:
+                    userlist = userlist[0]
+                url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
+                response = requests.get(url)
+                text = eval(response.text)
+                print '[INFO] result:',text
+                if text["error"] in [0,'0']:
+                    if text['subscribe'] in [0,'0']:
+                        userlist.subscribe='0'
+                        result['subscribe']='0'
+                        result['error']='0'
+                    else:
+                        userlist.subscribe='1'
+                        result['subscribe']='1'
+                        result['error']='0'
+                    userlist.save()
         return HttpResponse(json.dumps(result))
+    def direct_sign_md5(self,parameters):
+        s = '&'.join(sorted(parameters))
+        m = hashlib.md5()
+        m.update(s.encode('utf-8'))
+        return "".join("{:02x}".format(ord(c)) for c in m.digest())
 
 class Sub_detail(View):
     '''
@@ -87,7 +137,7 @@ class Sub_detail(View):
         page = 1
         page_size = 100
         t =  int(time.time())
-        apis = self.md5('yft_6l4twiir4jms87w4'+'_'+str(t))
+        apis = md5('yft_6l4twiir4jms87w4'+'_'+str(t))
 
         context ={}
         context['sd']=startdate
@@ -115,11 +165,7 @@ class Sub_detail(View):
                         self.saveinfo(text_page['list'])
 
         return HttpResponse(response.text)
-    def  md5(self,str):
-        import hashlib
-        m = hashlib.md5()
-        m.update(str)
-        return m.hexdigest()
+
 
     def saveinfo(self,infolist):
         for item in infolist:
@@ -164,6 +210,7 @@ def showfans(request):
     # 调用函数
     totalprofit,totalfans=earnings(cloudid,shopid,'','')
     todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
+    takemoney=support_takemoney(cloudid,shopid)
 
     context['cloudid']=cloudid
     context['shopid']=shopid
@@ -171,6 +218,7 @@ def showfans(request):
     context['totalprofit']=totalprofit
     context['totalfans']=totalfans
     context['todayfans']=todayfans
+    context['takemoney']=takemoney
     # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/showfans.html',context)
 
@@ -197,19 +245,125 @@ def earnings(cloudid,shopid,startDate,enddate):
         print 'usermac',item.id
         print 'usermac',item.price
         profit += float(item.price)
-    # profit_dis=round(profit*float(discount), 3)
-    profit_dis=profit*float(discount)
+    profit_dis=round(profit*float(discount), 2)
 
     return profit_dis,userobject.count()
+
+# 可提现
+def support_takemoney(cloudid,shopid):
+    userobject = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid,settlement=1)
+    # 用户权限收益打折扣
+    discountlist=SystemConfig.objects.filter(attribute='discount')
+    if discountlist.count()==0:
+        discount=0.9
+    else:
+        discount=discountlist[0].value
+    profit=0
+    for item in userobject:
+        print 'usermac',item.id
+        print 'usermac',item.price
+        profit += float(item.price)
+    profit_dis=round(profit*float(discount), 2)
+
+
+    return profit_dis
 
 def takemoney(request):
     cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
     shopid = request.GET.get('shopid', '2')
-    totalprofit,totalfans=earnings(cloudid,shopid,'','')
+    takemoney=support_takemoney(cloudid,shopid)
     context ={}
     context['cloudid']=cloudid
     context['shopid']=shopid
-    context['totalprofit']=totalprofit
-    print totalprofit
+    context['takemoney']=takemoney
+    print takemoney
     # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/takemoney.html',context)
+def getThirdpartInfo(request):
+    Thridpartlist = ThridPartyConfig.objects.all()
+    resultlist = []
+    for item in Thridpartlist:
+        tempdict = {}
+        tempdict["id"]=item.id
+        tempdict["name"]=item.thirdpartname
+        tempdict["url"]=item.url
+        tempdict["type"]=item.type
+        resultlist.append(tempdict)
+    return HttpResponse(json.dumps(resultlist))
+def saveThirdpartInfo(request):
+    name = request.GET.get('name')
+    url = request.GET.get('url')
+    type = request.GET.get('type','0')
+    id = request.GET.get('id',-1)
+    operationtype = request.GET.get('typeThird','')
+    print name,url,operationtype
+    result = {}
+    result['error']=1
+
+    iteminfo = ThridPartyConfig.objects.filter(id = id)
+    try:
+    # if True:
+        if operationtype == 'edit':
+            if iteminfo.count() == 0:
+                result['error']=1
+            else:
+                iteminfo.update(thirdpartname = name,url=url,type=type)
+                result['error']=0
+        elif operationtype == 'add':
+            if iteminfo.count() == 0:
+                iteminfo = ThridPartyConfig(thirdpartname = name,url=url,type=type)
+                iteminfo.save()
+                result['error']=0
+            else:
+                result['error']=3
+        elif operationtype == 'del':
+            if iteminfo.count() == 0:
+                result['error']=4
+            else:
+                iteminfo.delete()
+                result['error']=0
+
+    except Exception,e:
+        result['error']=2
+    return HttpResponse(json.dumps(result))
+
+def getCloudname(request):
+    cloudinfo = CloudInformation.objects.all()
+    cloudinfolist = []
+    for item in cloudinfo:
+        itemdict = {}
+        itemdict['cloudname']=item.cloudName
+        itemdict['cloudid']=item.cloudNum
+        cloudinfolist.append(itemdict)
+    return HttpResponse(json.dumps(cloudinfolist))
+
+def saveCloudconfig(request):
+    cloudname = request.GET.get('cloudname')
+    thirdpartid = request.GET.get('thirdpart')
+    type = request.GET.get('type')
+    result = {}
+    result['error']=1
+    iteminfo = CloudConfig.objects.filter(cloudname = cloudname)
+    thirdpart = ThridPartyConfig.objects.filter(id = int(thirdpartid))
+    try:
+    # if True:
+        if iteminfo.count() == 0:
+            iteminfo = ThridPartyConfig(cloudname = cloudname,thirdpart=thirdpart[0],type=type)
+            iteminfo.save()
+            result['error']=0
+        else:
+            iteminfo.update(thirdpart=thirdpart[0],type=type)
+            result['error']=0
+    except Exception,e:
+        result['error']=2
+    return HttpResponse(json.dumps(result))
+
+def getCloudConfig(request):
+    cloudconfiginfo = CloudConfig.objects.all()
+    cloudinfolist = []
+    for item in cloudconfiginfo:
+        itemdict = {}
+        itemdict['cloudname']=item.cloudName
+        itemdict['thirdpart_name']=item.thirdpart.thirdpartname
+        cloudinfolist.append(itemdict)
+    return HttpResponse(json.dumps(cloudinfolist))

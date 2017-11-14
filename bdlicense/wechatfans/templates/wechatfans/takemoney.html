@@ -71,7 +71,7 @@
                     getmoney: {
                         required: true,
                         digits: true,
-                        max:{{ totalprofit }}
+                        max:{{ takemoney }}
                     }
                 },
                 messages: {
@@ -90,7 +90,7 @@
                     getmoney: {
                         required: "必填",
                         digits: "请填入数字",
-                        max:"最大可提取金额为"+{{ totalprofit }}
+                        max:"最大可提取金额为"+{{ takemoney }}
                     }
                 },
                 submitHandler: function(form) {
@@ -121,7 +121,7 @@
                     <label for="totalmoney" class="col-sm-4 control-label">可提现余额</label>
                     <div class="col-sm-4">
                         <span class="btn" id="totalmoney" style="cursor: default;color: #2ddad1">
-                            <strong>{{ totalprofit }} 元</strong>
+                            <strong>{{ takemoney }} 元</strong>
                         </span>
                     </div>
                 </div>
