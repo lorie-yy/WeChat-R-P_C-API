@@ -49,5 +49,5 @@ class ApplyforWithdrawalRecords(models.Model):
 		(RESULT_FAIL, '转账失败')
 		)
     paymentresult = models.IntegerField(choices=PaymentResultChoices, verbose_name='支付结果')
-    flag = models.IntegerField('标签')
+    flag = models.IntegerField('标签',default=0)
     note = models.TextField(blank=True, verbose_name='备注')
