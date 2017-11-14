@@ -249,7 +249,7 @@ def earnings(cloudid,shopid,startDate,enddate):
 
     return profit_dis,userobject.count()
 
-# 可提现
+# 可提现金额
 def support_takemoney(cloudid,shopid):
     userobject = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid,settlement=1)
     # 用户权限收益打折扣
@@ -264,8 +264,6 @@ def support_takemoney(cloudid,shopid):
         print 'usermac',item.price
         profit += float(item.price)
     profit_dis=round(profit*float(discount), 2)
-
-
     return profit_dis
 
 def takemoney(request):
@@ -279,6 +277,8 @@ def takemoney(request):
     print takemoney
     # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/takemoney.html',context)
+
+
 def getThirdpartInfo(request):
     Thridpartlist = ThridPartyConfig.objects.all()
     resultlist = []

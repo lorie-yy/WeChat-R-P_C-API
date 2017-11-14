@@ -45,6 +45,7 @@
             });
 
             //表单验证
+            var paymentmode=$('#paymentmode').checked.val();
             var alipay_name=$('#alipay_name').val();
             var alipaynum=$('#alipaynum').val();
             var company=$('#company').val();
@@ -126,13 +127,13 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="type" class="col-sm-4 control-label">提现方式</label>
+                    <label for="paymentmode" class="col-sm-4 control-label">提现方式</label>
                     <div class="col-sm-4">
                         <label class="radio-inline">
-                            <input type="radio" name="type" id="type1" value="type1" checked>支付宝
+                            <input type="radio" name="paymentmode" id="paymentmode" value="1" checked>支付宝
                         </label>
                         <label class="radio-inline">
-                            <input type="radio" name="type" id="type2" value="type2">银行卡
+                            <input type="radio" name="paymentmode" id="paymentmode" value="2">银行卡
                         </label>
                     </div>
                 </div>

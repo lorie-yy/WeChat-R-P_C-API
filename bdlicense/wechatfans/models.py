@@ -38,8 +38,12 @@ class ApplyforWithdrawalRecords(models.Model):
     shopid = models.IntegerField('云平台商铺id',default=0)
     username = models.CharField('用户名',max_length=32)
     applyfortime = models.DateTimeField('申请时间',auto_now_add=True)
-    paytype = models.CharField('付款类型',max_length=2)
-    fee = models.FloatField('金额')
+    alipay_name=models.CharField('支付宝姓名',max_length=64)
+    alipaynum=models.CharField('支付宝账号',max_length=64)
+    company=models.CharField('公司名称',max_length=64)
+    bank_name=models.CharField('开户行',max_length=64)
+    banknum=models.CharField('银行卡账号',max_length=19)
+    getmoney = models.FloatField('提取金额')
     RESULT_SUCCESS = 101
     RESULT_FAIL = 102
     RESULT_ACCESSPAY = 103
