@@ -6,7 +6,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic import View
 import requests
-from wechatfans.models import TwechatOffline
+from adminbd.models import CloudInformation
+from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig
 import time
 
 def md5(str):
@@ -22,32 +23,35 @@ class TAuthdata(View):
     def get(self,request):
 
         cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid','')
+        # shopid = request.GET.get('shopid','')
         wechatsign = request.GET.get('wechatsign','')
         timestamp = request.GET.get('timestamp','')
         extend = request.GET.get('extend','')
-        type = request.GET.get('wechatAuthvalue','')
+        wechatAuthvalue = request.GET.get('wechatAuthvalue','')
         mac = request.GET.get('mac','')
         bmac = request.GET.get('bmac','')
         wlanacport = request.GET.get('wlanacport','')
         portocol = request.GET.get('portocol','')
         authUrl = request.GET.get('authUrl','')
-        newwechatsign = md5('df2424efb7548eaa'+extend+timestamp+authUrl+mac+type+bmac+wlanacport+portocol)
+        newwechatsign = md5('df2424efb7548eaa'+extend+timestamp+authUrl+mac+wechatAuthvalue+bmac+wlanacport+portocol)
         print newwechatsign,wechatsign
         if wechatsign == newwechatsign:#核对签名
             newtimestamp = (int(time.time() * 1000))
             timestamp = int(timestamp)
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
-                context={}
-                print '[INFO]type & extend:',type,extend
-                if type == '2':#bigwifi
-                    context['mac'] = mac
-                    context['bmac'] = bmac
-                    context['wlanacport'] = wlanacport
-                    context['portocol'] = portocol
-                    context['authUrl'] = authUrl
+                cloudconfig = CloudConfig.objects.filter(cloudname=cloudid)
+                if cloudconfig.count() > 0:
+                    context={}
+                    context['url'] = cloudconfig[0].thirdpart.url
 
-                return render(request,'wechatfans/transition.html',context)
+                    if cloudconfig[0].thirdpart.type == '2':#bigwifi
+                        context['mac'] = mac
+                        context['bmac'] = bmac
+                        context['wlanacport'] = wlanacport
+                        context['portocol'] = portocol
+                        context['authUrl'] = authUrl
+
+                    return render(request,'wechatfans/transition.html',context)
         return HttpResponse('签名失败')
 
 class Getfansnumber(View):
@@ -189,3 +193,92 @@ class Sub_detail(View):
                                    type='1',
                                )
                 to.save()
+
+def getThirdpartInfo(request):
+    Thridpartlist = ThridPartyConfig.objects.all()
+    resultlist = []
+    for item in Thridpartlist:
+        tempdict = {}
+        tempdict["id"]=item.id
+        tempdict["name"]=item.thirdpartname
+        tempdict["url"]=item.url
+        tempdict["type"]=item.type
+        resultlist.append(tempdict)
+    return HttpResponse(json.dumps(resultlist))
+def saveThirdpartInfo(request):
+    name = request.GET.get('name')
+    url = request.GET.get('url')
+    type = request.GET.get('type','0')
+    id = request.GET.get('id',-1)
+    operationtype = request.GET.get('typeThird','')
+    print name,url,operationtype
+    result = {}
+    result['error']=1
+
+    iteminfo = ThridPartyConfig.objects.filter(id = id)
+    try:
+    # if True:
+        if operationtype == 'edit':
+            if iteminfo.count() == 0:
+                result['error']=1
+            else:
+                iteminfo.update(thirdpartname = name,url=url,type=type)
+                result['error']=0
+        elif operationtype == 'add':
+            if iteminfo.count() == 0:
+                iteminfo = ThridPartyConfig(thirdpartname = name,url=url,type=type)
+                iteminfo.save()
+                result['error']=0
+            else:
+                result['error']=3
+        elif operationtype == 'del':
+            if iteminfo.count() == 0:
+                result['error']=4
+            else:
+                iteminfo.delete()
+                result['error']=0
+
+    except Exception,e:
+        result['error']=2
+    return HttpResponse(json.dumps(result))
+
+def getCloudname(request):
+    cloudinfo = CloudInformation.objects.all()
+    cloudinfolist = []
+    for item in cloudinfo:
+        itemdict = {}
+        itemdict['cloudname']=item.cloudName
+        itemdict['cloudid']=item.cloudNum
+        cloudinfolist.append(itemdict)
+    return HttpResponse(json.dumps(cloudinfolist))
+
+def saveCloudconfig(request):
+    cloudname = request.GET.get('cloudname')
+    thirdpartid = request.GET.get('thirdpart')
+    type = request.GET.get('type')
+    result = {}
+    result['error']=1
+    iteminfo = CloudConfig.objects.filter(cloudname = cloudname)
+    thirdpart = ThridPartyConfig.objects.filter(id = int(thirdpartid))
+    try:
+    # if True:
+        if iteminfo.count() == 0:
+            iteminfo = ThridPartyConfig(cloudname = cloudname,thirdpart=thirdpart[0],type=type)
+            iteminfo.save()
+            result['error']=0
+        else:
+            iteminfo.update(thirdpart=thirdpart[0],type=type)
+            result['error']=0
+    except Exception,e:
+        result['error']=2
+    return HttpResponse(json.dumps(result))
+
+def getCloudConfig(request):
+    cloudconfiginfo = CloudConfig.objects.all()
+    cloudinfolist = []
+    for item in cloudconfiginfo:
+        itemdict = {}
+        itemdict['cloudname']=item.cloudName
+        itemdict['thirdpart_name']=item.thirdpart.thirdpartname
+        cloudinfolist.append(itemdict)
+    return HttpResponse(json.dumps(cloudinfolist))
