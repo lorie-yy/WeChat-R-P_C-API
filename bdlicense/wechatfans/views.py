@@ -326,8 +326,9 @@ def apply_for_withdrawal(request):
         applyrecords = ApplyforWithdrawalRecords(paymentresult=102)
         applyrecords.cloudid = cloudid
         applyrecords.shopid = shopid
+        applyrecords.username = username
         applyrecords.paymentmode = paymentmode
-        applyrecords.getmoney = getmoney
+        applyrecords.getmoney = float(getmoney)
         applyrecords.alipay_name = alipay_name
         applyrecords.alipaynum = alipaynum
         applyrecords.company = company
@@ -341,6 +342,52 @@ def apply_for_withdrawal(request):
     print result
     return JsonResponse({'result':result})
 
+# 申请提现记录
+def applyfor_records(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
+    records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
+    context ={}
+    context['records']=records
+
+    if records.count()==0:
+        print '无记录'
+    else:
+        for record in records:
+            context['record']=record
+            cloudname = record.cloudname
+            username = record.username
+            paymentmode = record.paymentmode
+            applyfortime = record.applyfortime
+            alipaynum = record.alipaynum
+            banknum = record.banknum
+            getmoney = record.getmoney
+            paymentresult = record.paymentresult
+
+            context['cloudname']=cloudname
+            context['username']=username
+            context['applyfortime']=applyfortime
+            context['paymentmode']=paymentmode
+            context['alipaynum']=alipaynum
+            context['banknum']=banknum
+            context['getmoney']=getmoney
+            context['paymentresult']=paymentresult
+
+    # 成功提现总计
+    totalsuc=0
+    suc=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=101)
+    if suc.count()==0:
+        print '成功提现总计为0'
+    else:
+        for i in suc:
+            totalsuc += float(i.getmoney)
+            print '成功提现总计为',totalsuc
+    context['totalsuc']=round(totalsuc,2)
+    return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
     Thridpartlist = ThridPartyConfig.objects.all()

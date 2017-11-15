@@ -1,44 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>云商城</title>
-
-    {% load i18n %}
-    {% load staticfiles %}
-    <!-- Styles-->
-	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
-	<link rel="stylesheet" href="{% static 'css/daterangepicker.css' %}">
-	<link rel="stylesheet" href="{% static 'js/theme/default/layer.css' %}">
-    <!-- jQuery Js -->
-    <script src="{% static 'js/jquery.3.2.1.js' %}"></script>
-    <script src="{% static 'js/jquery.validate.js' %}"></script>
-    <script src="{% static 'js/layer.js' %}"></script>
-    <script src="{% static 'js/moment.min.js' %}"></script>
-    <script src="{% static 'js/daterangepicker.js' %}"></script>
-    <script src="{% static 'js/echarts.min.js' %}"></script>
-    <style>
-        .btn-tixian{
-            background-color: #2ddad1;
-            border-color: #2ddad1;
-        }
-        .btn-tixian:hover{
-            background-color: #41c5bf;
-            border-color: #41c5bf;
-        }
-        label.error{
-            position: absolute;
-            top: 10px;
-            right: 30px;
-            color: orange;;
-            font-weight: normal;
-            font-size: smaller;
-        }
-    </style>
-</head>
-<body>
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
     <script>
         $(function(){
             //支付宝提现or银行提现
@@ -70,11 +33,11 @@
                         digits:true,
                         rangelength:[19,19]
                     },
-                    getmoney: {
-                        required: true,
+{#                    getmoney: {#}
+{#                        required: true,#}
 {#                        min:100,#}
-                        max:{{ takemoney }}
-                    }
+{#                        max:{{ takemoney }}#}
+{#                    }#}
                 },
                 messages: {
                     alipay_name: {
@@ -94,11 +57,11 @@
                         digits:"请输入正确的银行卡号",
                         rangelength:"请输入19位银行卡号"
                     },
-                    getmoney: {
-                        required: "必填",
+{#                    getmoney: {#}
+{#                        required: "必填",#}
 {#                        min:"最小可提取金额为100元",#}
-                        max:"最大可提取金额为"+{{ takemoney }}
-                    }
+{#                        max:"最大可提取金额为"+{{ takemoney }}#}
+{#                    }#}
                 },
                 submitHandler: function(form) {
                     var paymentmode=$('input[type="radio"]:checked').val();
@@ -107,14 +70,14 @@
                     var company=$('#company').val();
                     var bank_name=$('#bank_name').val();
                     var banknum=$('#banknum').val();
-                    var getmoney=$('#getmoney').val();
+                    var takemoney="{{ takemoney }}";
         {#            alert(paymentmode+"////////"+getmoney)#}
 {#                    console.log('company:',company,'bank_name:',bank_name,'banknum:',banknum)#}
                     $.ajax({
                         url: "/wechatfans/apply_for_withdrawal",
                         method: 'POST',
                         dataType: 'json',
-                        data: {'paymentmode':paymentmode,'getmoney':getmoney,
+                        data: {'paymentmode':paymentmode,'getmoney':takemoney,
                             'alipay_name':alipay_name,'alipaynum':alipaynum,
                             'company':company,'bank_name':bank_name,'banknum':banknum},
                         success: function(result){
@@ -133,7 +96,6 @@
             });
         });
     </script>
-<div class="container">
     <div class="panel">
         <div class="panel-heading">
             <h3>提取可用余额到个人账户</h3>
@@ -195,12 +157,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="getmoney" class="col-sm-4 control-label">提现金额 (元)</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control" name="getmoney" id="getmoney" placeholder="提现金额">
-                    </div>
-                </div>
+{#                <div class="form-group">#}
+{#                    <label for="getmoney" class="col-sm-4 control-label">提现金额 (元)</label>#}
+{#                    <div class="col-sm-4">#}
+{#                        <input type="text" class="form-control" name="getmoney" id="getmoney" placeholder="提现金额">#}
+{#                    </div>#}
+{#                </div>#}
                 <div class="form-group">
                     <div class="col-sm-2">
                         <input type="submit" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="申请提现">
@@ -214,7 +176,4 @@
         </div>
     </div>
 
-</div>
-
-</body>
-</html>
+{% endblock %}
