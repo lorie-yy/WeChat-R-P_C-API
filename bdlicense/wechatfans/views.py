@@ -40,12 +40,12 @@ class TAuthdata(View):
             newtimestamp = (int(time.time() * 1000))
             timestamp = int(timestamp)
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
-                cloudconfig = CloudConfig.objects.filter(cloudname=cloudid)
+                cloudconfig = CloudConfig.objects.filter(cloudid=cloudid)
                 if cloudconfig.count() > 0:
                     context={}
                     context['url'] = cloudconfig[0].thirdpart.url
 
-                    if cloudconfig[0].thirdpart.type == '2':#bigwifi
+                    if cloudconfig[0].thirdpart.type == '1':#bigwifi
                         context['mac'] = mac
                         context['bmac'] = bmac
                         context['wlanacport'] = wlanacport
@@ -64,7 +64,7 @@ class Getfansnumber(View):
         result = {}
         result['error']='1'
         cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid',0)
+        shopid = request.GET.get('shop_id',0)
         usermac = request.GET.get('usermac','')
         type = request.GET.get('type','')
         oid = request.GET.get('oid','')
@@ -282,7 +282,8 @@ def getCloudConfig(request):
     cloudinfolist = []
     for item in cloudconfiginfo:
         itemdict = {}
-        itemdict['cloudname']=item.cloudName
+        itemdict['cloudname']=item.cloudname
+        itemdict['cloudid']=item.cloudid
         itemdict['thirdpart_name']=item.thirdpart.thirdpartname
         cloudinfolist.append(itemdict)
     return HttpResponse(json.dumps(cloudinfolist))
@@ -304,7 +305,7 @@ class Register(View):
 
         try:
             user = User.objects.create_user(username=user_name,password=password,user_type = 1)
-            print "create new user and inital pwd is 123456"
+            print "create new user"
             print user
             if super_user == 1:
                 user.is_superuser = 1
