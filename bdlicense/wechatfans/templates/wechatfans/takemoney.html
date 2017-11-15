@@ -29,15 +29,12 @@
             border-color: #41c5bf;
         }
         label.error{
-            position: relative;
-            top: -24px;
-            float: right;
-            padding-right: 15px;
+            position: absolute;
+            top: 10px;
+            right: 30px;
             color: orange;;
             font-weight: normal;
             font-size: smaller;
-            margin: 0;
-            z-index: 2;
         }
     </style>
 </head>
@@ -69,15 +66,21 @@
                         required: true
                     },
                     banknum: {
-                        required: true
+                        required: true,
+                        digits:true,
+                        rangelength:[19,19]
                     },
                     getmoney: {
                         required: true,
+{#                        min:100,#}
                         max:{{ takemoney }}
                     }
                 },
                 messages: {
                     alipay_name: {
+                        required: "必填"
+                    },
+                    alipaynum: {
                         required: "必填"
                     },
                     company: {
@@ -87,11 +90,13 @@
                         required: "必填"
                     },
                     banknum: {
-                        required: "必填"
+                        required: "必填",
+                        digits:"请输入正确的银行卡号",
+                        rangelength:"请输入19位银行卡号"
                     },
                     getmoney: {
                         required: "必填",
-                        min:"最小可提取金额为100元",
+{#                        min:"最小可提取金额为100元",#}
                         max:"最大可提取金额为"+{{ takemoney }}
                     }
                 },
@@ -104,6 +109,7 @@
                     var banknum=$('#banknum').val();
                     var getmoney=$('#getmoney').val();
         {#            alert(paymentmode+"////////"+getmoney)#}
+{#                    console.log('company:',company,'bank_name:',bank_name,'banknum:',banknum)#}
                     $.ajax({
                         url: "/wechatfans/apply_for_withdrawal",
                         method: 'POST',
@@ -114,7 +120,6 @@
                         success: function(result){
                             if (result.result==1){
                                 layer.msg('申请成功!')
-
                             }else if(result.result==2){
                                 layer.msg('正在审核,请不要重复提交申请!')
                             }
@@ -149,10 +154,10 @@
                     <label for="paymentmode" class="col-sm-4 control-label">提现方式</label>
                     <div class="col-sm-4">
                         <label class="radio-inline">
-                            <input type="radio" name="paymentmode" id="paymentmode" value="1" checked>支付宝
+                            <input type="radio" name="paymentmode" id="type1" value="1" checked>支付宝
                         </label>
                         <label class="radio-inline">
-                            <input type="radio" name="paymentmode" id="paymentmode" value="2">银行卡
+                            <input type="radio" name="paymentmode" id="type2" value="2">银行卡
                         </label>
                     </div>
                 </div>

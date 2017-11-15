@@ -44,7 +44,7 @@ class TAuthdata(View):
             newtimestamp = (int(time.time() * 1000))
             timestamp = int(timestamp)
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
-                cloudconfig = CloudConfig.objects.filter(cloudname=cloudid)
+                cloudconfig = CloudConfig.objects.filter(cloudid=cloudid)
                 if cloudconfig.count() > 0:
                     context={}
                     context['url'] = cloudconfig[0].thirdpart.url
@@ -297,6 +297,7 @@ def apply_for_withdrawal(request):
     company = request.POST.get('company')
     bank_name = request.POST.get('bank_name')
     banknum = request.POST.get('banknum')
+    # 如果记录中有可转账状态,则不允许再次申请
     history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=102)
     if history.count()>0:
         result=2
@@ -319,7 +320,6 @@ def apply_for_withdrawal(request):
     context['result']=result
     print result
     return JsonResponse({'result':result})
-    # return render(request, 'wechatfans/takemoney.html',context)
 
 
 def getThirdpartInfo(request):
