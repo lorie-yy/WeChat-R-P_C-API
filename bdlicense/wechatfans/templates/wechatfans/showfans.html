@@ -1,21 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>云商城</title>
-
-    {% load i18n %}
-    {% load staticfiles %}
-    <!-- Styles-->
-	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
-	<link rel="stylesheet" href="{% static 'css/daterangepicker.css' %}">
-    <!-- jQuery Js -->
-    <script src="{% static 'js/jquery.3.2.1.js' %}"></script>
-    <script src="{% static 'js/moment.min.js' %}"></script>
-    <script src="{% static 'js/daterangepicker.js' %}"></script>
-    <script src="{% static 'js/echarts.min.js' %}"></script>
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
     <style>
         .data-detail{
             background-color: #fbfbfb;
@@ -52,9 +38,6 @@
         }
 
     </style>
-</head>
-<body>
-<div class="container">
     <div class="panel">
         <div class="panel-heading">
             <h3>收益统计</h3>
@@ -188,5 +171,4 @@
     </div>
 </div>
 
-</body>
-</html>
+{% endblock %}

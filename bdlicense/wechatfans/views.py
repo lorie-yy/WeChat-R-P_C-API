@@ -328,6 +328,48 @@ def apply_for_withdrawal(request):
     print result
     return JsonResponse({'result':result})
 
+# 申请提现记录
+def applyfor_records(request):
+    cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
+    shopid = request.GET.get('shopid', '2')
+    records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
+    context ={}
+    context['records']=records
+
+    if records.count()==0:
+        print '无记录'
+    else:
+        for record in records:
+            context['record']=record
+            cloudname = record.cloudname
+            username = record.username
+            paymentmode = record.paymentmode
+            applyfortime = record.applyfortime
+            alipaynum = record.alipaynum
+            banknum = record.banknum
+            getmoney = record.getmoney
+            paymentresult = record.paymentresult
+
+            context['cloudname']=cloudname
+            context['username']=username
+            context['applyfortime']=applyfortime
+            context['paymentmode']=paymentmode
+            context['alipaynum']=alipaynum
+            context['banknum']=banknum
+            context['getmoney']=getmoney
+            context['paymentresult']=paymentresult
+
+    # 成功提现总计
+    totalsuc=0
+    suc=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=101)
+    if suc.count()==0:
+        print '成功提现总计为0'
+    else:
+        for i in suc:
+            totalsuc += float(i.getmoney)
+            print '成功提现总计为',totalsuc
+    context['totalsuc']=round(totalsuc,2)
+    return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
     Thridpartlist = ThridPartyConfig.objects.all()

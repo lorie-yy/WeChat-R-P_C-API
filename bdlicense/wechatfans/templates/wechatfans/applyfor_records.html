@@ -1,0 +1,51 @@
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
+    <div class="panel">
+        <div class="panel-heading">
+            <h3>提现记录</h3>
+        </div>
+        <hr/>
+        <div class="panel-body">
+            <div class="form-group">
+                <label for="totalmoney" class="" style="float: left;padding: 0">成功提现总计 : </label>
+                <span><strong style="color: #2ddad1;padding-left:10px;">{{ totalsuc }} </strong>元</span>
+            </div>
+            <div class="">
+                <table id="apply_records" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>提现金额(元)</th>
+                            <th>提现时间</th>
+                            <th>提现方式</th>
+                            <th>账号</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody class="middle-align">
+                    {% if records %}
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.username }}</td>
+                            <td>{{ record.getmoney }}</td>
+                            <td>{{ record.applyfortime }}</td>
+                            <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
+                            <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
+                            <td>{% if record.paymentresult == 102 %}<span style="color:#2ddad1;">审核中...</span>{% elif record.paymentresult == 101 %}提现成功{% else %}提现失败{% endif%}</td>
+                        </tr>
+                    {% endfor %}
+                    {% else %}
+                        <tr>暂无提现记录</tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <a href="javascript:history.back()" class="btn btn-default" style="float: right">返回</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
