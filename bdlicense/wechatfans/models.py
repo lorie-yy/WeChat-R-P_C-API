@@ -63,3 +63,9 @@ class cloudtouser(models.Model):
     password = models.CharField('密码',max_length=32)
     cloudid = models.CharField('云平台编号',max_length=64)
     shopid = models.IntegerField('云平台商铺id')
+
+
+class shop_discountinfo(models.Model):
+    cloudid = models.CharField('云平台编号',max_length=64)
+    shopid = models.IntegerField('云平台商铺id')
+    discount = models.FloatField('云平台商铺折扣')

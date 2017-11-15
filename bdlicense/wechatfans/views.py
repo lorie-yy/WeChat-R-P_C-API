@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 import requests
 from adminbd.models import SystemConfig
-from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords
+from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords, shop_discountinfo
 
 from adminbd.models import CloudInformation
 from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig, cloudtouser
@@ -49,7 +49,7 @@ class TAuthdata(View):
                     context={}
                     context['url'] = cloudconfig[0].thirdpart.url
 
-                    if cloudconfig[0].thirdpart.type == '2':#bigwifi
+                    if cloudconfig[0].thirdpart.type == '1':#bigwifi
                         context['mac'] = mac
                         context['bmac'] = bmac
                         context['wlanacport'] = wlanacport
@@ -68,7 +68,7 @@ class Getfansnumber(View):
         result = {}
         result['error']='1'
         cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid',0)
+        shopid = request.GET.get('shop_id',0)
         usermac = request.GET.get('usermac','')
         type = request.GET.get('type','')
         oid = request.GET.get('oid','')
@@ -97,6 +97,7 @@ class Getfansnumber(View):
                 if cloud.count() > 0:
                     type = cloud[0].thirdpart.type
                 userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
+                print '444444444444',oid,openid
                 if userlist.count() == 0:
                     userlist = TwechatOffline(orderid=oid,
                                               openid=openid,
@@ -240,11 +241,16 @@ def earnings(cloudid,shopid,startDate,enddate):
                                           )
     print userobject
     # 用户权限收益打折扣
+    shop_discount=shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
-    if discountlist.count()==0:
-        discount=0.9
+    if shop_discount.count()==0:
+        if discountlist.count()==0:
+            discount=0.9
+        else:
+            discount=discountlist[0].value
     else:
-        discount=discountlist[0].value
+        discount=shop_discount[0].discount
+
     profit=0
     for item in userobject:
         print 'usermac',item.id
@@ -411,7 +417,9 @@ def getCloudConfig(request):
         cloudinfolist.append(itemdict)
     return HttpResponse(json.dumps(cloudinfolist))
 
+
 class Register(View):
+    # @csrf_exempt
     def get(self,request):
         user_name = request.GET.get('username')
         password = request.GET.get('password')
@@ -427,22 +435,26 @@ class Register(View):
             return JsonResponse(uu)
 
         try:
-            user = User.objects.create_user(username=user_name,password=password,user_type = 1)
-            print "create new user and inital pwd is 123456"
-            print user
-            if super_user == 1:
-                user.is_superuser = 1
-            else:
-                user.is_superuser = 0
-            user.user_level = super_user
 
-            user.is_staff = 1
-            user.is_active = 1
-            user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
 
             clouduser = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
             #add cloud admin
             if clouduser.count() == 0:
+                # auth_user表
+                user = User.objects.create_user(username=user_name,password=password,user_type = 1)
+                print "create new user and inital pwd is 123456"
+                print user
+                if super_user == 1:
+                    user.is_superuser = 1
+                else:
+                    user.is_superuser = 0
+                user.user_level = super_user
+
+                user.is_staff = 1
+                user.is_active = 1
+                user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+
+                #cloud_user表
                 co = cloudtouser(username=user_name,password=password,cloudid=cloudid,shopid=shopid)
                 co.save()
                 result = 0
@@ -455,5 +467,6 @@ class Register(View):
         except Exception,e:
             print e
         result = 3
-        uu = {'res':result}
-        return JsonResponse(uu)
+        # uu = {'res':result}
+        # return JsonResponse(uu)
+        return render(request, 'wechatfans/register.html',{'res':result})
