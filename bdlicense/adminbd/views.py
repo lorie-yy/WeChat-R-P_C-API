@@ -35,7 +35,8 @@ class IndexView(View):
     def get(self, request):
         print "in IndexView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
@@ -791,6 +792,7 @@ def license_login(request):
             request.session['username'] = user_name
             request.session['is_superuser'] = user_pass.is_superuser
             request.session['user_level'] = user_pass.user_level
+            request.session['user_type'] = user_pass.user_type
             cur_path=os.path.abspath('.')
             print "os.path.abspath('.')",cur_path
             target_path=os.path.join(cur_path, DOWNLOAD_FILE_PATH)
