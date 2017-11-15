@@ -33,11 +33,11 @@
                         digits:true,
                         rangelength:[19,19]
                     },
-                    getmoney: {
-                        required: true,
+{#                    getmoney: {#}
+{#                        required: true,#}
 {#                        min:100,#}
-                        max:{{ takemoney }}
-                    }
+{#                        max:{{ takemoney }}#}
+{#                    }#}
                 },
                 messages: {
                     alipay_name: {
@@ -57,11 +57,11 @@
                         digits:"请输入正确的银行卡号",
                         rangelength:"请输入19位银行卡号"
                     },
-                    getmoney: {
-                        required: "必填",
+{#                    getmoney: {#}
+{#                        required: "必填",#}
 {#                        min:"最小可提取金额为100元",#}
-                        max:"最大可提取金额为"+{{ takemoney }}
-                    }
+{#                        max:"最大可提取金额为"+{{ takemoney }}#}
+{#                    }#}
                 },
                 submitHandler: function(form) {
                     var paymentmode=$('input[type="radio"]:checked').val();
@@ -70,14 +70,14 @@
                     var company=$('#company').val();
                     var bank_name=$('#bank_name').val();
                     var banknum=$('#banknum').val();
-                    var getmoney=$('#getmoney').val();
+                    var takemoney="{{ takemoney }}";
         {#            alert(paymentmode+"////////"+getmoney)#}
 {#                    console.log('company:',company,'bank_name:',bank_name,'banknum:',banknum)#}
                     $.ajax({
                         url: "/wechatfans/apply_for_withdrawal",
                         method: 'POST',
                         dataType: 'json',
-                        data: {'paymentmode':paymentmode,'getmoney':getmoney,
+                        data: {'paymentmode':paymentmode,'getmoney':takemoney,
                             'alipay_name':alipay_name,'alipaynum':alipaynum,
                             'company':company,'bank_name':bank_name,'banknum':banknum},
                         success: function(result){
@@ -157,12 +157,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="getmoney" class="col-sm-4 control-label">提现金额 (元)</label>
-                    <div class="col-sm-4">
-                        <input type="text" class="form-control" name="getmoney" id="getmoney" placeholder="提现金额">
-                    </div>
-                </div>
+{#                <div class="form-group">#}
+{#                    <label for="getmoney" class="col-sm-4 control-label">提现金额 (元)</label>#}
+{#                    <div class="col-sm-4">#}
+{#                        <input type="text" class="form-control" name="getmoney" id="getmoney" placeholder="提现金额">#}
+{#                    </div>#}
+{#                </div>#}
                 <div class="form-group">
                     <div class="col-sm-2">
                         <input type="submit" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="申请提现">

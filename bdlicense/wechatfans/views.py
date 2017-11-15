@@ -326,8 +326,9 @@ def apply_for_withdrawal(request):
         applyrecords = ApplyforWithdrawalRecords(paymentresult=102)
         applyrecords.cloudid = cloudid
         applyrecords.shopid = shopid
+        applyrecords.username = username
         applyrecords.paymentmode = paymentmode
-        applyrecords.getmoney = getmoney
+        applyrecords.getmoney = float(getmoney)
         applyrecords.alipay_name = alipay_name
         applyrecords.alipaynum = alipaynum
         applyrecords.company = company
@@ -343,8 +344,12 @@ def apply_for_withdrawal(request):
 
 # 申请提现记录
 def applyfor_records(request):
-    cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
-    shopid = request.GET.get('shopid', '2')
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
     records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
     context ={}
     context['records']=records
