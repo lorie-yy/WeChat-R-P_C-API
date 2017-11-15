@@ -107,6 +107,7 @@ class Getfansnumber(View):
                                               type=type,
                                               cloudid=cloudid)
                 else:
+                    userlist.update(shopid=int(shopid),cloudid=cloudid)
                     userlist = userlist[0]
                 url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
                 response = requests.get(url)
@@ -412,7 +413,8 @@ def getCloudConfig(request):
     cloudinfolist = []
     for item in cloudconfiginfo:
         itemdict = {}
-        itemdict['cloudname']=item.cloudName
+        itemdict['cloudname']=item.cloudname
+        itemdict['cloudid']=item.cloudid
         itemdict['thirdpart_name']=item.thirdpart.thirdpartname
         cloudinfolist.append(itemdict)
     return HttpResponse(json.dumps(cloudinfolist))
@@ -435,6 +437,14 @@ class Register(View):
             return JsonResponse(uu)
 
         try:
+            user = User.objects.create_user(username=user_name,password=password,user_type = 1)
+            print "create new user"
+            print user
+            if super_user == 1:
+                user.is_superuser = 1
+            else:
+                user.is_superuser = 0
+            user.user_level = super_user
 
 
             clouduser = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
