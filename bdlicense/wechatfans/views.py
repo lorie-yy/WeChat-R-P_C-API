@@ -205,8 +205,13 @@ class Sub_detail(View):
                 to.save()
 
 def showfans(request):
-    cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
-    shopid = request.GET.get('shopid', '2')
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    print 'user_type',user_type
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
     startdate=datetime.datetime.now().strftime('%Y-%m-%d')
     startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
@@ -279,8 +284,12 @@ def support_takemoney(cloudid,shopid):
     return profit_dis
 
 def takemoney(request):
-    cloudid = request.GET.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
-    shopid = request.GET.get('shopid', '2')
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
     takemoney=support_takemoney(cloudid,shopid)
     context ={}
     context['cloudid']=cloudid
@@ -293,8 +302,12 @@ def takemoney(request):
 # 取款记录
 @csrf_exempt
 def apply_for_withdrawal(request):
-    cloudid = request.POST.get('cloudid', 'TEMP:00:0c:29:42:cb:00')
-    shopid = request.POST.get('shopid', '2')
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
     paymentmode = request.POST.get('paymentmode')
     getmoney = request.POST.get('getmoney', 0.00)
     # 支付宝
@@ -388,13 +401,13 @@ def getCloudname(request):
     return HttpResponse(json.dumps(cloudinfolist))
 
 def saveCloudconfig(request):
-    cloudname = request.GET.get('cloudname')
+    cloudname = request.GET.get('cloudname','null')
     cloudid = request.GET.get('cloudid')
-    thirdpartid = request.GET.get('thirdpart')
+    thirdpartname = request.GET.get('thirdpart')
     result = {}
     result['error']=1
-    iteminfo = CloudConfig.objects.filter(cloudname = cloudname)
-    thirdpart = ThridPartyConfig.objects.filter(id = int(thirdpartid))
+    iteminfo = CloudConfig.objects.filter(cloudid=cloudid)
+    thirdpart = ThridPartyConfig.objects.filter(thirdpartname = thirdpartname)
     try:
     # if True:
         if iteminfo.count() == 0:
