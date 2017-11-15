@@ -102,6 +102,7 @@ class Getfansnumber(View):
                                               type=type,
                                               cloudid=cloudid)
                 else:
+                    userlist.update(shopid=int(shopid),cloudid=cloudid)
                     userlist = userlist[0]
                 url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
                 response = requests.get(url)
