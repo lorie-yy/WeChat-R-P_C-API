@@ -122,7 +122,7 @@ class UserIndexView(View):
         all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
-            userSets = User.objects.all()
+            userSets = User.objects.filter(user_type=0)
             context['userSets'] = userSets
         else:
             print "not superuser,no right to display the user list"
@@ -521,7 +521,7 @@ class AddCloudView(View):
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
         context = {}
-        cloudUsers = User.objects.all()
+        cloudUsers = User.objects.filter(user_type=0)
         context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
