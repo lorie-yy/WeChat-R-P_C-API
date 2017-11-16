@@ -226,11 +226,11 @@ def showfans(request):
 
     context['cloudid']=cloudid
     context['shopid']=shopid
-    context['todayprofit']=todayprofit
-    context['totalprofit']=totalprofit
+    context['todayprofit']=todayprofit/100.00
+    context['totalprofit']=totalprofit/100.00
     context['totalfans']=totalfans
     context['todayfans']=todayfans
-    context['takemoney']=takemoney
+    context['takemoney']=takemoney/100.00
     # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/showfans.html',context)
 
@@ -261,8 +261,9 @@ def earnings(cloudid,shopid,startDate,enddate):
     for item in userobject:
         print 'usermac',item.id
         print 'usermac',item.price
-        profit += float(item.price)
-    profit_dis=round(profit*float(discount), 2)
+        profit += int(float(item.price)*100)
+    profit_dis=int(profit*float(discount))
+    print '///////',profit_dis
 
     return profit_dis,userobject.count()
 
@@ -279,8 +280,8 @@ def support_takemoney(cloudid,shopid):
     for item in userobject:
         print 'usermac',item.id
         print 'usermac',item.price
-        profit += float(item.price)
-    profit_dis=round(profit*float(discount), 2)
+        profit += int(float(item.price)*100)
+    profit_dis=int(profit*float(discount))
     return profit_dis
 
 def takemoney(request):
@@ -294,9 +295,7 @@ def takemoney(request):
     context ={}
     context['cloudid']=cloudid
     context['shopid']=shopid
-    context['takemoney']=takemoney
-    print takemoney
-    # return HttpResponse(json.dumps(context))
+    context['takemoney']=takemoney/100.00
     return render(request, 'wechatfans/takemoney.html',context)
 
 # 取款记录
@@ -309,7 +308,7 @@ def apply_for_withdrawal(request):
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     paymentmode = request.POST.get('paymentmode')
-    getmoney = request.POST.get('getmoney', 0.00)
+    getmoney = (request.POST.get('getmoney'))*100
     # 支付宝
     alipay_name = request.POST.get('alipay_name')
     alipaynum = request.POST.get('alipaynum')
@@ -328,7 +327,7 @@ def apply_for_withdrawal(request):
         applyrecords.shopid = shopid
         applyrecords.username = username
         applyrecords.paymentmode = paymentmode
-        applyrecords.getmoney = float(getmoney)
+        applyrecords.getmoney = getmoney
         applyrecords.alipay_name = alipay_name
         applyrecords.alipaynum = alipaynum
         applyrecords.company = company
@@ -374,7 +373,7 @@ def applyfor_records(request):
             context['paymentmode']=paymentmode
             context['alipaynum']=alipaynum
             context['banknum']=banknum
-            context['getmoney']=getmoney
+            context['getmoney']=getmoney/100.00
             context['paymentresult']=paymentresult
 
     # 成功提现总计
@@ -384,9 +383,9 @@ def applyfor_records(request):
         print '成功提现总计为0'
     else:
         for i in suc:
-            totalsuc += float(i.getmoney)
+            totalsuc += i.getmoney
             print '成功提现总计为',totalsuc
-    context['totalsuc']=round(totalsuc,2)
+    context['totalsuc']=totalsuc/100.00
     return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
