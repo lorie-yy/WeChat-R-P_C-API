@@ -206,6 +206,9 @@ class Sub_detail(View):
                 to.save()
 
 def showfans(request):
+    path_url=request.build_absolute_uri('/wechatfans/sub_detail')
+    print '11111111111',path_url
+    requests.get(path_url)
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     print 'user_type',user_type
@@ -227,11 +230,11 @@ def showfans(request):
 
     context['cloudid']=cloudid
     context['shopid']=shopid
-    context['todayprofit']=todayprofit
-    context['totalprofit']=totalprofit
+    context['todayprofit']=todayprofit/100.00
+    context['totalprofit']=totalprofit/100.00
     context['totalfans']=totalfans
     context['todayfans']=todayfans
-    context['takemoney']=takemoney
+    context['takemoney']=takemoney/100.00
     # return HttpResponse(json.dumps(context))
     return render(request, 'wechatfans/showfans.html',context)
 
@@ -260,10 +263,11 @@ def earnings(cloudid,shopid,startDate,enddate):
 
     profit=0
     for item in userobject:
-        print 'usermac',item.id
-        print 'usermac',item.price
-        profit += float(item.price)
-    profit_dis=round(profit*float(discount), 2)
+        # print 'usermac',item.id
+        # print 'usermac',item.price
+        profit += int(float(item.price)*100)
+    profit_dis=int(profit*float(discount))
+    print '///////',profit_dis
 
     return profit_dis,userobject.count()
 
@@ -278,10 +282,10 @@ def support_takemoney(cloudid,shopid):
         discount=discountlist[0].value
     profit=0
     for item in userobject:
-        print 'usermac',item.id
-        print 'usermac',item.price
-        profit += float(item.price)
-    profit_dis=round(profit*float(discount), 2)
+        # print 'usermac',item.id
+        # print 'usermac',item.price
+        profit += int(float(item.price)*100)
+    profit_dis=int(profit*float(discount))
     return profit_dis
 
 def takemoney(request):
@@ -295,9 +299,7 @@ def takemoney(request):
     context ={}
     context['cloudid']=cloudid
     context['shopid']=shopid
-    context['takemoney']=takemoney
-    print takemoney
-    # return HttpResponse(json.dumps(context))
+    context['takemoney']=takemoney/100.00
     return render(request, 'wechatfans/takemoney.html',context)
 
 # 取款记录
@@ -310,7 +312,7 @@ def apply_for_withdrawal(request):
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     paymentmode = request.POST.get('paymentmode')
-    getmoney = request.POST.get('getmoney', 0.00)
+    getmoney = (request.POST.get('getmoney'))*100
     # 支付宝
     alipay_name = request.POST.get('alipay_name')
     alipaynum = request.POST.get('alipaynum')
@@ -327,6 +329,7 @@ def apply_for_withdrawal(request):
         applyrecords = ApplyforWithdrawalRecords(paymentresult=102)
         applyrecords.cloudid = cloudid
         applyrecords.shopid = shopid
+        applyrecords.username = username
         applyrecords.paymentmode = paymentmode
         applyrecords.getmoney = getmoney
         applyrecords.alipay_name = alipay_name
@@ -342,6 +345,52 @@ def apply_for_withdrawal(request):
     print result
     return JsonResponse({'result':result})
 
+# 申请提现记录
+def applyfor_records(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
+    records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
+    context ={}
+    context['records']=records
+
+    if records.count()==0:
+        print '无记录'
+    else:
+        for record in records:
+            context['record']=record
+            cloudname = record.cloudname
+            username = record.username
+            paymentmode = record.paymentmode
+            applyfortime = record.applyfortime
+            alipaynum = record.alipaynum
+            banknum = record.banknum
+            getmoney = record.getmoney
+            paymentresult = record.paymentresult
+
+            context['cloudname']=cloudname
+            context['username']=username
+            context['applyfortime']=applyfortime
+            context['paymentmode']=paymentmode
+            context['alipaynum']=alipaynum
+            context['banknum']=banknum
+            context['getmoney']=getmoney/100.00
+            context['paymentresult']=paymentresult
+
+    # 成功提现总计
+    totalsuc=0
+    suc=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=101)
+    if suc.count()==0:
+        print '成功提现总计为0'
+    else:
+        for i in suc:
+            totalsuc += i.getmoney
+            print '成功提现总计为',totalsuc
+    context['totalsuc']=totalsuc/100.00
+    return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
     Thridpartlist = ThridPartyConfig.objects.all()
@@ -402,6 +451,7 @@ def getCloudname(request):
     return HttpResponse(json.dumps(cloudinfolist))
 
 def saveCloudconfig(request):
+    cloudname = request.GET.get('cloudname','null')
     cloudid = request.GET.get('cloudid')
     thirdpartname = request.GET.get('thirdpart')
     operationtype = request.GET.get('typeThird','')

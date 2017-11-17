@@ -21,4 +21,5 @@ urlpatterns = patterns(
     url(r'^getapplyforwithdrawal',views.getApplyforWithdrawal, name='getapplyforwithdrawal'),
     url(r'^getallapplyforwithdrawalrecords',views.getallApplyforWithdrawalRecords, name='getallapplyforwithdrawalrecords'),
     url(r'^transferaccounts',views.Transferaccounts.as_view(), name='transferaccounts'),
+    url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
 )

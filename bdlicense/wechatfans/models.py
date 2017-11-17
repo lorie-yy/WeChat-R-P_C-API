@@ -45,7 +45,7 @@ class ApplyforWithdrawalRecords(models.Model):
     company=models.CharField('公司名称',max_length=64)
     bank_name=models.CharField('开户行',max_length=64)
     banknum=models.CharField('银行卡账号',max_length=19)
-    getmoney = models.FloatField('提取金额')
+    getmoney = models.IntegerField('提取金额(分)')
     RESULT_SUCCESS = 101
     RESULT_FAIL = 102
     RESULT_ACCESSPAY = 103
