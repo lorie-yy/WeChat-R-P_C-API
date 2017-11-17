@@ -6,6 +6,7 @@
         .data-detail{
             background-color: #fbfbfb;
             padding: 20px;
+            margin-right: 50px;
         }
         .data-detail div dl{
             display: inline-block;
@@ -24,17 +25,12 @@
             color: #2ddad1;
         }
         .data-chart{
-            border: 1px solid #b8b8b8;
-            padding: 0 30px;
+{#            border: 1px solid #b8b8b8;#}
+{#            padding: 0 30px;#}
             margin: 30px 0;
         }
 
     </style>
-    <div class="panel">
-        <div class="panel-heading">
-            <h3>收益统计</h3>
-        </div>
-        <hr/>
     <!-- 收益数据展示 -->
     <div class="data-detail">
         <div style="height: 40px;">
@@ -64,10 +60,10 @@
         </div>
     </div>
     <div class="data-chart">
-        <div >
-            <div class="panel-heading" style="padding-top: 30px;">
-                <span style="font-size: x-large;">粉丝收益统计</span>
-                <div style="width: 25%;float: right;margin-right: 5%" class="input-group">
+        <div class="panel">
+            <div class="panel-heading">
+                <span>收益统计</span>
+                <div style="width: 25%;float: right;top: -10px;position: relative" class="input-group">
                     <input class="form-control" type="text" placeholder="请选择日期范围" name="daterange" id="daterange">
                     <span class="input-group-addon btn">查询</span>
                 </div>

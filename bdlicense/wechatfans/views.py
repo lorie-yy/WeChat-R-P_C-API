@@ -205,6 +205,9 @@ class Sub_detail(View):
                 to.save()
 
 def showfans(request):
+    path_url=request.build_absolute_uri('/wechatfans/sub_detail')
+    print '11111111111',path_url
+    requests.get(path_url)
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     print 'user_type',user_type
@@ -259,8 +262,8 @@ def earnings(cloudid,shopid,startDate,enddate):
 
     profit=0
     for item in userobject:
-        print 'usermac',item.id
-        print 'usermac',item.price
+        # print 'usermac',item.id
+        # print 'usermac',item.price
         profit += int(float(item.price)*100)
     profit_dis=int(profit*float(discount))
     print '///////',profit_dis
@@ -278,8 +281,8 @@ def support_takemoney(cloudid,shopid):
         discount=discountlist[0].value
     profit=0
     for item in userobject:
-        print 'usermac',item.id
-        print 'usermac',item.price
+        # print 'usermac',item.id
+        # print 'usermac',item.price
         profit += int(float(item.price)*100)
     profit_dis=int(profit*float(discount))
     return profit_dis
