@@ -10,6 +10,7 @@
     {% load staticfiles %}
     <!-- Styles-->
 	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+	<link rel="stylesheet" href="{% static 'assets/css/font-awesome.css' %}">
 	<link rel="stylesheet" href="{% static 'css/metisMenu.css' %}">
 	<link rel="stylesheet" href="{% static 'css/daterangepicker.css' %}">
 	<link rel="stylesheet" href="{% static 'js/theme/default/layer.css' %}">
@@ -33,24 +34,34 @@
             margin: 0;
             padding: 0;
         }
+{#        左侧菜单#}
         .page-container .sidebar-menu{
             display: table-cell;
             position: relative;
-            width: 20%;
-            background-color: #04364c;
+            width: 16%;
+            background-color: #2C3749;
         }
-        .page-container .main{
-            display: table-cell;
-            position: relative;
-            padding: 0 2%;
+        .page-container .sidebar-menu .sidebar-header{
+            padding: 35px 15px 65px 10px;
         }
-{#        菜单#}
         .metismenu{
-            margin:10px 5% 10px 20%;
+            padding-left: 0;
         }
-        .metismenu a:hover,
-        .metismenu a:focus,
-        .metismenu a.active{
+        .metismenu li a .faicon{
+            padding: 14px 16px;
+            color: #ffffff;
+            font-size: 20px;
+        }
+        .metismenu li a.active .faicon{
+            background-color: #0099cc;
+        }
+        .metismenu li a .menuitem{
+            padding-left: 20px;
+            font-size: 14px
+        }
+        .metismenu a:hover .menuitem,
+        .metismenu a:focus .menuitem,
+        .metismenu a.active .menuitem{
             color: white;
         }
         .metismenu ul li a{
@@ -59,20 +70,74 @@
         .metismenu ul li ul li a{
             padding-left:40px;
         }
-        .metismenu a{
+        .metismenu a .menuitem{
             color: #adacaa;
+        }
+        .metismenu a{
             padding:13px 2%;
             display: block;
             text-decoration: none;
             font-size:16px;
         }
+{#        右侧顶部#}
+        .page-container .page-right{
+            display: table-cell;
+            position: relative;
+            background-color: #EDEEF2;
+        }
+        .page-container .page-right .page-top{
+            padding: 15px 0;
+            position: absolute;
+            right: 70px;
+            color: #747474;
+        }
+        .page-container .page-right .page-logout{
+            cursor: pointer;
+        }
+        .page-container .page-right .page-welconme{
+            padding: 12px;
+            background-color: #ffffff;
+            margin-top:50px;
+            margin-bottom:20px;
+            padding-left:20px;
+        }
+{#        右侧主内容#}
+        .page-container .page-right .main{
+            padding: 0 20px;
+        }
+        .main{
+            background-color: #EDEEF2;
+        }
+        .main .panel{
+            padding: 18px 25px;
+            margin-right: 50px;
+            border-radius: 0;
+        }
+        .main .panel .panel-heading{
+            font-size: 16px;
+            font-weight: 800;
+            padding: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #bfb8b8;
+        }
+        .main .panel .panel-body{
+            padding:15px 0;
+        }
+        .main .panel .panel-body form .control-label{
+            text-align: left;
+            font-weight:inherit;
+            width: 150px;
+        }
+        .special-color{
+            color: #0099cc;
+        }
         .btn-tixian{
-            background-color: #2ddad1;
-            border-color: #2ddad1;
+            background-color: #0099cc;
+            border-color: #0099cc;
         }
         .btn-tixian:hover{
-            background-color: #41c5bf;
-            border-color: #41c5bf;
+            background-color: #048fbd;
+            border-color: #048fbd;
         }
         label.error{
             position: absolute;
@@ -81,6 +146,9 @@
             color: orange;;
             font-weight: normal;
             font-size: smaller;
+        }
+        .form-group.button-group{
+            padding-top: 20px;
         }
     </style>
 </head>
@@ -104,10 +172,24 @@
 <div class="page-container">
 {% block sidebar-menu %}
 <div class="sidebar-menu">
+    <div class="sidebar-header">
+        <a class="" href="/wechatfans/showfans">
+            <img src="{% static 'images/logo白.png' %}"/>
+        </a>
+    </div>
     <ul class="metismenu" id="metismenu">
-        <li><a href="/wechatfans/showfans"><i class="fa fa-home"></i>收益统计</a></li>
-        <li><a href="/wechatfans/takemoney"><i class="fa fa-home"></i>申请提现</a></li>
-        <li><a href="/wechatfans/applyfor_records"><i class="fa fa-home"></i>申请记录</a></li>
+        <li><a href="/wechatfans/showfans">
+            <span class="faicon" style="padding-right: 13px;padding-left: 14px"><img src="{% static 'images/icon1.png' %}"></span>
+            <span class="menuitem">收益统计</span>
+        </a></li>
+        <li><a href="/wechatfans/takemoney">
+            <span class="faicon" style="padding-right: 17px"><img src="{% static 'images/icon4.png' %}"></span>
+            <span class="menuitem">申请提现</span>
+        </a></li>
+        <li><a href="/wechatfans/applyfor_records">
+            <span class="faicon"><img src="{% static 'images/icon2.png' %}"></span>
+            <span class="menuitem">申请记录</span>
+        </a></li>
 {#        二级菜单#}
 {#        <li>#}
 {#            <a href="#" class="has-arrow"><i class="fa fa-cog"></i>云商城管理</a>#}
@@ -118,12 +200,24 @@
 {#        </li>#}
 
     </ul>
-
 </div>
 {% endblock %}
-<div class="main">
-    {% block main %}{% endblock %}
+{% block page-right %}
+<div class="page-right">
+    <div class="page-top">
+        <span class="page-user">{{ username }}</span>
+        <span style="padding: 0 3px">|</span>
+        <span class="page-logout" onclick="">退出登录</span>
+    </div>
+    <div class="page-welconme">
+        welcome
+    </div>
+    <div class="main">
+        {% block main %}{% endblock %}
+    </div>
 </div>
+{% endblock %}
+
 </div>
 
 </body>

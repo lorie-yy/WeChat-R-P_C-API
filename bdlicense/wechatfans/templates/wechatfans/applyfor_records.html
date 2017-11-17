@@ -4,13 +4,12 @@
 {% block main %}
     <div class="panel">
         <div class="panel-heading">
-            <h3>提现记录</h3>
+            <div>提现记录</div>
         </div>
-        <hr/>
         <div class="panel-body">
             <div class="form-group">
-                <label for="totalmoney" class="" style="float: left;padding: 0">成功提现总计 : </label>
-                <span><strong style="color: #2ddad1;padding-left:10px;">{{ totalsuc }} </strong>元</span>
+                <label class="" style="float: left;padding: 0">成功提现总计 : </label>
+                <span><strong class="special-color" style="padding-left:10px;">{{ totalsuc }} </strong>元</span>
             </div>
             <div class="">
                 <table id="apply_records" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
@@ -33,7 +32,7 @@
                             <td>{{ record.applyfortime }}</td>
                             <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
                             <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
-                            <td>{% if record.paymentresult == 102 %}<span style="color:#2ddad1;">审核中...</span>{% elif record.paymentresult == 101 %}提现成功{% else %}提现失败{% endif%}</td>
+                            <td>{% if record.paymentresult == 102 %}<span class="special-color">审核中...</span>{% elif record.paymentresult == 101 %}提现成功{% else %}提现失败{% endif%}</td>
                         </tr>
                     {% endfor %}
                     {% else %}

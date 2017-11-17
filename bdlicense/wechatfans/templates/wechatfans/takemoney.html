@@ -2,16 +2,36 @@
 {% load i18n %}
 {% load static %}
 {% block main %}
+    <style>
+    .radio-inline{
+        height: 34px;
+        padding-right: 20px;
+    }
+    .radio-inline span{
+        padding:8px 10px;
+        border-radius: 5px;
+        border: 1px solid #999;
+    }
+    .radio-inline span.active{
+        border-color: #0099cc;
+        color: #fff;
+        background-color:#0099cc;
+    }
+    </style>
     <script>
         $(function(){
             //支付宝提现or银行提现
             $('#type2').click( function () {
                 $('.bankpay').show();
                 $('.alipay').hide();
+                $(this).next('span').addClass('active');
+                $('#type1').next('span').removeClass('active');
             });
             $('#type1').click( function () {
                 $('.alipay').show();
                 $('.bankpay').hide();
+                $(this).next('span').addClass('active');
+                $('#type2').next('span').removeClass('active');
             });
             //表单验证
             $("form#takemoney").validate({
@@ -98,61 +118,60 @@
     </script>
     <div class="panel">
         <div class="panel-heading">
-            <h3>提取可用余额到个人账户</h3>
+            <div>提取可用余额到个人账户</div>
         </div>
-        <hr/>
         <div class="panel-body">
             <form class="form-horizontal" action="" id="takemoney" method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="totalmoney" class="col-sm-4 control-label">可提现余额</label>
-                    <div class="col-sm-4">
-                        <span class="btn" id="totalmoney" style="cursor: default;color: #2ddad1">
+                    <label for="totalmoney" class="col-sm-2 control-label">可提现余额 ：</label>
+                    <div class="col-sm-3">
+                        <span class="btn special-color" id="totalmoney" style="cursor: default;">
                             <strong>{{ takemoney }} 元</strong>
                         </span>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="paymentmode" class="col-sm-4 control-label">提现方式</label>
+                    <label for="paymentmode" class="col-sm-2 control-label">提现方式 ：</label>
                     <div class="col-sm-4">
                         <label class="radio-inline">
-                            <input type="radio" name="paymentmode" id="type1" value="1" checked>支付宝
+                            <input type="radio" name="paymentmode" id="type1" value="1" checked><span class="active" style="">支付宝</span>
                         </label>
                         <label class="radio-inline">
-                            <input type="radio" name="paymentmode" id="type2" value="2">银行卡
+                            <input type="radio" name="paymentmode" id="type2" value="2"><span>银行卡</span>
                         </label>
                     </div>
                 </div>
                 <div class="alipay">
                     <div class="form-group">
-                        <label for="alipay_name" class="col-sm-4 control-label">姓名</label>
-                        <div class="col-sm-4">
+                        <label for="alipay_name" class="col-sm-2 control-label">姓名 ：</label>
+                        <div class="col-sm-3">
                             <input type="text" class="form-control" name="alipay_name" id="alipay_name" placeholder="姓名">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="alipaynum" class="col-sm-4 control-label">支付宝账号</label>
-                        <div class="col-sm-4">
+                        <label for="alipaynum" class="col-sm-2 control-label">支付宝账号 ：</label>
+                        <div class="col-sm-3">
                             <input type="text" class="form-control" name="alipaynum" id="alipaynum" placeholder="支付宝账号">
                         </div>
                     </div>
                 </div>
                 <div class="bankpay" hidden>
                     <div class="form-group">
-                        <label for="company" class="col-sm-4 control-label">公司名称</label>
-                        <div class="col-sm-4">
+                        <label for="company" class="col-sm-2 control-label">公司名称 ：</label>
+                        <div class="col-sm-3">
                             <input type="text" class="form-control" name="company" id="company" placeholder="公司名称">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="banknum" class="col-sm-4 control-label">银行卡号</label>
-                        <div class="col-sm-4">
+                        <label for="banknum" class="col-sm-2 control-label">银行卡号 ：</label>
+                        <div class="col-sm-3">
                             <input type="text" class="form-control" name="banknum" id="banknum" placeholder="银行卡号">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="bank_name" class="col-sm-4 control-label">开户行</label>
-                        <div class="col-sm-4">
+                        <label for="bank_name" class="col-sm-2 control-label">开户行 ：</label>
+                        <div class="col-sm-3">
                             <input type="text" class="form-control" name="bank_name" id="bank_name" placeholder="开户行">
                         </div>
                     </div>
@@ -163,12 +182,12 @@
 {#                        <input type="text" class="form-control" name="getmoney" id="getmoney" placeholder="提现金额">#}
 {#                    </div>#}
 {#                </div>#}
-                <div class="form-group">
-                    <div class="col-sm-2">
+                <div class="form-group button-group">
+                    <div class="col-sm-4">
                         <input type="submit" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="申请提现">
                     </div>
                     <div class="col-sm-2" style="float: right">
-                        <a href="javascript:history.back()" class="btn btn-default">返回</a>
+                        <a href="javascript:history.back()" class="btn btn-default" style="float: right">返回</a>
                     </div>
                 </div>
             </form>
