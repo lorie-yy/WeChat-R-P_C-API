@@ -3,62 +3,69 @@
 {% load static %}
 {% block main %}
     <style>
-        .data-detail{
-            background-color: #fbfbfb;
-            padding: 20px;
-            margin-right: 50px;
-        }
-        .data-detail div dl{
-            display: inline-block;
-            margin: 0;
-            text-align: center;
-            width: 15%;
-            height: 40px;
-            border-right: 1px solid #b8b8b8;
-        }
-        .data-detail div dl:last-child{
-            border-right:none;
-            position: relative;
-            top: -10px;
-        }
-        .data-detail div dl dt:last-child{
-            color: #2ddad1;
-        }
-        .data-chart{
-{#            border: 1px solid #b8b8b8;#}
-{#            padding: 0 30px;#}
-            margin: 30px 0;
-        }
-
+    .data-inline{
+        display: inline-flex;
+        margin-bottom: 25px;
+    }
+    .data-inline .data-table{
+        display: table;
+        height: 60px;
+        background-color: #fff;
+        margin-right: 25px;
+        text-align: center;
+        width: 160px;
+    }
+    .data-inline .data-table div{
+        display: table-cell;
+        width:35px;
+        background-color: #00838f
+    }
+    .data-inline .data-table dl{
+        margin: 0;
+        padding: 10px 0;
+    }
     </style>
-    <!-- 收益数据展示 -->
-    <div class="data-detail">
-        <div style="height: 40px;">
+    <div class="data-inline">
+        <div class="data-table">
+            <div style="background-color: #FF8762"></div>
             <dl>
-                <dt>今日收益(元)</dt>
-                <dt>{{ todayprofit }}</dt>
+                <span>今日收益￥</span>
+                <dt style="color: #FF8762">{{ todayprofit }}</dt>
             </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #56BDDE"></div>
             <dl>
-                <dt>总收益(元)</dt>
-                <dt>{{ totalprofit }}</dt>
+                <span>总收益￥</span>
+                <dt style="color: #56BDDE">{{ totalprofit }}</dt>
             </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #B198DC"></div>
             <dl>
-                <dt>今日粉丝(个)</dt>
-                <dt>{{ todayfans }}</dt>
+                <span>今日粉丝(人)</span>
+                <dt style="color: #B198DC">{{ todayfans }}</dt>
             </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #FEC400"></div>
             <dl>
-                <dt>总粉丝(个)</dt>
-                <dt>{{ totalfans }}</dt>
+                <span>总粉丝(人)</span>
+                <dt style="color: #FEC400">{{ totalfans }}</dt>
             </dl>
-            <dl style="border-right:none;">
-                <dt>可提现(元)</dt>
-                <dt>{{ takemoney }}</dt>
-            </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #71CE34"></div>
             <dl>
-                <dt><a href="takemoney.html" class="btn btn-info btn-tixian" style="padding:9px 20px;top: -10px;">提现</a></dt>
+                <span>可提现￥</span>
+                <dt style="color: #71CE34">{{ takemoney }}</dt>
             </dl>
         </div>
     </div>
+    <div style="padding: 10px 0;float: right;margin-right: 50px;">
+        <a href="takemoney.html" class="btn btn-info btn-tixian" style="padding:9px 20px;top: -10px;">提现</a>
+    </div>
+    
     <div class="data-chart">
         <div class="panel">
             <div class="panel-heading">
