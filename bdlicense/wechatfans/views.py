@@ -3,7 +3,7 @@ import hashlib
 import json
 import datetime
 from django.contrib.auth.models import User
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template.context_processors import csrf
 from django.views.decorators.csrf import csrf_exempt
@@ -136,6 +136,7 @@ class Sub_detail(View):
     功能：调用bigwifi查询关注数据接口
     '''
     def get(self,request):
+        print '[INFO] call Sub_detail'
         import time
         url = 'https://api.weifenshi.cn/api/sub_detail'
         now = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -156,7 +157,6 @@ class Sub_detail(View):
         context['t']=t
         context['apis']=apis
         response = requests.get(url,params=context)
-        print response.text
         text = eval(response.text)
         if text['error'] in [0,'0']:
             page_count = text['page_count']       #总页数
@@ -172,7 +172,7 @@ class Sub_detail(View):
                     if text_page['error'] in [0,'0']:
                         self.saveinfo(text_page['list'])
 
-        return HttpResponse(response.text)
+        return HttpResponse("OK")
 
 
     def saveinfo(self,infolist):
@@ -230,6 +230,7 @@ def showfans(request):
 
     context['cloudid']=cloudid
     context['shopid']=shopid
+    context['username']=username
     context['todayprofit']=todayprofit/100.00
     context['totalprofit']=totalprofit/100.00
     context['totalfans']=totalfans
@@ -299,6 +300,7 @@ def takemoney(request):
     context ={}
     context['cloudid']=cloudid
     context['shopid']=shopid
+    context['username']=username
     context['takemoney']=takemoney/100.00
     return render(request, 'wechatfans/takemoney.html',context)
 
@@ -321,12 +323,12 @@ def apply_for_withdrawal(request):
     bank_name = request.POST.get('bank_name')
     banknum = request.POST.get('banknum')
     # 如果记录中有可转账状态,则不允许再次申请
-    history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=102)
+    history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
     else:
         # 创建表的实例对象(取款记录)
-        applyrecords = ApplyforWithdrawalRecords(paymentresult=102)
+        applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
         applyrecords.cloudid = cloudid
         applyrecords.shopid = shopid
         applyrecords.username = username
@@ -566,6 +568,7 @@ class Register(View):
         # return JsonResponse(uu)
         return render(request, 'wechatfans/register.html',{'res':result})
 
+
 def getshopid(request):
     '''
     根据云平台的编号获取这个云平台的商铺id
@@ -655,6 +658,7 @@ def getApplyforWithdrawal(request):
         #确认是否可提现
         if isSafe(applyforitem.cloudid,applyforitem.shopid,applyforitem.getmoney):
             itemdict = {}
+            itemdict['id'] = applyforitem.id
             itemdict['paymentmode'] = applyforitem.paymentmode
             itemdict['shopid'] = applyforitem.shopid
             itemdict['username'] = applyforitem.username
@@ -712,13 +716,21 @@ def getallApplyforWithdrawalRecords(request):
 
 class Transferaccounts(View):
     def get(self,request):
-        csrf_token = csrf(request)['csrf_token']
-        uu = {}
-        uu['csrfmiddlewaretoken'] = str(csrf_token)
-        print uu,type(csrf_token)
-        return JsonResponse(uu)
-    def post(self,request):
-        id = request.POST.get('id')
-        time = request.POST.get('time')
+        id = request.GET.get('id')
+        time = request.GET.get('time')
         print id,time
         return JsonResponse({'res':0})
+
+
+
+# 退出登录
+@csrf_exempt
+def logout(request):
+    if request.method == "GET":
+        username = request.session.get('username','')
+        user_type = request.session.get('user_type','')
+        if not username or user_type==0:
+            return render(request,'license_login.html')
+        request.session.flush()
+        return render(request,'license_login.html')
+
