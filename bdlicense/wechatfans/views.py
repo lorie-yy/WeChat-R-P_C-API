@@ -7,7 +7,9 @@ from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+from django.contrib.auth import authenticate
 import requests
+import simplejson
 from adminbd.models import SystemConfig
 from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords, shop_discountinfo
 
@@ -97,7 +99,6 @@ class Getfansnumber(View):
                 if cloud.count() > 0:
                     type = cloud[0].thirdpart.type
                 userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
-                print '444444444444',oid,openid
                 if userlist.count() == 0:
                     userlist = TwechatOffline(orderid=oid,
                                               openid=openid,
@@ -206,7 +207,7 @@ class Sub_detail(View):
 
 def showfans(request):
     path_url=request.build_absolute_uri('/wechatfans/sub_detail')
-    print '11111111111',path_url
+    print 'path_url',path_url
     requests.get(path_url)
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
@@ -267,7 +268,7 @@ def earnings(cloudid,shopid,startDate,enddate):
         # print 'usermac',item.price
         profit += int(float(item.price)*100)
     profit_dis=int(profit*float(discount))
-    print '///////',profit_dis
+    print 'profit_dis',profit_dis
 
     return profit_dis,userobject.count()
 
@@ -303,7 +304,7 @@ def takemoney(request):
     context['takemoney']=takemoney/100.00
     return render(request, 'wechatfans/takemoney.html',context)
 
-# 取款记录
+# 创建取款记录
 @csrf_exempt
 def apply_for_withdrawal(request):
     username = request.session.get('username','')
@@ -313,7 +314,8 @@ def apply_for_withdrawal(request):
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     paymentmode = request.POST.get('paymentmode')
-    getmoney = (request.POST.get('getmoney'))*100
+    getmoney = (float(request.POST.get('getmoney')))
+    getmoney = int(getmoney*100)
     # 支付宝
     alipay_name = request.POST.get('alipay_name')
     alipaynum = request.POST.get('alipaynum')
@@ -322,12 +324,12 @@ def apply_for_withdrawal(request):
     bank_name = request.POST.get('bank_name')
     banknum = request.POST.get('banknum')
     # 如果记录中有可转账状态,则不允许再次申请
-    history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=102)
+    history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
     else:
         # 创建表的实例对象(取款记录)
-        applyrecords = ApplyforWithdrawalRecords(paymentresult=102)
+        applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
         applyrecords.cloudid = cloudid
         applyrecords.shopid = shopid
         applyrecords.username = username
@@ -357,12 +359,14 @@ def applyfor_records(request):
     records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
     context ={}
     context['records']=records
+    recordslist=[]
 
     if records.count()==0:
         print '无记录'
     else:
         for record in records:
-            context['record']=record
+            # context['record']=record
+            tempdict={}
             cloudname = record.cloudname
             username = record.username
             paymentmode = record.paymentmode
@@ -372,14 +376,15 @@ def applyfor_records(request):
             getmoney = record.getmoney
             paymentresult = record.paymentresult
 
-            context['cloudname']=cloudname
-            context['username']=username
-            context['applyfortime']=applyfortime
-            context['paymentmode']=paymentmode
-            context['alipaynum']=alipaynum
-            context['banknum']=banknum
-            context['getmoney']=getmoney/100.00
-            context['paymentresult']=paymentresult
+            tempdict['cloudname']=cloudname
+            tempdict['username']=username
+            tempdict['applyfortime']=applyfortime
+            tempdict['paymentmode']=paymentmode
+            tempdict['alipaynum']=alipaynum
+            tempdict['banknum']=banknum
+            tempdict['getmoney']=getmoney/100.00
+            tempdict['paymentresult']=paymentresult
+            recordslist.append(tempdict)
 
     # 成功提现总计
     totalsuc=0
@@ -391,6 +396,7 @@ def applyfor_records(request):
             totalsuc += i.getmoney
             print '成功提现总计为',totalsuc
     context['totalsuc']=totalsuc/100.00
+    context['recordslist']=recordslist
     return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
@@ -557,3 +563,45 @@ def logout(request):
             return render(request,'license_login.html')
         request.session.flush()
         return render(request,'license_login.html')
+
+# 修改密码
+@csrf_exempt
+def modify_password(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    uu = {'username': username}
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    if request.method == 'POST':
+        username = request.session['username']
+        password = request.POST.get('password')
+        password_new1 = request.POST.get('password_new1')
+        print password,password_new1
+        try:
+
+            po = authenticate(username=username,password=password)
+            pn = User.objects.get(username=username)
+            if(po):
+                if(str(password) == str(password_new1)):
+                    result = 3
+                    uu = {'res': result}
+                    return JsonResponse(uu)
+
+                if(pn):
+                    result = 1
+                    result = simplejson.dumps(result)
+                    uu = {'res': result}
+                    pn.set_password(password_new1)
+                    pn.save()
+                    return JsonResponse(uu)
+                else:
+                    result = 0
+                    uu = {'res': result}
+                    return JsonResponse(uu)
+            else:
+                result = 2
+                uu = {'res': result}
+                return JsonResponse(uu)
+        except Exception, e:
+            print e
+    return render(request, 'wechatfans/modify_password.html',uu)

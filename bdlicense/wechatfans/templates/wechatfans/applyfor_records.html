@@ -15,7 +15,7 @@
                 <table id="apply_records" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>用户名</th>
+{#                            <th>用户名</th>#}
                             <th>提现金额(元)</th>
                             <th>提现时间</th>
                             <th>提现方式</th>
@@ -25,16 +25,16 @@
                     </thead>
                     <tbody class="middle-align">
                     {% if records %}
-                        {% for record in records %}
+                        {% for record in recordslist %}
                         <tr>
-                            <td>{{ record.username }}</td>
+{#                            <td>{{ record.username }}</td>#}
                             <td>{{ record.getmoney }}</td>
                             <td>{{ record.applyfortime }}</td>
                             <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
                             <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
                             <td>{% if record.paymentresult == 102 %}<span class="special-color">审核中...</span>{% elif record.paymentresult == 101 %}提现成功{% else %}提现失败{% endif%}</td>
                         </tr>
-                    {% endfor %}
+                        {% endfor %}
                     {% else %}
                         <tr>暂无提现记录</tr>
                     {% endif %}
