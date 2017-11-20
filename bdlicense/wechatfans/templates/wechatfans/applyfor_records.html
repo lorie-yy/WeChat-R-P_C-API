@@ -32,7 +32,11 @@
                             <td>{{ record.applyfortime }}</td>
                             <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
                             <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
-                            <td>{% if record.paymentresult == 102 %}<span class="special-color">审核中...</span>{% elif record.paymentresult == 101 %}提现成功{% else %}提现失败{% endif%}</td>
+                            <td>
+                                {% if record.paymentresult == 103 %}<span class="special-color">审核中...</span>
+                                {% elif record.paymentresult == 101 %}提现成功
+                                {% elif record.paymentresult == 102 %}提现失败{% endif%}
+                            </td>
                         </tr>
                         {% endfor %}
                     {% else %}
