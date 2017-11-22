@@ -101,15 +101,13 @@
                             'alipay_name':alipay_name,'alipaynum':alipaynum,
                             'company':company,'bank_name':bank_name,'banknum':banknum},
                         success: function(result){
-                            if(takemoney >= 100){
-                                if (result.result==1){
-                                    layer.msg('申请成功!',function(){
-                                        window.location.href="/wechatfans/applyfor_records"
-                                    })
-                                }else if(result.result==2){
-                                    layer.msg('正在审核,请不要重复提交申请!')
-                                }
-                            }else{
+                            if (result.result==1){
+                                layer.msg('申请成功!',function(){
+                                    window.location.href="/wechatfans/applyfor_records"
+                                })
+                            }else if(result.result==2){
+                                layer.msg('正在审核,请不要重复提交申请!')
+                            }else if(result.result==3){
                                 layer.msg('余额不足100元,不能申请!')
                             }
                         },
@@ -191,7 +189,7 @@
 {#                </div>#}
                 <div class="form-group button-group">
                     <div class="col-sm-4">
-                        <input type="submit" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="申请提现">
+                        <input type="submit" class="btn btn-info btn-tixian" {% if takemoney < 100 %}disabled {% endif %} style="padding: 6px 30px;" value="申请提现">
                     </div>
                     <div class="col-sm-2" style="float: right">
                         <a href="javascript:history.back()" class="btn btn-default" style="float: right">返回</a>

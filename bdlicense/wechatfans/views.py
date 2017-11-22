@@ -212,7 +212,8 @@ def showfans(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     print 'user_type',user_type
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -292,7 +293,8 @@ def support_takemoney(cloudid,shopid):
 def takemoney(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -309,7 +311,8 @@ def takemoney(request):
 def apply_for_withdrawal(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -327,6 +330,8 @@ def apply_for_withdrawal(request):
     history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
+    elif getmoney < 10000:
+        result=3
     else:
         # 创建表的实例对象(取款记录)
         applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
@@ -352,7 +357,8 @@ def apply_for_withdrawal(request):
 def applyfor_records(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -407,7 +413,8 @@ def closerecord(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     context ={}
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     try:
         id = request.GET.get('id')
@@ -584,7 +591,8 @@ def logout(request):
     if request.method == "GET":
         username = request.session.get('username','')
         user_type = request.session.get('user_type','')
-        if not username or user_type==0:
+        is_superuser = request.session.get('is_superuser','')
+        if not username or user_type==0 or is_superuser==1:
             return render(request,'license_login.html')
         request.session.flush()
         return render(request,'license_login.html')
@@ -595,7 +603,8 @@ def modify_password(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     uu = {'username': username}
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     if request.method == 'POST':
         username = request.session['username']
