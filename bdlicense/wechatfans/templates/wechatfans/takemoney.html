@@ -101,10 +101,16 @@
                             'alipay_name':alipay_name,'alipaynum':alipaynum,
                             'company':company,'bank_name':bank_name,'banknum':banknum,'flag':'{{ flag }}'},
                         success: function(result){
-                            if (result.result==1){
-                                layer.msg('申请成功!')
-                            }else if(result.result==2){
-                                layer.msg('正在审核,请不要重复提交申请!')
+                            if(takemoney >= 100){
+                                if (result.result==1){
+                                    layer.msg('申请成功!',function(){
+                                        window.location.href="/wechatfans/applyfor_records"
+                                    })
+                                }else if(result.result==2){
+                                    layer.msg('正在审核,请不要重复提交申请!')
+                                }
+                            }else{
+                                layer.msg('余额不足100元,不能申请!')
                             }
                         },
                         error:function(result){
@@ -129,6 +135,7 @@
                         <span class="btn special-color" id="totalmoney" style="cursor: default;">
                             <strong>{{ takemoney }} 元</strong>
                         </span>
+                        <span>(最低100元起)</span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -146,13 +153,13 @@
                     <div class="form-group">
                         <label for="alipay_name" class="col-sm-2 control-label">姓名 ：</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" name="alipay_name" id="alipay_name" placeholder="姓名">
+                            <input type="text" class="form-control" name="alipay_name" id="alipay_name" placeholder="请输入支付宝真实姓名">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="alipaynum" class="col-sm-2 control-label">支付宝账号 ：</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" name="alipaynum" id="alipaynum" placeholder="支付宝账号">
+                            <input type="text" class="form-control" name="alipaynum" id="alipaynum" placeholder="请输入支付宝账号">
                         </div>
                     </div>
                 </div>
@@ -160,19 +167,19 @@
                     <div class="form-group">
                         <label for="company" class="col-sm-2 control-label">公司名称 ：</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" name="company" id="company" placeholder="公司名称">
+                            <input type="text" class="form-control" name="company" id="company" placeholder="请输入公司名称">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="banknum" class="col-sm-2 control-label">银行卡号 ：</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" name="banknum" id="banknum" placeholder="银行卡号">
+                            <input type="text" class="form-control" name="banknum" id="banknum" placeholder="请输入19位银行卡号">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="bank_name" class="col-sm-2 control-label">开户行 ：</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" name="bank_name" id="bank_name" placeholder="开户行">
+                            <input type="text" class="form-control" name="bank_name" id="bank_name" placeholder="请输入开户行">
                         </div>
                     </div>
                 </div>

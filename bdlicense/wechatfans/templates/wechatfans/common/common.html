@@ -166,9 +166,11 @@
 <body>
 <script>
     $(function () {
+        //二级菜单
         $('#metismenu').metisMenu();
+        //菜单高亮
         var urlstr = location.href;
-        //alert(urlstr);
+{#        alert(urlstr);#}
         var urlstatus=false;
         $(".metismenu a").each(function () {
             if ((urlstr + '/').indexOf($(this).attr('href')) > -1 && $(this).attr('href') != '') {

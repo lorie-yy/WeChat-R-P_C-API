@@ -423,6 +423,7 @@ def applyfor_records(request):
     records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
     context ={}
     context['records']=records
+    context['username']=username
     recordslist=[]
 
     if records.count()==0:
