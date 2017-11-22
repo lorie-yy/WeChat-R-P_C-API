@@ -89,7 +89,8 @@ class IndexViewYun(View):
     def get(self, request):
         print "in IndexYunView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
@@ -115,7 +116,8 @@ class UserIndexView(View):
     def get(self, request):
         print "in IndexYunView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -123,7 +125,7 @@ class UserIndexView(View):
         all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
-            userSets = User.objects.all()
+            userSets = User.objects.filter(user_type=0)
             context['userSets'] = userSets
         else:
             print "not superuser,no right to display the user list"
@@ -143,10 +145,10 @@ def genZteCode():
                     "2017":"H","2018":"J","2019":"K","2020":"L","2021":"M","2022":"N","2023":"P",
                     "2024":"Q","2025":"R","2026":"T","2027":"U","2028":"V","2029":"W","2030":"X",
                     "2031":"Y"}
-    month_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+    month_context = {"01":"1","02":"2","03":"3","04":"4","05":"5","06":"6","07":"7","08":"8","09":"9",
                      "10":"A","11":"B","12":"C"}
 
-    day_context = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+    day_context = {"01":"1","02":"2","03":"3","04":"4","05":"5","06":"6","07":"7","08":"8","09":"9",
                      "10":"A","11":"B","12":"C","13":"D","14":"E","15":"F","16":"G","17":"H",
                    "18":"I","19":"J","20":"K","21":"L","22":"M","23":"N","24":"O","25":"P",
                    "26":"Q","27":"R","28":"S","29":"T","30":"U","31":"V"
@@ -222,53 +224,44 @@ class AddLicenseView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         print "in add license get func"
 
         context = {}
-
-        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
-        print "licenseParams count",licenseParams.count()
+        code_type = request.GET.get('code_type','0')
+        licenseParams = LicenseParams.objects.filter(product_type = 2)
         context['licenseParams'] = licenseParams
-
         cloudInfos = CloudInformation.objects.exclude(cloudName = "")
         context['cloudInfos'] = cloudInfos
         context['username'] = username
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['all_files'] = all_files
-        #
-        # if request.is_ajax():
-        #     print "in request.is_ajax() "
-        #     code_type = request.GET.get('code_type')
-        #     license_code = ""
-        #     if code_type == "0":
-        #         license_code = genBdCode("D")
-        #     elif code_type == "1":
-        #         license_code = genZteCode()
-        #     else:
-        #         return HttpResponse("error!!!!")
-        #     #response code
-        #     if license_code:
-        #         return HttpResponse(license_code)
-        #     else:
-        #         return HttpResponse("error!!!!")
+
         return render(request, 'license_added.html',context)
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         print "in add license post func"
         license_time = request.POST.get('license_time')
+        print license_time
         cloud_info = request.POST.get('cloud_info')
-        lower = request.POST.get('lower',0)
-        low = request.POST.get('low',0)
-        medium = request.POST.get('medium',0)
-        high = request.POST.get('high',0)
-        higher = request.POST.get('higher',0)
+        print cloud_info
+        licensePZ = request.POST.get('licensePZ','')
+        tmp_param_dic = {}
+        if licensePZ:
+            licenseParamList = str(licensePZ).split(",")
+            for l in licenseParamList:
+                tmp = l.split(":")
+                tmp_param_dic[tmp[0]] = tmp[1]
+            print tmp_param_dic
+
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
         work_num = request.POST.get('work_num','')
@@ -350,29 +343,24 @@ class AddLicenseView(View):
             workNum = WorkOrderNum(license_id=license.id,workOrderNum = work_num)
             workNum.save()
 
-            params_dic = {
-                "BCP8200-Lic-32":lower,
-                "BCP8200-Lic-64":low,
-                "BCP8200-Lic-128":medium,
-                "BCP8200-Lic-512":high,
-                "BCP8200-Lic-1024":higher
-            }
             basic_dict = {}
-            licensePas = LicenseParams.objects.all()
+            licensePas = LicenseParams.objects.filter(product_type=2)
             for licensePa in licensePas:
                 basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
             print basic_dict
             maxAPs = 0
             maxACs = 0
             maxUsers = 0
-            for key,value in params_dic.items():
-                if value in [0,'0']:
+            for key,value in tmp_param_dic.items():
+                if value in [0,"0"]:
                     continue
                 else:
                     wkInfo = WorkOrderInformation(
                         materiel_name=key,
                         materiel_count=value,
-                        workordernum_id=workNum.id)
+                        workordernum_id=workNum.id,
+                        materiel_type = 2
+                    )
                     wkInfo.save()
                     if key in basic_dict.keys():
                         maxAPs += int(value)*int(basic_dict[key][0])
@@ -401,7 +389,8 @@ class EditLicenseView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         print "in edit license get func"
 
@@ -414,6 +403,10 @@ class EditLicenseView(View):
             if license_id is not None:
                 licenseRecord = LicenseRecord.objects.get(id=int(license_id))
                 context['licenseRecord'] = licenseRecord
+                if str(licenseRecord.license_code).startswith("BCPLICF"):
+                    context['code_type'] = "0"
+                elif str(licenseRecord.license_code).startswith("ZTE"):
+                    context['code_type'] = "1"
 
                 if int(licenseRecord.licenseType) & 4:
                     context['data_id'] = 4
@@ -426,46 +419,16 @@ class EditLicenseView(View):
                 print wkOrders.count()
                 print "-id count()"
                 if wkOrders.count() >0:
-                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id)
+                    wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrders[0].id,
+                                                                  materiel_type=0)
                     for wkInfo in wkInfos:
                         get_dic[wkInfo.materiel_name] = wkInfo.materiel_count
-
-                    # basic_dic = {
-                    #         "BCP8200-Lic-32":3,
-                    #         "BCP8200-Lic-64":9,
-                    #         "BCP8200-Lic-128":"medium",
-                    #         "BCP8200-Lic-512":"high",
-                    #         "BCP8200-Lic-1024":"higher"
-                    #     }
-                    if "BCP8200-Lic-32" in get_dic.keys():
-                        context['lower'] = get_dic['BCP8200-Lic-32']
-                    else:
-                        context['lower'] = 0
-                    if "BCP8200-Lic-64" in get_dic.keys():
-                        context['low'] = get_dic['BCP8200-Lic-64']
-                    else:
-                        context['low'] = 0
-                    if "BCP8200-Lic-128" in get_dic.keys():
-                        context['mid'] = get_dic['BCP8200-Lic-128']
-                    else:
-                        context['mid'] = 0
-                    if "BCP8200-Lic-512" in get_dic.keys():
-                        context['high'] = get_dic['BCP8200-Lic-512']
-                    else:
-                        context['high'] = 0
-                    if "BCP8200-Lic-1024" in get_dic.keys():
-                        context['higher'] = get_dic['BCP8200-Lic-1024']
-                    else:
-                        context['higher'] = 0
-                    print context['higher']
-                    print context['high']
-                    print context['mid']
-                    print context['low']
-                    print context['lower']
+                    context['get_dic'] = json.dumps(get_dic)
+                    print type(json.dumps(get_dic))
         except Exception,e:
             print e
 
-        licenseParams = LicenseParams.objects.filter(product_type = 2,vesion_type=1)
+        licenseParams = LicenseParams.objects.filter(product_type = 2)
         context['licenseParams'] = licenseParams
 
         context['username'] = username
@@ -478,7 +441,8 @@ class EditLicenseView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         print "in edit license post func"
@@ -487,22 +451,17 @@ class EditLicenseView(View):
         license_id = params['license_id']
         data_license = request.POST.get('data_license','')
         charging_license = request.POST.get('charging_license','')
-
-        lower = request.POST.get('lower',0)
-        low = request.POST.get('low',0)
-        medium = request.POST.get('medium',0)
-        high = request.POST.get('high',0)
-        higher = request.POST.get('higher',0)
-
-        params_dic = {
-                "BCP8200-Lic-32":lower,
-                "BCP8200-Lic-64":low,
-                "BCP8200-Lic-128":medium,
-                "BCP8200-Lic-512":high,
-                "BCP8200-Lic-1024":higher
-            }
+        licensePZ = request.POST.get('licensePZ')
+        print licensePZ
+        tmp_param_dic = {}
+        if licensePZ:
+            licenseParamList = str(licensePZ).split(",")
+            for l in licenseParamList:
+                tmp = l.split(":")
+                tmp_param_dic[tmp[0]] = tmp[1]
+            print tmp_param_dic
         basic_dict = {}
-        licensePas = LicenseParams.objects.all()
+        licensePas = LicenseParams.objects.filter(product_type=2)
         for licensePa in licensePas:
             basic_dict[licensePa.cloudRankName] = [licensePa.maxAPs,licensePa.maxACs,licensePa.maxUsers]
         print basic_dict
@@ -513,8 +472,8 @@ class EditLicenseView(View):
         try:
             workNum = WorkOrderNum(license_id=license_id,workOrderNum = getRandom16Num())
             workNum.save()
-            for key,value in params_dic.items():
-                if value in [0,'0']:
+            for key,value in tmp_param_dic.items():
+                if value in [0,"0"]:
                     continue
                 else:
                     wkInfo = WorkOrderInformation(
@@ -529,8 +488,6 @@ class EditLicenseView(View):
                         maxUsers += int(value)*int(basic_dict[key][2])
                     else:
                         return HttpResponse("illegal license params")
-
-
             uu = {}
 
             licenseObj = LicenseRecord.objects.filter(id=int(license_id))
@@ -564,14 +521,16 @@ class EditLicenseView(View):
 class AddCloudView(View):
     def get(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
         context = {}
-        cloudUsers = User.objects.all()
+        cloudUsers = User.objects.filter(user_type=0)
+        # cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
@@ -582,7 +541,8 @@ class AddCloudView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         print "in add cloud post func"
         params = request.POST.copy()
@@ -626,7 +586,8 @@ class AddCloudView(View):
 class AddUserView(View):
     def get(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -648,7 +609,8 @@ class AddUserView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         params = request.POST.copy()
@@ -709,7 +671,8 @@ class UserCloudView(View):
     def get(self, request):
         print "in UserCloudView "
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         user_id = request.GET.get('id')
@@ -735,7 +698,8 @@ class KeyParamsView(View):
     def get(self, request):
         print "in IndexView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         key_id = request.GET.get('id',None)
@@ -1358,7 +1322,8 @@ class ModifyPasswordView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
@@ -1801,7 +1766,8 @@ class SysConfigView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
 
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         context = {}
         s_ips = SystemConfig.objects.filter(attribute= "server_ip")
@@ -1822,7 +1788,8 @@ class SysConfigView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
@@ -1854,7 +1821,8 @@ class or_query(View):
     def get(self, request):
         print "[in or_query]"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -1897,7 +1865,8 @@ class order_details(View):
         print "[order_details]"
         username = request.session.get('username')
         user_level = request.session.get('user_level')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -1933,7 +1902,8 @@ class TmpCloud(View):
         print "[tmp cloud]"
         username = request.session.get('username')
         user_level = request.session.get('user_level')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -1956,3 +1926,32 @@ class TmpCloud(View):
 
 
         return render(request,'tmp_cloud.html',context)
+
+class delCloudView(View):
+    def get(self,request):
+        print "[ delCloudView ]"
+        username = request.session.get('username')
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
+            return render(request,'license_login.html')
+
+        cloud_id = request.GET.get('cloud_id')
+        try:
+            if cloud_id:
+                licenses = LicenseRecord.objects.filter(cloudInfo_id=int(cloud_id))
+                if licenses.count() > 0:
+                    wkOrders = WorkOrderNum.objects.filter(license_id = licenses[0].id)
+                    for wkOrder in wkOrders:
+                        wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrder.id)
+                        for wkInfo in wkInfos:
+                            wkInfo.delete()
+                        wkOrder.delete()
+                    licenses[0].delete()
+
+                cloud = CloudInformation.objects.get(id=int(cloud_id))
+                cloud.delete()
+                return JsonResponse({"result":0})
+            else:
+                return JsonResponse({"result":1})
+        except Exception,e:
+            print e
