@@ -8,7 +8,9 @@ from django.shortcuts import render
 from django.template.context_processors import csrf
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+from django.contrib.auth import authenticate
 import requests
+import simplejson
 from adminbd.models import SystemConfig
 from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords, shop_discountinfo
 
@@ -98,7 +100,6 @@ class Getfansnumber(View):
                 if cloud.count() > 0:
                     type = cloud[0].thirdpart.type
                 userlist = TwechatOffline.objects.filter(orderid=oid,openid=openid)
-                print '444444444444',oid,openid
                 if userlist.count() == 0:
                     userlist = TwechatOffline(orderid=oid,
                                               openid=openid,
@@ -190,7 +191,7 @@ class Sub_detail(View):
                                           orderid=orderid,
                                           )
             if userobject.count() > 0:
-                userobject.update(price=price,gh_name=gh_name,settlement='1',apmac=apmac,authtime=sub_time)
+                userobject.update(price=price,gh_name=gh_name,apmac=apmac,authtime=sub_time)
             else:
                 to = TwechatOffline(openid=openid,
                                    orderid=orderid,
@@ -207,7 +208,7 @@ class Sub_detail(View):
 
 def showfans(request):
     path_url=request.build_absolute_uri('/wechatfans/sub_detail')
-    print '11111111111',path_url
+    print 'path_url',path_url
     requests.get(path_url)
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
@@ -226,7 +227,7 @@ def showfans(request):
     # 调用函数
     totalprofit,totalfans=earnings(cloudid,shopid,'','')
     todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
-    takemoney=support_takemoney(cloudid,shopid)
+    takemoney,flag=support_takemoney(cloudid,shopid)
 
     context['cloudid']=cloudid
     context['shopid']=shopid
@@ -237,7 +238,63 @@ def showfans(request):
     context['todayfans']=todayfans
     context['takemoney']=takemoney/100.00
     # return HttpResponse(json.dumps(context))
+    saveShopProfit(cloudid,shopid,totalprofit)
     return render(request, 'wechatfans/showfans.html',context)
+#保存收益
+def saveShopProfit(cloudid,shopid,totalprofit):
+    shopinfolist = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+    if shopinfolist.count() > 0:
+        cashed = shopinfolist[0].cashed
+        shopinfolist.update(totalincome=totalprofit,availablecash=totalprofit-cashed)
+    else:
+        sd = shop_discountinfo(cloudid=cloudid,
+                          shopid=shopid,
+                          totalincome=totalprofit,
+                          availablecash=totalprofit)
+        sd.save()
+
+#保存所有shop_discountinfo
+def saveShopDiscountInfo():
+    #获取所有云平台
+    cloudinfo = CloudInformation.objects.all()
+    for clouditem in cloudinfo:
+        #获取云平台下的商铺id
+        cloudid = clouditem.cloudNum
+        resultlist = TwechatOffline.objects.filter(cloudid=cloudid)
+        if resultlist.count() > 0:
+            shopidSet = resultlist.values('shopid')
+            shopidlist = []
+            for shopid in shopidSet:
+                #保存
+                _shopid = shopid['shopid']
+                shopidlist.append(_shopid)
+            shopidlist =  list(set(shopidlist))
+            print shopidlist
+            for itemshopid in shopidlist:
+                shopinfolist = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=itemshopid)
+                if shopinfolist.count() == 0:
+                    sd = shop_discountinfo(cloudid=cloudid,shopid=itemshopid)
+                    sd.save()
+                    totalprofit,totalfans=earnings(cloudid,itemshopid,'','')
+                    saveShopProfit(cloudid,itemshopid,totalprofit)
+
+
+
+def getAllProfit(request):
+    saveShopDiscountInfo()
+    shopinfolist = shop_discountinfo.objects.all()
+    resultlist = []
+    for shopinfo in shopinfolist:
+        tempdict = {}
+        tempdict['id'] = shopinfo.id
+        tempdict['cloudid'] = shopinfo.cloudid
+        tempdict['shopid'] = shopinfo.shopid
+        tempdict['discount'] = shopinfo.discount
+        tempdict['totalincome'] = shopinfo.totalincome
+        tempdict['availablecash'] = shopinfo.availablecash
+        tempdict['cashed'] = shopinfo.cashed
+        resultlist.append(tempdict)
+    return HttpResponse(json.dumps(resultlist))
 
 # 计算收益量和粉丝量
 def earnings(cloudid,shopid,startDate,enddate):
@@ -266,15 +323,19 @@ def earnings(cloudid,shopid,startDate,enddate):
     for item in userobject:
         # print 'usermac',item.id
         # print 'usermac',item.price
-        profit += int(float(item.price)*100)
-    profit_dis=int(profit*float(discount))
-    print '///////',profit_dis
+        profit += (float(item.price)*100)
+    profit_dis=int(profit*discount)
+    print 'profit_dis',profit_dis
 
     return profit_dis,userobject.count()
 
 # 可提现金额
 def support_takemoney(cloudid,shopid):
-    userobject = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid,settlement=1)
+    userobject = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid,settlement=1).order_by('-id')
+    if userobject.count() > 0:
+        flag = userobject[0].id
+    else:
+        flag = 0
     # 用户权限收益打折扣
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if discountlist.count()==0:
@@ -285,9 +346,9 @@ def support_takemoney(cloudid,shopid):
     for item in userobject:
         # print 'usermac',item.id
         # print 'usermac',item.price
-        profit += int(float(item.price)*100)
-    profit_dis=int(profit*float(discount))
-    return profit_dis
+        profit += (float(item.price)*100)
+    profit_dis=int(profit*discount)
+    return profit_dis,flag
 
 def takemoney(request):
     username = request.session.get('username','')
@@ -296,15 +357,16 @@ def takemoney(request):
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
-    takemoney=support_takemoney(cloudid,shopid)
+    takemoney,flag=support_takemoney(cloudid,shopid)
     context ={}
     context['cloudid']=cloudid
+    context['flag']=flag
     context['shopid']=shopid
     context['username']=username
     context['takemoney']=takemoney/100.00
     return render(request, 'wechatfans/takemoney.html',context)
 
-# 取款记录
+# 创建取款记录
 @csrf_exempt
 def apply_for_withdrawal(request):
     username = request.session.get('username','')
@@ -314,7 +376,9 @@ def apply_for_withdrawal(request):
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     paymentmode = request.POST.get('paymentmode')
-    getmoney = (request.POST.get('getmoney'))*100
+    flag = request.POST.get('flag')
+    getmoney = (float(request.POST.get('getmoney')))
+    getmoney = int(getmoney*100)
     # 支付宝
     alipay_name = request.POST.get('alipay_name')
     alipaynum = request.POST.get('alipaynum')
@@ -339,6 +403,7 @@ def apply_for_withdrawal(request):
         applyrecords.company = company
         applyrecords.bank_name = bank_name
         applyrecords.banknum = banknum
+        applyrecords.flag = flag
         applyrecords.save()
         result = 1
 
@@ -358,12 +423,14 @@ def applyfor_records(request):
     records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
     context ={}
     context['records']=records
+    recordslist=[]
 
     if records.count()==0:
         print '无记录'
     else:
         for record in records:
-            context['record']=record
+            # context['record']=record
+            tempdict={}
             cloudname = record.cloudname
             username = record.username
             paymentmode = record.paymentmode
@@ -373,14 +440,15 @@ def applyfor_records(request):
             getmoney = record.getmoney
             paymentresult = record.paymentresult
 
-            context['cloudname']=cloudname
-            context['username']=username
-            context['applyfortime']=applyfortime
-            context['paymentmode']=paymentmode
-            context['alipaynum']=alipaynum
-            context['banknum']=banknum
-            context['getmoney']=getmoney/100.00
-            context['paymentresult']=paymentresult
+            tempdict['cloudname']=cloudname
+            tempdict['username']=username
+            tempdict['applyfortime']=applyfortime
+            tempdict['paymentmode']=paymentmode
+            tempdict['alipaynum']=alipaynum
+            tempdict['banknum']=banknum
+            tempdict['getmoney']=getmoney/100.00
+            tempdict['paymentresult']=paymentresult
+            recordslist.append(tempdict)
 
     # 成功提现总计
     totalsuc=0
@@ -392,6 +460,7 @@ def applyfor_records(request):
             totalsuc += i.getmoney
             print '成功提现总计为',totalsuc
     context['totalsuc']=totalsuc/100.00
+    context['recordslist']=recordslist
     return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
@@ -637,6 +706,7 @@ def getalldiscountinfo(request):
         shopinfolist = []
         for shop in shopinfo:
             itemdict = {}
+            itemdict['id'] = shop.id
             itemdict['cloudid'] = shop.cloudid
             itemdict['shopid'] = shop.shopid
             itemdict['bonus'] = shop.discount
@@ -717,9 +787,45 @@ def getallApplyforWithdrawalRecords(request):
 class Transferaccounts(View):
     def get(self,request):
         id = request.GET.get('id')
-        time = request.GET.get('time')
-        print id,time
-        return JsonResponse({'res':0})
+        typeThird = request.GET.get('typeThird')
+        #取出申请记录
+        applyfor = ApplyforWithdrawalRecords.objects.filter(id=id)
+        result = {}
+        if applyfor.count() > 0:
+            if typeThird == 'pass':
+
+                cloudid = applyfor[0].cloudid
+                shopid = applyfor[0].shopid
+                getmoney = applyfor[0].getmoney
+                #是否符合提现条件
+                if isSafe(cloudid,shopid,getmoney):
+                    #判断转账方式，如需实现自动转账，在此码代码
+                    #现省略此步
+
+                    #确认转账成功后更新数据库
+                    #1.更新TwechatOffline
+                    oldflag = applyfor[0].flag
+                    twolist = TwechatOffline.objects.filter(id__lte=oldflag,cloudid=cloudid,shopid=shopid,settlement=1)
+                    twolist.update(settlement=2)
+
+                    #2.更新ApplyforWithdrawalRecords
+                    applyfor.update(paymentresult=101)
+
+                    #3.更新shop_discountinfo
+                    sdc = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+                    availablecash = sdc[0].availablecash-getmoney
+                    sdc.update(availablecash=availablecash,cashed=getmoney)
+                    result['res'] = 0
+                    result['msg'] = '转账成功'
+            elif typeThird == 'no':
+                #转账失败
+                applyfor.update(paymentresult=102)
+                result['res'] = 0
+                result['msg'] = '转账失败，拒绝转账'
+        else:
+            result['res'] = 1
+            result['msg'] = '转账失败，无申请记录'
+        return HttpResponse(json.dumps([result]))
 
 
 
@@ -733,4 +839,47 @@ def logout(request):
             return render(request,'license_login.html')
         request.session.flush()
         return render(request,'license_login.html')
+
+
+# 修改密码
+@csrf_exempt
+def modify_password(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    uu = {'username': username}
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    if request.method == 'POST':
+        username = request.session['username']
+        password = request.POST.get('password')
+        password_new1 = request.POST.get('password_new1')
+        print password,password_new1
+        try:
+
+            po = authenticate(username=username,password=password)
+            pn = User.objects.get(username=username)
+            if(po):
+                if(str(password) == str(password_new1)):
+                    result = 3
+                    uu = {'res': result}
+                    return JsonResponse(uu)
+
+                if(pn):
+                    result = 1
+                    result = simplejson.dumps(result)
+                    uu = {'res': result}
+                    pn.set_password(password_new1)
+                    pn.save()
+                    return JsonResponse(uu)
+                else:
+                    result = 0
+                    uu = {'res': result}
+                    return JsonResponse(uu)
+            else:
+                result = 2
+                uu = {'res': result}
+                return JsonResponse(uu)
+        except Exception, e:
+            print e
+    return render(request, 'wechatfans/modify_password.html',uu)
 

@@ -5,6 +5,7 @@ urlpatterns = patterns(
     '',
     url(r'^register',views.Register.as_view(), name='register'),
     url(r'^logout',views.logout, name='logout'),
+    url(r'^modify_password',views.modify_password, name='modify_password'),
     url(r'^getauthdata',views.TAuthdata.as_view(), name='getauthdata'),
     url(r'^getfansnumber',views.Getfansnumber.as_view(), name='getfansnumber'),
     url(r'^sub_detail',views.Sub_detail.as_view(), name='sub_detail'),
@@ -23,4 +24,5 @@ urlpatterns = patterns(
     url(r'^getallapplyforwithdrawalrecords',views.getallApplyforWithdrawalRecords, name='getallapplyforwithdrawalrecords'),
     url(r'^transferaccounts',views.Transferaccounts.as_view(), name='transferaccounts'),
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
+    url(r'^getallprofit',views.getAllProfit, name='getallprofit'),
 )
