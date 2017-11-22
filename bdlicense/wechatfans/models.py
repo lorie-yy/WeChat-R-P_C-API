@@ -23,7 +23,7 @@ class ThridPartyConfig(models.Model):
     type = models.CharField('类型',max_length=2,unique=True)
 
 class CloudConfig(models.Model):
-    cloudname = models.CharField('云平台名称',max_length=64)
+    cloudname = models.CharField('云平台名称',max_length=64,null=True,blank=True)
     cloudid = models.CharField('云平台编号',max_length=64)
     thirdpart = models.ForeignKey(ThridPartyConfig)
 
@@ -68,4 +68,7 @@ class cloudtouser(models.Model):
 class shop_discountinfo(models.Model):
     cloudid = models.CharField('云平台编号',max_length=64)
     shopid = models.IntegerField('云平台商铺id')
-    discount = models.FloatField('云平台商铺折扣')
+    discount = models.FloatField('云平台商铺折扣',default= 0.9)
+    totalincome = models.IntegerField('总收益(分)',default= 0)      #打折
+    availablecash = models.IntegerField('可提现(分)',default= 0)    #打折
+    cashed = models.IntegerField('已提现(分)',default= 0)           #打折

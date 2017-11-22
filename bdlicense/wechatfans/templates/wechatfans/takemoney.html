@@ -99,7 +99,7 @@
                         dataType: 'json',
                         data: {'paymentmode':paymentmode,'getmoney':takemoney,
                             'alipay_name':alipay_name,'alipaynum':alipaynum,
-                            'company':company,'bank_name':bank_name,'banknum':banknum},
+                            'company':company,'bank_name':bank_name,'banknum':banknum,'flag':'{{ flag }}'},
                         success: function(result){
                             if(takemoney >= 100){
                                 if (result.result==1){

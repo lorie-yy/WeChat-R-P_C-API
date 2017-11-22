@@ -17,5 +17,12 @@ urlpatterns = patterns(
     url(r'^savecloudconfig',views.saveCloudconfig, name='savecloudconfig'),
     url(r'^getcloudconfig',views.getCloudConfig, name='getcloudconfig'),
     url(r'^apply_for_withdrawal',views.apply_for_withdrawal, name='apply_for_withdrawal'),
+    url(r'^getshopid',views.getshopid, name='getshopid'),
+    url(r'^savediscountinfo',views.savediscountinfo, name='savediscountinfo'),
+    url(r'^getalldiscountinfo',views.getalldiscountinfo, name='getalldiscountinfo'),
+    url(r'^getapplyforwithdrawal',views.getApplyforWithdrawal, name='getapplyforwithdrawal'),
+    url(r'^getallapplyforwithdrawalrecords',views.getallApplyforWithdrawalRecords, name='getallapplyforwithdrawalrecords'),
+    url(r'^transferaccounts',views.Transferaccounts.as_view(), name='transferaccounts'),
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
+    url(r'^getallprofit',views.getAllProfit, name='getallprofit'),
 )
