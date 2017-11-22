@@ -368,6 +368,7 @@ def applyfor_records(request):
         for record in records:
             # context['record']=record
             tempdict={}
+            id = record.id
             cloudname = record.cloudname
             username = record.username
             paymentmode = record.paymentmode
@@ -377,6 +378,7 @@ def applyfor_records(request):
             getmoney = record.getmoney
             paymentresult = record.paymentresult
 
+            tempdict['id']=id
             tempdict['cloudname']=cloudname
             tempdict['username']=username
             tempdict['applyfortime']=applyfortime
@@ -398,6 +400,28 @@ def applyfor_records(request):
             print '成功提现总计为',totalsuc
     context['totalsuc']=totalsuc/100.00
     context['recordslist']=recordslist
+    return render(request, 'wechatfans/applyfor_records.html',context)
+
+# 关闭申请
+def closerecord(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    context ={}
+    if not username or user_type==0:
+        return render(request,'license_login.html')
+    try:
+        id = request.GET.get('id')
+        record=ApplyforWithdrawalRecords.objects.filter(id=id)
+        record.update(paymentresult=102)
+        print '***************record',record
+        result=1
+        context['result']=result
+        print result
+
+    except Exception,e:
+        result=2
+        context['result']=result
+    # return JsonResponse({'result':result})
     return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
