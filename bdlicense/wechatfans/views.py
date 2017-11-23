@@ -217,10 +217,10 @@ def showfans(request):
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
+    # 今天开始0点-结束24点
     startdate=datetime.datetime.now().strftime('%Y-%m-%d')
     startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
-    # endDate = datetime.datetime(int(startDate[:4]), int(startDate[5:7]), int(startDate[8:10]), 23, 59,59)
     print startDate
     print endDate
     context ={}
@@ -228,6 +228,38 @@ def showfans(request):
     totalprofit,totalfans=earnings(cloudid,shopid,'','')
     todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
     takemoney=support_takemoney(cloudid,shopid)
+
+    # x轴日期数据
+    today = datetime.date.today()
+    oneweekago = today - datetime.timedelta(7)
+    begin=request.GET.get('begin',oneweekago.strftime('%Y-%m-%d'))
+    end=request.GET.get('end',today.strftime('%Y-%m-%d'))
+    # begin=request.GET.get('begin','2017-11-11')
+    # end=request.GET.get('end','2017-11-17')
+    print 'begin,end',begin,end
+    xdata = []
+    dt = datetime.datetime.strptime(begin, "%Y-%m-%d")
+    date = begin[:]
+    while date <= end:
+        xdata.append(date)
+        # 日期间隔为一天
+        dt = dt + datetime.timedelta(1)
+        date = dt.strftime("%Y-%m-%d")
+    # 转义
+    context['xdata']=str(xdata).decode("unicode-escape")
+    print 'xdata',str(xdata).decode("unicode-escape")
+
+    # y轴收益数据
+    seriesdata=[]
+    for item in xdata:
+        # 某天开始0点-结束24点
+        startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
+        endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
+        dayprofit,dayfans=earnings(cloudid,shopid,startDate,endDate)
+        seriesdata.append(dayprofit/100.00)
+    # seriesdata=[5,10,6,12,16,22,12]
+    print 'seriesdata',seriesdata
+    context['seriesdata']=seriesdata
 
     context['cloudid']=cloudid
     context['shopid']=shopid
@@ -251,7 +283,6 @@ def earnings(cloudid,shopid,startDate,enddate):
                                           shopid=shopid,
                                         authtime__range=(startDate,enddate)
                                           )
-    print userobject
     # 用户权限收益打折扣
     shop_discount=shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
