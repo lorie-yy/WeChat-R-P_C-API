@@ -70,37 +70,45 @@
         <div class="panel">
             <div class="panel-heading">
                 <span>收益统计</span>
-                <div style="width: 25%;float: right;top: -10px;position: relative" class="input-group">
-                    <input class="form-control" type="text" placeholder="请选择日期范围" name="daterange" id="daterange">
-                    <span class="input-group-addon btn">查询</span>
-                </div>
+{#                <div style="width: 25%;float: right;top: -10px;position: relative" class="input-group">#}
+{#                    <input class="form-control" type="text" placeholder="请选择日期范围" name="daterange" id="daterange">#}
+{#                    <span class="input-group-addon btn">查询</span>#}
+{#                </div>#}
             </div>
             <div class="panel-body">
                 <div id="main" style="height:400px;"></div>
             </div>
             <script type="text/javascript">
                 $(function() {
-                    //日期范围选择器
-                    var daterange1=$('#daterange');
-                    daterange1.daterangepicker({
-                        autoUpdateInput: false,
-                        locale: {format: 'YYYY/MM/DD'}
-                    });
-                    daterange1.on('apply.daterangepicker', function(ev, picker) {
-                        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
-                    });                                                  //apply事件，格式如2017/05/04 - 2017/06/03
-                    daterange1.on('cancel.daterangepicker', function() {
-                        $(this).val('');                                //清除事件
-                    });
-                });
+{#                    //日期范围选择器#}
+{#                    var daterange1=$('#daterange');#}
+{#                    daterange1.daterangepicker({#}
+{#                        autoUpdateInput: false,#}
+{#                        locale: {format: 'YYYY-MM-DD'}#}
+{#                    });#}
+{#                    daterange1.on('apply.daterangepicker', function(ev, picker) {#}
+{#                        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));#}
+{#                    });#}
+{#                    daterange1.on('cancel.daterangepicker', function() {#}
+{#                        $(this).val('');#}
+{#                    });#}
+
+                    var xdata={{ xdata|safe }};
+                    var seriesdata={{ seriesdata }};
+{#                    console.log(xdata);#}
+{#                    console.log(seriesdata);#}
+{#                    var startDate=$('input[name=daterangepicker_start]').val();#}
+{#                    var endDate=$('input[name=daterangepicker_end]').val();#}
 
                 //折线图
 {#                $.ajax({#}
-{#                    type:"GET",#}
-{#                    url:"wechatfans:showfans",#}
-{#                    data:{'startDate': startDate, 'endDate': endDate },#}
-{#                    success:function(arg){#}
+{#                    url:"/wechatfans/showfans",#}
+{#                    type: 'GET',#}
+{#                    dataType: 'json',#}
+{#                    data: {'begin':startDate,'end':endDate},#}
+{#                    success:function(data){#}
                         // 基于准备好的dom，初始化echarts实例,定义折线图显示的位置对象
+                        // 初始化图表，注意这里不能用JQuery方式，否则会无法初始化
                         var myChart = echarts.init(document.getElementById('main'));
                         // 指定图表的配置项和数据
                         var option = {
@@ -113,7 +121,7 @@
                             },
                             //图例
                             legend: {
-                                data:['粉丝量','收益量']
+                                data:['收益量']
                             },
                             //网格位置
                             grid: {
@@ -123,47 +131,83 @@
                                 containLabel: true
                             },
                             toolbox: {
-                                feature: {
-                                    //保存为图片
-                                    saveAsImage: {}
+                                show : true,
+                                right:'20px',
+                                feature : {
+                                    mark : {show: true},
+                                    magicType : {show: true, type: ['bar','line']},
+                                    dataView : {show: true, readOnly: false},
+                                    restore : {show: true},
+                                    saveAsImage : {show: true}
                                 }
                             },
+                            calculable : true,
                             xAxis: {
                                 type: 'category',
                                 boundaryGap: false,
-                                data: ['周一','周二','周三','周四','周五','周六','周日']
+                                data: xdata,
+                                axisLabel:{
+{#                                    rotate:45, //刻度旋转45度角#}
+                                    textStyle:{
+{#                                        color:"#0099cc",#}
+                                        fontSize:12
+                                    }
+                                }
                             },
                             yAxis: {
-                                type: 'value'
+                                type: 'value',
+                                axisLabel : {
+                                    formatter: '{value} 元'
+                                }
                             },
                             series: [
-                                {
-                                    name:'粉丝量',
-                                    type:'line',
-                                    stack: '总量',
-                                    data:[120, 132, 101, 134, 90, 230, 210]
-                                },
+        {#                                {#}
+        {#                                    name:'粉丝量',#}
+        {#                                    type:'line',#}
+        {#                                    stack: '总量',#}
+        {#                                    data:[120, 132, 101, 134, 90, 230, 210]#}
+        {#                                },#}
                                 {
                                     name:'收益量',
                                     type:'line',
                                     stack: '总量',
-                                    data:[220, 182, 191, 234, 290, 330, 310]
+                                    data:seriesdata,
+                                    markPoint : {
+                                        data : [
+                                            {type : 'max', name: '最大值'},
+                                            {type : 'min', name: '最小值'}
+
+                                        ]
+                                    },
+                                    markLine : {
+                                        data : [
+                                            {type : 'average', name : '平均值'}
+                                        ]
+                                    },
+                                    //连线平滑
+                                    smooth:true,
+                                    itemStyle : {
+                                        normal : {
+                                            color:'#0099cc',
+{#                                            //连线样式#}
+{#                                            lineStyle:{#}
+{#                                                color:'#0099cc'#}
+{#                                            }#}
+                                        }
+                                    }
                                 }
                             ]
                         };
-                        // 使用刚指定的配置项和数据显示图表。
+                        // 最后使用指定的配置项和数据加载图表。
                         myChart.setOption(option);
+
+{#                    },#}
+{#                    error:function(data){#}
+{#                        layer.msg('error')#}
 {#                    }#}
 {#                });#}
-
-
-
-
-
+                });
             </script>
         </div>
-
     </div>
-</div>
-
 {% endblock %}
