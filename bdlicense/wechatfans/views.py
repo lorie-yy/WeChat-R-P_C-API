@@ -31,7 +31,7 @@ class TAuthdata(View):
     def get(self,request):
 
         cloudid = request.GET.get('cloudid','')
-        # shopid = request.GET.get('shopid','')
+        shopid = request.GET.get('shopid','')
         wechatsign = request.GET.get('wechatsign','')
         timestamp = request.GET.get('timestamp','')
         extend = request.GET.get('extend','')
@@ -48,16 +48,20 @@ class TAuthdata(View):
             timestamp = int(timestamp)
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
                 cloudconfig = CloudConfig.objects.filter(cloudid=cloudid)
-                if cloudconfig.count() > 0:
-                    context={}
-                    context['url'] = cloudconfig[0].thirdpart.url
+                if cloudconfig.count() == 0:
+                    tpc = ThridPartyConfig.objects.get(type='1')
+                    cloudconfig = CloudConfig(cloudid=cloudid,thirdpart=tpc)
+                    cloudconfig.save()
 
-                    if cloudconfig[0].thirdpart.type == '1':#bigwifi
-                        context['mac'] = mac
-                        context['bmac'] = bmac
-                        context['wlanacport'] = wlanacport
-                        context['portocol'] = portocol
-                        context['authUrl'] = authUrl
+                context={}
+                context['url'] = cloudconfig[0].thirdpart.url
+
+                if cloudconfig[0].thirdpart.type == '1':#bigwifi
+                    context['mac'] = mac
+                    context['bmac'] = bmac
+                    context['wlanacport'] = wlanacport
+                    context['portocol'] = portocol
+                    context['authUrl'] = authUrl
 
                     return render(request,'wechatfans/transition.html',context)
         return HttpResponse('签名失败')
@@ -107,6 +111,7 @@ class Getfansnumber(View):
                                               usermac=usermac,
                                               apmac=wlanapmac,
                                               type=type,
+                                              settlement='1',
                                               cloudid=cloudid)
                 else:
                     userlist.update(shopid=int(shopid),cloudid=cloudid)
@@ -139,10 +144,11 @@ class Sub_detail(View):
     def get(self,request):
         print '[INFO] call Sub_detail'
         import time
+        daterange = request.GET.get('daterange',1)
         url = 'https://api.weifenshi.cn/api/sub_detail'
         now = datetime.datetime.now().strftime('%Y-%m-%d')
-        # date = (datetime.datetime.now() - datetime.timedelta(days = 1)).strftime("%Y-%m-%d")
-        startdate = datetime.datetime.strptime('2017-03-03','%Y-%m-%d')
+        startdate = (datetime.datetime.now() - datetime.timedelta(days = daterange)).strftime("%Y-%m-%d")
+        # startdate = datetime.datetime.strptime('2017-03-03','%Y-%m-%d')
         enddate = now
         page = 1
         page_size = 100
@@ -232,11 +238,11 @@ def showfans(request):
     context['cloudid']=cloudid
     context['shopid']=shopid
     context['username']=username
-    context['todayprofit']=todayprofit/100.00
-    context['totalprofit']=totalprofit/100.00
+    context['todayprofit']=todayprofit/100.000
+    context['totalprofit']=totalprofit/100.000
     context['totalfans']=totalfans
     context['todayfans']=todayfans
-    context['takemoney']=takemoney/100.00
+    context['takemoney']=takemoney/100.000
     # return HttpResponse(json.dumps(context))
     saveShopProfit(cloudid,shopid,totalprofit)
     return render(request, 'wechatfans/showfans.html',context)
@@ -337,17 +343,29 @@ def support_takemoney(cloudid,shopid):
     else:
         flag = 0
     # 用户权限收益打折扣
+    shop_discount=shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
-    if discountlist.count()==0:
-        discount=0.9
+    if shop_discount.count()==0:
+        if discountlist.count()==0:
+            discount=0.9
+        else:
+            discount=discountlist[0].value
     else:
-        discount=discountlist[0].value
+        discount=shop_discount[0].discount
     profit=0
+
+    #申请提现的金额
+    record = ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
+    if record.count() > 0:
+        applyformoney = record[0].getmoney
+    else:
+        applyformoney = 0
     for item in userobject:
         # print 'usermac',item.id
         # print 'usermac',item.price
         profit += (float(item.price)*100)
-    profit_dis=int(profit*discount)
+    profit_dis=int(profit*discount)-applyformoney
+    print '可提现金额',profit_dis
     return profit_dis,flag
 
 def takemoney(request):
@@ -363,7 +381,7 @@ def takemoney(request):
     context['flag']=flag
     context['shopid']=shopid
     context['username']=username
-    context['takemoney']=takemoney/100.00
+    context['takemoney']=takemoney/100.000
     return render(request, 'wechatfans/takemoney.html',context)
 
 # 创建取款记录
@@ -447,7 +465,7 @@ def applyfor_records(request):
             tempdict['paymentmode']=paymentmode
             tempdict['alipaynum']=alipaynum
             tempdict['banknum']=banknum
-            tempdict['getmoney']=getmoney/100.00
+            tempdict['getmoney']=getmoney/100.000
             tempdict['paymentresult']=paymentresult
             recordslist.append(tempdict)
 
@@ -460,7 +478,7 @@ def applyfor_records(request):
         for i in suc:
             totalsuc += i.getmoney
             print '成功提现总计为',totalsuc
-    context['totalsuc']=totalsuc/100.00
+    context['totalsuc']=totalsuc/100.000
     context['recordslist']=recordslist
     return render(request, 'wechatfans/applyfor_records.html',context)
 
@@ -582,8 +600,8 @@ class Register(View):
     def get(self,request):
         user_name = request.GET.get('username')
         password = request.GET.get('password')
-        cloudid = request.GET.get('cloudid')
-        shopid = request.GET.get('shopid')
+        cloudid = request.GET.get('cloudid','')
+        shopid = request.GET.get('shopid','')
         super_user = request.GET.get('super_user',0)
 
         userSet = User.objects.filter(username=user_name)
@@ -594,14 +612,6 @@ class Register(View):
             return JsonResponse(uu)
 
         try:
-            user = User.objects.create_user(username=user_name,password=password,user_type = 1)
-            print "create new user"
-            print user
-            if super_user == 1:
-                user.is_superuser = 1
-            else:
-                user.is_superuser = 0
-            user.user_level = super_user
 
 
             clouduser = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
@@ -611,7 +621,7 @@ class Register(View):
                 user = User.objects.create_user(username=user_name,password=password,user_type = 1)
                 print "create new user and inital pwd is 123456"
                 print user
-                if super_user == 1:
+                if super_user in[1,'1'] :
                     user.is_superuser = 1
                 else:
                     user.is_superuser = 0
@@ -620,7 +630,7 @@ class Register(View):
                 user.is_staff = 1
                 user.is_active = 1
                 user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
-
+                user.save()
                 #cloud_user表
                 co = cloudtouser(username=user_name,password=password,cloudid=cloudid,shopid=shopid)
                 co.save()
@@ -647,11 +657,20 @@ def getshopid(request):
     '''
     try:
         cloudid = request.GET.get('cloudid','')
+        shopdiscountlist = shop_discountinfo.objects.filter(cloudid=cloudid)
+        shopiddiscountlist = shopdiscountlist.values('shopid')
+        oldshopidlist = []
+        for itemid in shopiddiscountlist:
+            oldshopidlist.append(itemid['shopid'])
+
         resultlist = TwechatOffline.objects.filter(cloudid=cloudid)
         shopidSet = resultlist.values('shopid')
         shopidlist = []
         for shopid in shopidSet:
-            shopidlist.append(shopid['shopid'])
+            if shopid['shopid'] in oldshopidlist:
+                pass
+            else:
+                shopidlist.append(shopid['shopid'])
         shopidlist =  list(set(shopidlist))
     except Exception,e:
         shopidlist = []
@@ -765,8 +784,6 @@ def getallApplyforWithdrawalRecords(request):
     applyfor = ApplyforWithdrawalRecords.objects.exclude(paymentresult=103)
     accesspaylist = []
     for applyforitem in applyfor:
-        #确认是否可提现
-        if isSafe(applyforitem.cloudid,applyforitem.shopid,applyforitem.getmoney):
             itemdict = {}
             itemdict['id'] = applyforitem.id
             itemdict['paymentmode'] = applyforitem.paymentmode
@@ -783,6 +800,7 @@ def getallApplyforWithdrawalRecords(request):
             itemdict['paymentresult'] = applyforitem.paymentresult
             itemdict['note'] = applyforitem.note
             accesspaylist.append(itemdict)
+            print applyforitem.id
     return HttpResponse(json.dumps(accesspaylist))
 
 class Transferaccounts(View):
@@ -815,6 +833,7 @@ class Transferaccounts(View):
                     #3.更新shop_discountinfo
                     sdc = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
                     availablecash = sdc[0].availablecash-getmoney
+                    getmoney = sdc[0].cashed+getmoney
                     sdc.update(availablecash=availablecash,cashed=getmoney)
                     result['res'] = 0
                     result['msg'] = '转账成功'
