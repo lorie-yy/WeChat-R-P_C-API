@@ -350,7 +350,7 @@ def earnings(cloudid,shopid,startDate,enddate):
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if shop_discount.count()==0:
         if discountlist.count()==0:
-            discount=0.9
+            discount=0.8
         else:
             discount=discountlist[0].value
     else:
@@ -378,7 +378,7 @@ def support_takemoney(cloudid,shopid):
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if shop_discount.count()==0:
         if discountlist.count()==0:
-            discount=0.9
+            discount=0.8
         else:
             discount=discountlist[0].value
     else:
