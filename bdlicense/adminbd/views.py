@@ -35,7 +35,8 @@ class IndexView(View):
     def get(self, request):
         print "in IndexView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
@@ -88,7 +89,8 @@ class IndexViewYun(View):
     def get(self, request):
         print "in IndexYunView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
@@ -114,7 +116,8 @@ class UserIndexView(View):
     def get(self, request):
         print "in IndexYunView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -122,7 +125,7 @@ class UserIndexView(View):
         all_files = request.session.get('all_files')
         context = {}
         if is_superuser:
-            userSets = User.objects.all()
+            userSets = User.objects.filter(user_type=0)
             context['userSets'] = userSets
         else:
             print "not superuser,no right to display the user list"
@@ -221,7 +224,8 @@ class AddLicenseView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         print "in add license get func"
 
@@ -240,7 +244,8 @@ class AddLicenseView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         print "in add license post func"
@@ -384,7 +389,8 @@ class EditLicenseView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         print "in edit license get func"
 
@@ -435,7 +441,8 @@ class EditLicenseView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         print "in edit license post func"
@@ -514,14 +521,16 @@ class EditLicenseView(View):
 class AddCloudView(View):
     def get(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
         context = {}
-        cloudUsers = User.objects.all()
+        cloudUsers = User.objects.filter(user_type=0)
+        # cloudUsers = User.objects.all()
         context['cloudUsers'] = cloudUsers
         context['username'] = username
         context['is_superuser'] = is_superuser
@@ -532,7 +541,8 @@ class AddCloudView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         print "in add cloud post func"
         params = request.POST.copy()
@@ -576,7 +586,8 @@ class AddCloudView(View):
 class AddUserView(View):
     def get(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -598,7 +609,8 @@ class AddUserView(View):
 
     def post(self,request):
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         params = request.POST.copy()
@@ -659,7 +671,8 @@ class UserCloudView(View):
     def get(self, request):
         print "in UserCloudView "
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         user_id = request.GET.get('id')
@@ -685,7 +698,8 @@ class KeyParamsView(View):
     def get(self, request):
         print "in IndexView"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         key_id = request.GET.get('id',None)
@@ -1298,7 +1312,8 @@ class ModifyPasswordView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
@@ -1749,7 +1764,8 @@ class SysConfigView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
 
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         context = {}
         s_ips = SystemConfig.objects.filter(attribute= "server_ip")
@@ -1770,7 +1786,8 @@ class SysConfigView(View):
         is_superuser = request.session.get('is_superuser')
         user_level = request.session.get('user_level')
         all_files = request.session.get('all_files')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
         context = {}
         context['username'] = username
@@ -1802,7 +1819,8 @@ class or_query(View):
     def get(self, request):
         print "[in or_query]"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -1845,7 +1863,8 @@ class order_details(View):
         print "[order_details]"
         username = request.session.get('username')
         user_level = request.session.get('user_level')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -1881,7 +1900,8 @@ class TmpCloud(View):
         print "[tmp cloud]"
         username = request.session.get('username')
         user_level = request.session.get('user_level')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         is_superuser = request.session.get('is_superuser')
@@ -1912,7 +1932,8 @@ class delCloudView(View):
     def get(self,request):
         print "[ delCloudView ]"
         username = request.session.get('username')
-        if not username:
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
