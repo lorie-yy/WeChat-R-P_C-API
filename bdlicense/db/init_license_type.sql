@@ -19,3 +19,7 @@ INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,v
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (8,'ZXSOF-CDS0014A','ZXWL OMCP-License',1024,4,20480,2,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (9,'ZXSOF-CDS0015A','ZXWL OMCP-License',32,1,640,2,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (10,'ZXSOF-CDS0016A','ZXWL OMCP-License',128,2,2560,2,2);
+
+
+
+INSERT INTO wechatfans_thridpartyconfig(id,thirdpartname,url,type) VALUES (1,'bigwifi','https://res.v5fans.com/boda/start.html?bid=1443',1);

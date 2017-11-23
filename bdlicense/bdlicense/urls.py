@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^$',IndexView.as_view(),name='index'),
     url(r'^adminbd/', include('adminbd.urls', namespace='adminbd')),
     url(r'^wechatfans/', include('wechatfans.urls', namespace='adminbd')),
+    url(r'^react/', include('react.urls', namespace='react')),
 ]
