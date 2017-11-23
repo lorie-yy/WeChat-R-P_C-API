@@ -403,7 +403,7 @@ class EditLicenseView(View):
             if license_id is not None:
                 licenseRecord = LicenseRecord.objects.get(id=int(license_id))
                 context['licenseRecord'] = licenseRecord
-                if str(licenseRecord.license_code).startswith("BCPLICF"):
+                if str(licenseRecord.license_code).startswith("BCPLIC"):
                     context['code_type'] = "0"
                 elif str(licenseRecord.license_code).startswith("ZTE"):
                     context['code_type'] = "1"
