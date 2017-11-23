@@ -766,13 +766,16 @@ def license_login(request):
             if user_pass.user_type == 0:#bdlicense用户
                 result['res'] = 1
             elif user_pass.user_type == 1:#商城用户
-                clouduser = cloudtouser.objects.filter(username=user_name)
-                if clouduser.count() > 0:
-                    request.session['sc_cloudid'] = clouduser[0].cloudid
-                    request.session['sc_shopid'] = clouduser[0].shopid
-                    result['res'] = 3
+                if user_pass.is_superuser == 1:#管理员
+                    result['res'] = 5
                 else:
-                    result['res'] = 4
+                    clouduser = cloudtouser.objects.filter(username=user_name)
+                    if clouduser.count() > 0:
+                        request.session['sc_cloudid'] = clouduser[0].cloudid
+                        request.session['sc_shopid'] = clouduser[0].shopid
+                        result['res'] = 3
+                    else:
+                        result['res'] = 4
             return JsonResponse(result)
         else:
             result['res'] = 0
