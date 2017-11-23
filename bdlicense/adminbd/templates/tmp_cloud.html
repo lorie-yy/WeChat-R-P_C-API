@@ -23,7 +23,7 @@
                         <thead >
                             <tr>
                                 <th>云平台编号</th>
-                                <th>购买时间</th>
+{#                                <th>购买时间</th>#}
                                 <th>使用状态</th>
                             </tr>
                         </thead>
@@ -31,12 +31,16 @@
                         {% if licenses %}
                             {% for license in licenses %}
                                 <tr>
-                                    <td>{{ license.cloudInfo.cloudNum }}</td>
-                                    <td>{{ license.cloudInfo.buyTime }}</td>
-                                    {% if license.is_valid == 2 %}
-                                        <td style="color: #00E676">正在使用</td>
-                                    {% else %}
-                                        <td style="color:red">已过期</td>
+                                    <td>{{ license.cloudInfo.tmpCloudNum }}</td>
+{#                                    <td>{{ license.cloudInfo.buyTime }}</td>#}
+                                    {% if license.cloudInfo.cloudNum == "" and license.is_valid == 2 %}
+                                        <td style="color: #3C763D">正在使用</td>
+                                    {% elif license.cloudInfo.cloudNum == "" and license.is_valid == 0 %}
+                                        <td style="color: #A94442">已过期</td>
+                                    {% elif license.cloudInfo.cloudNum != "" %}
+                                        <td style="color: #8A6D3B">已升级</td>
+                                        {% else %}
+                                        <td>未知状态</td>
                                     {% endif %}
                                 </tr>
                             {% endfor %}

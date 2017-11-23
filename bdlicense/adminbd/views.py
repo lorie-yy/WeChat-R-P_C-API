@@ -1356,9 +1356,9 @@ class RegisterLicenseView(View):
 
         print "get code from cloud ",license_code
         cloud_id = request.GET.get('cloud_id','')
-        if cloud_id[:4] == 'TEMP':
-            #先体验试用版，现在注册正式版本，将cloud_id置为空
-            cloud_id = ''
+        # if cloud_id[:4] == 'TEMP':
+        #     #先体验试用版，现在注册正式版本，将cloud_id置为空
+        #     cloud_id = ''
         licenses = LicenseRecord.objects.filter(license_code=license_code)
         if licenses:
             cur_time = datetime.now()
@@ -1373,44 +1373,13 @@ class RegisterLicenseView(View):
                 print "无效的license---已过期"
                 uu['result'] = 2
                 return JsonResponse(uu)
-            # paramsAll = licenses[0].licenseParam.all()
-            # print "params.count()",paramsAll.count()
-            # max_aps = 0
-            # max_acs = 0
-            # max_users = 0
-            # for p in paramsAll:
-            #     print p
-            #     print p.id,type(p.id)
-            #     if int(p.id) == 1:
-            #         max_aps += licenses[0].low_counts*p.maxAPs
-            #         max_acs += licenses[0].low_counts*p.maxACs
-            #         max_users += licenses[0].low_counts*p.maxUsers
-            #         print max_aps
-            #         print max_acs
-            #         print max_users
-            #     elif (p.id) == 2:
-            #         max_aps += licenses[0].mid_counts*p.maxAPs
-            #         max_acs += licenses[0].mid_counts*p.maxACs
-            #         max_users += licenses[0].mid_counts*p.maxUsers
-            #     elif (p.id) == 3:
-            #         max_aps += licenses[0].high_counts*p.maxAPs
-            #         max_acs += licenses[0].high_counts*p.maxACs
-            #         max_users += licenses[0].high_counts*p.maxUsers
-            # print "maxAPs=",max_aps
-            # print "max_acs=",max_acs
-            # print "max_users=",max_users
             license_type = licenses[0].licenseType
             new_cloud_id = licenses[0].cloudInfo.id
+            new_cloud_num = licenses[0].cloudInfo.cloudNum
             if cloud_id:
-                print "已注册过的云平台"
-                print licenses[0].cloudInfo_id
-                print int(cloud_id)
-                if licenses[0].cloudInfo_id != int(cloud_id):
-                    print "license的云平台和正在注册的云平台不相符"
-                    uu['result'] = 6
-                    return JsonResponse(uu)
-                else:
-                    print "该license属于该云平台"
+                print "云平台的编号存在，可能为正式版本也可能为试用版本"
+                if cloud_id[:4] == 'TEMP':
+                    print "试用版本的云平台，请求注册正式版本"
                     if licenses[0].license_status == 1:
                         print "激活的license"
                         if licenses[0].is_valid == 0:
@@ -1418,7 +1387,21 @@ class RegisterLicenseView(View):
                             uu['result'] = 2
                             return JsonResponse(uu)
                         elif licenses[0].is_valid == 2:
-                            print "有效license在该云平台再一次注册（包括增值版本）"
+                            print "该license已注册--同一个license在不同的云平台注册"
+                            uu['result'] = 6
+                            return JsonResponse(uu)
+                        else:
+                            print "请求通过，正常注册"
+                            buss_cloud = CloudInformation.objects.filter(id=new_cloud_id)
+                            buss_cloud.update(tmpCloudNum=cloud_id)
+
+                            tmp_cloud = CloudInformation.objects.filter(tmpCloudNum=cloud_id,cloudNum="")
+                            tmp_cloud.update(cloudNum=new_cloud_num)
+
+                            print "更新试用云平台编号成功"
+                            # if tmp_cloud.count() > 0:
+                            #     tmp_cloud.delete()
+                            #     print "删除试用编号记录成功"
                             uu['license_type'] = license_type
                             uu['cloud_id'] = new_cloud_id
                             uu['result'] = 0
@@ -1428,18 +1411,43 @@ class RegisterLicenseView(View):
                             uu['max_aps'] = licenses[0].maxAps
                             uu['max_acs'] = licenses[0].maxAcs
                             uu['max_users'] = licenses[0].maxUsers
-                            # uu['max_aps'] = licenses[0].low_counts*32+licenses[0].mid_counts*128+licenses[0].high_counts*1024
-                            # uu['max_acs'] = licenses[0].low_counts*1+licenses[0].mid_counts*1+licenses[0].high_counts*4
-                            # uu['max_users'] = licenses[0].low_counts*640+licenses[0].mid_counts*2560+licenses[0].high_counts*20480
                             return JsonResponse(uu)
-                        else:
-                            print "license.is_valid not eq 0 or 2,this is impossible"
-                            uu['result'] = 9
-                            return JsonResponse(uu)
-                    else:
-                        print "未激活的license"
-                        uu['result'] = 3
+                else:
+                    print "已注册过的云平台"
+                    print licenses[0].cloudInfo_id
+                    print int(cloud_id)
+                    if licenses[0].cloudInfo_id != int(cloud_id):
+                        print "license的云平台和正在注册的云平台不相符"
+                        uu['result'] = 6
                         return JsonResponse(uu)
+                    else:
+                        print "该license属于该云平台"
+                        if licenses[0].license_status == 1:
+                            print "激活的license"
+                            if licenses[0].is_valid == 0:
+                                print "无效的license"
+                                uu['result'] = 2
+                                return JsonResponse(uu)
+                            elif licenses[0].is_valid == 2:
+                                print "有效license在该云平台再一次注册（包括增值版本）"
+                                uu['license_type'] = license_type
+                                uu['cloud_id'] = new_cloud_id
+                                uu['result'] = 0
+                                random_num = getRandom16Num()
+                                licenses.update(random_num=random_num)
+                                uu['random_num'] = random_num
+                                uu['max_aps'] = licenses[0].maxAps
+                                uu['max_acs'] = licenses[0].maxAcs
+                                uu['max_users'] = licenses[0].maxUsers
+                                return JsonResponse(uu)
+                            else:
+                                print "license.is_valid not eq 0 or 2,this is impossible"
+                                uu['result'] = 9
+                                return JsonResponse(uu)
+                        else:
+                            print "未激活的license"
+                            uu['result'] = 3
+                            return JsonResponse(uu)
             else:
                 print "未注册过的云平台，新的云平台"
                 if licenses[0].license_status == 1:
@@ -1517,7 +1525,7 @@ class TrialRegisterLicenseView(View):
         print "云平台发送试用版license过期时间为：",license_expire_time
         uu ={}
 
-        repeatCloudObj = CloudInformation.objects.filter(cloudNum=cloud_num)
+        repeatCloudObj = CloudInformation.objects.filter(tmpCloudNum=cloud_num)
         if repeatCloudObj.count() > 0 :
             repeatLicenseObj = LicenseRecord.objects.filter(cloudInfo_id=repeatCloudObj[0].id)
             if repeatLicenseObj.count() > 0:
@@ -1537,7 +1545,7 @@ class TrialRegisterLicenseView(View):
             # print "typeObj"
             # typeObj.save()
 
-            cloudObj = CloudInformation(cloudNum=cloud_num)
+            cloudObj = CloudInformation(tmpCloudNum=cloud_num)
             print "cloud num %s"%cloud_num
             cloudObj.save()
 
@@ -1883,12 +1891,15 @@ class TmpCloud(View):
         if is_superuser:
             licenses = LicenseRecord.objects.filter(license_code__istartswith="TEMP")
             context['licenses'] = licenses
+            # tmp_cloud = CloudInformation.objects.exclude(tmpCloudNum="")
+            # context['tmp_cloud'] = tmp_cloud
         else:
-            user = User.objects.get(username=username)
-            cloudInfos = user.cloudinformation_set.filter(cloudNum__istartswith="TEMP:")
-            for cloudInfo in cloudInfos:
-                licenses = LicenseRecord.objects.filter(cloudInfo_id=cloudInfo.id)
-                context['licenses'] = licenses
+            return HttpResponse("no rights!!!")
+            # user = User.objects.get(username=username)
+            # cloudInfos = user.cloudinformation_set.filter(cloudName="").exclude(tmpCloudNum= "")
+            # for cloudInfo in cloudInfos:
+            #     licenses = LicenseRecord.objects.filter(cloudInfo_id=cloudInfo.id)
+            #     context['licenses'] = licenses
         context['is_superuser'] = is_superuser
         context['user_level'] = user_level
         context['username'] = username
