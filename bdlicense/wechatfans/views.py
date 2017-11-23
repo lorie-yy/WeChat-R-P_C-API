@@ -264,7 +264,6 @@ def showfans(request):
         endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
         dayprofit,dayfans=earnings(cloudid,shopid,startDate,endDate)
         seriesdata.append(dayprofit/100.00)
-    # seriesdata=[5,10,6,12,16,22,12]
     print 'seriesdata',seriesdata
     context['seriesdata']=seriesdata
 

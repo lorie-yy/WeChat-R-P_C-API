@@ -95,8 +95,8 @@
 
                     var xdata={{ xdata|safe }};
                     var seriesdata={{ seriesdata }};
-                    console.log(xdata);
-                    console.log(seriesdata);
+{#                    console.log(xdata);#}
+{#                    console.log(seriesdata);#}
 {#                    var startDate=$('input[name=daterangepicker_start]').val();#}
 {#                    var endDate=$('input[name=daterangepicker_end]').val();#}
 
@@ -107,7 +107,6 @@
 {#                    dataType: 'json',#}
 {#                    data: {'begin':startDate,'end':endDate},#}
 {#                    success:function(data){#}
-{#                        var seriesdata=[220, 182, 191, 234, 290, 330, 310];#}
                         // 基于准备好的dom，初始化echarts实例,定义折线图显示的位置对象
                         // 初始化图表，注意这里不能用JQuery方式，否则会无法初始化
                         var myChart = echarts.init(document.getElementById('main'));
@@ -132,11 +131,17 @@
                                 containLabel: true
                             },
                             toolbox: {
-                                feature: {
-                                    //保存为图片
-        {#                                    saveAsImage: {}#}
+                                show : true,
+                                right:'20px',
+                                feature : {
+                                    mark : {show: true},
+                                    magicType : {show: true, type: ['bar','line']},
+                                    dataView : {show: true, readOnly: false},
+                                    restore : {show: true},
+                                    saveAsImage : {show: true}
                                 }
                             },
+                            calculable : true,
                             xAxis: {
                                 type: 'category',
                                 boundaryGap: false,
@@ -150,7 +155,10 @@
                                 }
                             },
                             yAxis: {
-                                type: 'value'
+                                type: 'value',
+                                axisLabel : {
+                                    formatter: '{value} 元'
+                                }
                             },
                             series: [
         {#                                {#}
@@ -163,7 +171,30 @@
                                     name:'收益量',
                                     type:'line',
                                     stack: '总量',
-                                    data:seriesdata
+                                    data:seriesdata,
+                                    markPoint : {
+                                        data : [
+                                            {type : 'max', name: '最大值'},
+                                            {type : 'min', name: '最小值'}
+
+                                        ]
+                                    },
+                                    markLine : {
+                                        data : [
+                                            {type : 'average', name : '平均值'}
+                                        ]
+                                    },
+                                    //连线平滑
+                                    smooth:true,
+                                    itemStyle : {
+                                        normal : {
+                                            color:'#0099cc',
+{#                                            //连线样式#}
+{#                                            lineStyle:{#}
+{#                                                color:'#0099cc'#}
+{#                                            }#}
+                                        }
+                                    }
                                 }
                             ]
                         };
@@ -175,68 +206,8 @@
 {#                        layer.msg('error')#}
 {#                    }#}
 {#                });#}
-{#                //静态数据#}
-{#                // 基于准备好的dom，初始化echarts实例,定义折线图显示的位置对象#}
-{#                var myChart = echarts.init(document.getElementById('main'));#}
-{#                // 指定图表的配置项和数据#}
-{#                var option = {#}
-{#                    title: {#}
-{#                        //text: '粉丝收益统计'#}
-{#                    },#}
-{#                    //工具提示#}
-{#                    tooltip: {#}
-{#                        trigger: 'axis'#}
-{#                    },#}
-{#                    //图例#}
-{#                    legend: {#}
-{#                        data:['粉丝量','收益量']#}
-{#                    },#}
-{#                    //网格位置#}
-{#                    grid: {#}
-{#                        left: '3%',#}
-{#                        right: '4%',#}
-{#                        bottom: '3%',#}
-{#                        containLabel: true#}
-{#                    },#}
-{#                    toolbox: {#}
-{#                        feature: {#}
-{#                            //保存为图片#}
-{#                                    saveAsImage: {}#}
-{#                        }#}
-{#                    },#}
-{#                    xAxis: {#}
-{#                        type: 'category',#}
-{#                        boundaryGap: false,#}
-{#                        data: ['周一','周二','周三','周四','周五','周六','周日']#}
-{#                    },#}
-{#                    yAxis: {#}
-{#                        type: 'value'#}
-{#                    },#}
-{#                    series: [#}
-{#                        {#}
-{#                            name:'粉丝量',#}
-{#                            type:'line',#}
-{#                            stack: '总量',#}
-{#                            data:[120, 132, 101, 134, 90, 230, 210]#}
-{#                        },#}
-{#                        {#}
-{#                            name:'收益量',#}
-{#                            type:'line',#}
-{#                            stack: '总量',#}
-{#                            data:[220, 182, 191, 234, 290, 330, 310]#}
-{#                        }#}
-{#                    ]#}
-{#                };#}
-{#                // 使用刚指定的配置项和数据显示图表。#}
-{#                myChart.setOption(option);#}
                 });
-
-
-
-
             </script>
         </div>
-
     </div>
-
 {% endblock %}
