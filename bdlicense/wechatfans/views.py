@@ -17,6 +17,8 @@ from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords, shop_di
 from adminbd.models import CloudInformation
 from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig, cloudtouser
 import time
+from wechatfans.serializers import shop_discountinfoSerializer
+
 
 def md5(str):
     import hashlib
@@ -316,23 +318,34 @@ def saveShopDiscountInfo():
                     totalprofit,totalfans=earnings(cloudid,itemshopid,'','')
                     saveShopProfit(cloudid,itemshopid,totalprofit)
 
-
+def getCloudProfit(request):
+    try:
+        cloudid = request.GET.get('cloudid')
+    except Exception,e:
+        return HttpResponse(status=404)
+    shopinfolist = shop_discountinfo.objects.filter(cloudid=cloudid)
+    serializer = shop_discountinfoSerializer(shopinfolist, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 def getAllProfit(request):
     saveShopDiscountInfo()
+
+    # shopinfolist = shop_discountinfo.objects.all()
+    # resultlist = []
+    # for shopinfo in shopinfolist:
+    #     tempdict = {}
+    #     tempdict['id'] = shopinfo.id
+    #     tempdict['cloudid'] = shopinfo.cloudid
+    #     tempdict['shopid'] = shopinfo.shopid
+    #     tempdict['discount'] = shopinfo.discount
+    #     tempdict['totalincome'] = shopinfo.totalincome
+    #     tempdict['availablecash'] = shopinfo.availablecash
+    #     tempdict['cashed'] = shopinfo.cashed
+    #     resultlist.append(tempdict)
     shopinfolist = shop_discountinfo.objects.all()
-    resultlist = []
-    for shopinfo in shopinfolist:
-        tempdict = {}
-        tempdict['id'] = shopinfo.id
-        tempdict['cloudid'] = shopinfo.cloudid
-        tempdict['shopid'] = shopinfo.shopid
-        tempdict['discount'] = shopinfo.discount
-        tempdict['totalincome'] = shopinfo.totalincome
-        tempdict['availablecash'] = shopinfo.availablecash
-        tempdict['cashed'] = shopinfo.cashed
-        resultlist.append(tempdict)
-    return HttpResponse(json.dumps(resultlist))
+    serializer = shop_discountinfoSerializer(shopinfolist, many=True)
+    return JsonResponse(serializer.data, safe=False)
+    # return HttpResponse(json.dumps(resultlist))
 
 # 计算收益量和粉丝量
 def earnings(cloudid,shopid,startDate,enddate):
@@ -608,6 +621,7 @@ def saveCloudconfig(request):
     operationtype = request.GET.get('typeThird','')
     result = {}
     result['msg']='操作成功'
+    result['error']=0
     cloudinfo = CloudInformation.objects.filter(cloudNum=cloudid)
     if cloudinfo.count() > 0:
         cloudname = cloudinfo[0].cloudName
@@ -621,7 +635,7 @@ def saveCloudconfig(request):
             if iteminfo.count() == 0:
                 iteminfo = CloudConfig(cloudname = cloudname,thirdpart=thirdpart[0],cloudid=cloudid)
                 iteminfo.save()
-                result['error']=0
+
             else:
                 result['error']=3
                 result['msg']='新增失败'
@@ -631,14 +645,14 @@ def saveCloudconfig(request):
                 result['msg']='编辑失败'
             else:
                 iteminfo.update(thirdpart=thirdpart[0])
-                result['error']=0
+
         elif operationtype == 'del':
             if iteminfo.count() == 0:
                 result['error']=5
                 result['msg']='删除失败'
             else:
                 iteminfo.delete()
-                result['error']=0
+
     # except Exception,e:
     #     result['error']=2
     #     result['msg']= e
@@ -805,6 +819,7 @@ def getApplyforWithdrawal(request):
     '''
     applyfor = ApplyforWithdrawalRecords.objects.filter(paymentresult=103)
     accesspaylist = []
+    saveShopDiscountInfo()
     for applyforitem in applyfor:
         #确认是否可提现
         if isSafe(applyforitem.cloudid,applyforitem.shopid,applyforitem.getmoney):
