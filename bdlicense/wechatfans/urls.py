@@ -25,4 +25,5 @@ urlpatterns = patterns(
     url(r'^transferaccounts',views.Transferaccounts.as_view(), name='transferaccounts'),
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
     url(r'^getallprofit',views.getAllProfit, name='getallprofit'),
+    url(r'^getcloudprofit',views.getCloudProfit, name='getcloudprofit'),
 )
