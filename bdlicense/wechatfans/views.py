@@ -221,14 +221,15 @@ def showfans(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     print 'user_type',user_type
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
+    # 今天开始0点-结束24点
     startdate=datetime.datetime.now().strftime('%Y-%m-%d')
     startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
-    # endDate = datetime.datetime(int(startDate[:4]), int(startDate[5:7]), int(startDate[8:10]), 23, 59,59)
     print startDate
     print endDate
     context ={}
@@ -236,6 +237,37 @@ def showfans(request):
     totalprofit,totalfans=earnings(cloudid,shopid,'','')
     todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
     takemoney,flag=support_takemoney(cloudid,shopid)
+
+    # x轴日期数据
+    today = datetime.date.today()
+    oneweekago = today - datetime.timedelta(7)
+    begin=request.GET.get('begin',oneweekago.strftime('%Y-%m-%d'))
+    end=request.GET.get('end',today.strftime('%Y-%m-%d'))
+    # begin=request.GET.get('begin','2017-11-11')
+    # end=request.GET.get('end','2017-11-17')
+    print 'begin,end',begin,end
+    xdata = []
+    dt = datetime.datetime.strptime(begin, "%Y-%m-%d")
+    date = begin[:]
+    while date <= end:
+        xdata.append(date)
+        # 日期间隔为一天
+        dt = dt + datetime.timedelta(1)
+        date = dt.strftime("%Y-%m-%d")
+    # 转义
+    context['xdata']=str(xdata).decode("unicode-escape")
+    print 'xdata',str(xdata).decode("unicode-escape")
+
+    # y轴收益数据
+    seriesdata=[]
+    for item in xdata:
+        # 某天开始0点-结束24点
+        startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
+        endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
+        dayprofit,dayfans=earnings(cloudid,shopid,startDate,endDate)
+        seriesdata.append(dayprofit/100.00)
+    print 'seriesdata',seriesdata
+    context['seriesdata']=seriesdata
 
     context['cloudid']=cloudid
     context['shopid']=shopid
@@ -326,13 +358,12 @@ def earnings(cloudid,shopid,startDate,enddate):
                                           shopid=shopid,
                                         authtime__range=(startDate,enddate)
                                           )
-    print userobject
     # 用户权限收益打折扣
     shop_discount=shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if shop_discount.count()==0:
         if discountlist.count()==0:
-            discount=0.9
+            discount=0.8
         else:
             discount=discountlist[0].value
     else:
@@ -360,7 +391,7 @@ def support_takemoney(cloudid,shopid):
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if shop_discount.count()==0:
         if discountlist.count()==0:
-            discount=0.9
+            discount=0.8
         else:
             discount=discountlist[0].value
     else:
@@ -384,7 +415,8 @@ def support_takemoney(cloudid,shopid):
 def takemoney(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -402,7 +434,8 @@ def takemoney(request):
 def apply_for_withdrawal(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -421,6 +454,8 @@ def apply_for_withdrawal(request):
     history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
+    elif getmoney < 10000:
+        result=3
     else:
         # 创建表的实例对象(取款记录)
         applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
@@ -447,7 +482,8 @@ def apply_for_withdrawal(request):
 def applyfor_records(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
@@ -463,6 +499,7 @@ def applyfor_records(request):
         for record in records:
             # context['record']=record
             tempdict={}
+            id = record.id
             cloudname = record.cloudname
             username = record.username
             paymentmode = record.paymentmode
@@ -472,6 +509,7 @@ def applyfor_records(request):
             getmoney = record.getmoney
             paymentresult = record.paymentresult
 
+            tempdict['id']=id
             tempdict['cloudname']=cloudname
             tempdict['username']=username
             tempdict['applyfortime']=applyfortime
@@ -493,6 +531,29 @@ def applyfor_records(request):
             print '成功提现总计为',totalsuc
     context['totalsuc']=totalsuc/100.000
     context['recordslist']=recordslist
+    return render(request, 'wechatfans/applyfor_records.html',context)
+
+# 关闭申请
+def closerecord(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    context ={}
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
+        return render(request,'license_login.html')
+    try:
+        id = request.GET.get('id')
+        record=ApplyforWithdrawalRecords.objects.filter(id=id)
+        record.update(paymentresult=102)
+        print '***************record',record
+        result=1
+        context['result']=result
+        print result
+
+    except Exception,e:
+        result=2
+        context['result']=result
+    # return JsonResponse({'result':result})
     return render(request, 'wechatfans/applyfor_records.html',context)
 
 def getThirdpartInfo(request):
@@ -870,7 +931,8 @@ def logout(request):
     if request.method == "GET":
         username = request.session.get('username','')
         user_type = request.session.get('user_type','')
-        if not username or user_type==0:
+        is_superuser = request.session.get('is_superuser','')
+        if not username or user_type==0 or is_superuser==1:
             return render(request,'license_login.html')
         request.session.flush()
         return render(request,'license_login.html')
@@ -882,7 +944,8 @@ def modify_password(request):
     username = request.session.get('username','')
     user_type = request.session.get('user_type','')
     uu = {'username': username}
-    if not username or user_type==0:
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     if request.method == 'POST':
         username = request.session['username']

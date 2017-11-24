@@ -24,6 +24,7 @@ urlpatterns = patterns(
     url(r'^getallapplyforwithdrawalrecords',views.getallApplyforWithdrawalRecords, name='getallapplyforwithdrawalrecords'),
     url(r'^transferaccounts',views.Transferaccounts.as_view(), name='transferaccounts'),
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
+    url(r'closerecord',views.closerecord, name='closerecord'),
     url(r'^getallprofit',views.getAllProfit, name='getallprofit'),
     url(r'^getcloudprofit',views.getCloudProfit, name='getcloudprofit'),
 )
