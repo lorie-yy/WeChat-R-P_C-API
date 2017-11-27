@@ -57,6 +57,7 @@ class CloudInformation(models.Model):
     contacts = models.CharField('联系人',max_length=255,blank=True, null=True)
     phone = models.CharField('联系电话',max_length=255,blank=True, null=True)
     cloudNum = models.CharField('云平台编号',max_length=255,default='', blank=False)
+    tmpCloudNum = models.CharField('临时云平台编号',max_length=255,default='', blank=False)
 
     class Meta:
         verbose_name='云平台信息'
