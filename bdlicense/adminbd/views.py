@@ -1953,12 +1953,19 @@ class DelTmpCloud(View):
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
-        res = del_cloud(cloud_id)
-        if res == 0:
-            return JsonResponse({"result":0})
+        if cloud_id:
+            cloud = CloudInformation.objects.filter(id=cloud_id)
+            if cloud.count() > 0:
+                if cloud[0].cloudNum != "" and cloud[0].tmpCloudNum != "":
+                    #正式云平台,不能删除
+                    return JsonResponse({"result":1})
+            res = del_cloud(cloud_id)
+            if res == 0:
+                return JsonResponse({"result":0})
+            else:
+                return JsonResponse({"result":1})
         else:
             return JsonResponse({"result":1})
-
 def del_cloud(cloud_id):
     result = 1
     try:
