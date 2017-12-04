@@ -36,4 +36,5 @@ urlpatterns = patterns(
     url(r'^or_query',views.or_query.as_view(), name='or_query'),
     url(r'^order_details',views.order_details.as_view(), name='order_details'),
     url(r'^tmp_cloud',views.TmpCloud.as_view(), name='tmp_cloud'),
+    url(r'^del_tmp_cloud',views.DelTmpCloud.as_view(), name='del_tmp_cloud'),
 )
