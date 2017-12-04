@@ -44,7 +44,8 @@ INSTALLED_APPS = (
 )
 
 REST_FRAMEWORK = {
-    'PAGE_SIZE': 10
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 8,
 }
 
 MIDDLEWARE_CLASSES = (
