@@ -97,7 +97,6 @@
                         data:{cloud_id:cloud_id},
                         type:"GET",
                         success:function(data) {
-                            alert(data.result);
                             if(data.result == 0){
                                 SuccessWarning("删除成功！",reloadPage);
                             }else{
