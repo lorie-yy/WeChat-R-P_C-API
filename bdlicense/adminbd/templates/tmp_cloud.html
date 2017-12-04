@@ -57,7 +57,7 @@
                                     {% elif license.cloudInfo.cloudNum == "" and license.is_valid == 0 %}
                                         <td style="color: #A94442">已过期</td>
                                     {% elif license.cloudInfo.cloudNum != "" %}
-                                        <td style="color: #8A6D3B">已升级</td>
+                                        <td style="color: #8A6D3B">已注册为正式版本</td>
                                         {% else %}
                                         <td>未知状态</td>
                                     {% endif %}
@@ -97,9 +97,11 @@
                         data:{cloud_id:cloud_id},
                         type:"GET",
                         success:function(data) {
+                            alert(data.result);
                             if(data.result == 0){
                                 SuccessWarning("删除成功！",reloadPage);
                             }else{
+
                                 ErrorWarning("删除失败！",reloadPage);
                             }
                         },
