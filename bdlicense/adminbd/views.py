@@ -1391,6 +1391,7 @@ class RegisterLicenseView(View):
             license_type = licenses[0].licenseType
             new_cloud_id = licenses[0].cloudInfo.id
             new_cloud_num = licenses[0].cloudInfo.cloudNum
+            # new_cloud_name = licenses[0].cloudInfo.cloudName
             if cloud_id:
                 print "云平台的编号存在，可能为正式版本也可能为试用版本"
                 if cloud_id[:4] == 'TEMP':
@@ -1937,22 +1938,44 @@ class delCloudView(View):
             return render(request,'license_login.html')
 
         cloud_id = request.GET.get('cloud_id')
-        try:
-            if cloud_id:
-                licenses = LicenseRecord.objects.filter(cloudInfo_id=int(cloud_id))
-                if licenses.count() > 0:
-                    wkOrders = WorkOrderNum.objects.filter(license_id = licenses[0].id)
-                    for wkOrder in wkOrders:
-                        wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrder.id)
-                        for wkInfo in wkInfos:
-                            wkInfo.delete()
-                        wkOrder.delete()
-                    licenses[0].delete()
+        res = del_cloud(cloud_id)
+        if res == 0:
+            return JsonResponse({"result":0})
+        else:
+            return JsonResponse({"result":1})
 
-                cloud = CloudInformation.objects.get(id=int(cloud_id))
-                cloud.delete()
-                return JsonResponse({"result":0})
-            else:
-                return JsonResponse({"result":1})
-        except Exception,e:
-            print e
+class DelTmpCloud(View):
+    def get(self,request):
+        print "[ delCloudView ]"
+        username = request.session.get('username')
+        user_type = request.session.get('user_type')
+        if not username or user_type==1:
+            return render(request,'license_login.html')
+
+        cloud_id = request.GET.get('cloud_id')
+        res = del_cloud(cloud_id)
+        if res == 0:
+            return JsonResponse({"result":0})
+        else:
+            return JsonResponse({"result":1})
+
+def del_cloud(cloud_id):
+    result = 1
+    try:
+        licenses = LicenseRecord.objects.filter(cloudInfo_id=int(cloud_id))
+        if licenses.count() > 0:
+            wkOrders = WorkOrderNum.objects.filter(license_id = licenses[0].id)
+            for wkOrder in wkOrders:
+                wkInfos = WorkOrderInformation.objects.filter(workordernum_id=wkOrder.id)
+                for wkInfo in wkInfos:
+                    wkInfo.delete()
+                wkOrder.delete()
+            licenses[0].delete()
+
+        cloud = CloudInformation.objects.get(id=int(cloud_id))
+        cloud.delete()
+        result = 0
+    except Exception,e:
+        print e
+        result = 1
+    return result
