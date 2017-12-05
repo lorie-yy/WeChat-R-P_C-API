@@ -302,7 +302,10 @@ def saveShopDiscountInfo():
     cloudinfo = CloudInformation.objects.all()
     for clouditem in cloudinfo:
         #获取云平台下的商铺id
-        cloudid = clouditem.cloudNum
+        if clouditem.cloudNum:
+            cloudid = clouditem.cloudNum
+        else:
+            cloudid = clouditem.tmpCloudNum
         resultlist = TwechatOffline.objects.filter(cloudid=cloudid)
         if resultlist.count() > 0:
             shopidSet = resultlist.values('shopid')
@@ -625,7 +628,10 @@ def getCloudname(request):
     for item in cloudinfo:
         itemdict = {}
         itemdict['cloudname']=item.cloudName
-        itemdict['cloudid']=item.cloudNum
+        if item.cloudNum:
+            itemdict['cloudid']=item.cloudNum
+        else:
+            itemdict['cloudid']=item.tmpCloudNum
         cloudinfolist.append(itemdict)
     return HttpResponse(json.dumps(cloudinfolist))
 
@@ -641,7 +647,11 @@ def saveCloudconfig(request):
     if cloudinfo.count() > 0:
         cloudname = cloudinfo[0].cloudName
     else:
-        cloudname = ''
+        cloudinfo = CloudInformation.objects.filter(tmpcloudNum=cloudid)
+        if cloudinfo.count() > 0:
+            cloudname = cloudinfo[0].cloudName
+        else:
+            cloudname = ''
     iteminfo = CloudConfig.objects.filter(cloudid=cloudid)
     thirdpart = ThridPartyConfig.objects.filter(thirdpartname = thirdpartname)
     # try:
