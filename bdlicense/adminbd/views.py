@@ -50,7 +50,7 @@ class IndexView(View):
             cloudObj = CloudInformation.objects.get(id=cloud_id)
 
             if is_superuser:
-                licenseRecords = cloudObj.licenserecord_set.exclude(license_code__istartswith = "TEMP")
+                licenseRecords = cloudObj.licenserecord_set.exclude(license_code__istartswith = "TEMP").order_by('-id')
                 context['licenses'] = licenseRecords
             else:
                 licenseRecords = cloudObj.licenserecord_set.all()
@@ -60,7 +60,7 @@ class IndexView(View):
             context['cloud_id'] = int(cloud_id)
         else:
             if is_superuser:
-                LicenseRecords = LicenseRecord.objects.exclude(license_code__istartswith = "TEMP")
+                LicenseRecords = LicenseRecord.objects.exclude(license_code__istartswith = "TEMP").order_by('-id')
                 context['licenses'] = LicenseRecords
             else:
                 user = User.objects.get(username=username)
