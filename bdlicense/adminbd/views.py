@@ -50,7 +50,7 @@ class IndexView(View):
             cloudObj = CloudInformation.objects.get(id=cloud_id)
 
             if is_superuser:
-                licenseRecords = cloudObj.licenserecord_set.exclude(license_code__istartswith = "TEMP")
+                licenseRecords = cloudObj.licenserecord_set.exclude(license_code__istartswith = "TEMP").order_by('-id')
                 context['licenses'] = licenseRecords
             else:
                 licenseRecords = cloudObj.licenserecord_set.all()
@@ -60,7 +60,7 @@ class IndexView(View):
             context['cloud_id'] = int(cloud_id)
         else:
             if is_superuser:
-                LicenseRecords = LicenseRecord.objects.exclude(license_code__istartswith = "TEMP")
+                LicenseRecords = LicenseRecord.objects.exclude(license_code__istartswith = "TEMP").order_by('-id')
                 context['licenses'] = LicenseRecords
             else:
                 user = User.objects.get(username=username)
@@ -890,11 +890,6 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
         if license_code == '':
             license_code = result.get('license_code', '')
 
-        if details['swVersion'] == u"同博达":
-            rst_dict['version_type'] = 'bdcode'
-        else:
-            rst_dict['version_type'] = 'ztecode'
-
         tmp_dict = {}
         if details['productNo'] in os_ids:
             tmp_dict['productNo'] = details['productNo']
@@ -916,7 +911,10 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
             rst_dict['buss_info'].append(tmp_dict)
         else:
             continue
-
+        if details['swVersion'] == u"同博达":
+            rst_dict['version_type'] = 'bdcode'
+        else:
+            rst_dict['version_type'] = 'ztecode'
     rst_dict['license_code'] = license_code
 
     rst_dict['license_type'] =1
