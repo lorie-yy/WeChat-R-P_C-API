@@ -1,0 +1,49 @@
+/*license_loginnew css*/
+html,body{
+    height: 100%;
+    width: 100%;
+    background-color: #f2f2f2;
+}
+.page-body{
+    padding-top: 2%;
+}
+.page-body .nav.nav-pills{
+    padding: 15px 10%;
+}
+.page-body .nav.nav-pills .page-name{
+    padding: 15px 0;
+    font-size: 18px;
+}
+.page-body .login-background{
+    margin-top: -150px;
+    width:100%;
+    z-index: -1
+}
+.page-body .login-main{
+    z-index:10;
+    padding: 20px 15px;
+    position: absolute;
+    right: 210px;
+    top: 178px;
+    width: 240px;
+    height: 240px;
+    background-color: #2C3749;
+}
+.page-body .login-main .login-header{
+    color: #ffffff;
+    font-size: 16px;
+    padding-bottom:28px;
+}
+.login-body .form-group{
+    margin-bottom: 10px;
+}
+.login-body .form-group .form-control{
+    border-radius: 0;
+    height: 36px;
+}
+.login-body .form-group .btn-login{
+    background-color: #0099cc;
+    color: #ffffff;
+    border-radius: 0
+}
+/*end license_loginnew css*/
