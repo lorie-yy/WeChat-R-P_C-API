@@ -3,6 +3,7 @@ import hashlib
 import json
 import datetime
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template.context_processors import csrf
@@ -10,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.contrib.auth import authenticate
 import requests
+from rest_framework import mixins,generics
 import simplejson
 from adminbd.models import SystemConfig
 from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords, shop_discountinfo
@@ -17,6 +19,9 @@ from wechatfans.models import TwechatOffline, ApplyforWithdrawalRecords, shop_di
 from adminbd.models import CloudInformation
 from wechatfans.models import TwechatOffline, ThridPartyConfig, CloudConfig, cloudtouser
 import time
+from wechatfans.serializers import shop_discountinfoSerializer, ThridPartyConfigSerializer, Shop_discountinfoSerializer, \
+    CloudConfigSerializer, ApplyforWithdrawalRecordsSerializer
+
 
 def md5(str):
     import hashlib
@@ -297,7 +302,10 @@ def saveShopDiscountInfo():
     cloudinfo = CloudInformation.objects.all()
     for clouditem in cloudinfo:
         #获取云平台下的商铺id
-        cloudid = clouditem.cloudNum
+        if clouditem.cloudNum:
+            cloudid = clouditem.cloudNum
+        else:
+            cloudid = clouditem.tmpCloudNum
         resultlist = TwechatOffline.objects.filter(cloudid=cloudid)
         if resultlist.count() > 0:
             shopidSet = resultlist.values('shopid')
@@ -316,23 +324,43 @@ def saveShopDiscountInfo():
                     totalprofit,totalfans=earnings(cloudid,itemshopid,'','')
                     saveShopProfit(cloudid,itemshopid,totalprofit)
 
+class getCloudProfit(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
+    serializer_class = shop_discountinfoSerializer
+
+    def get_queryset(self):
+        try:
+            cloudid = self.request.GET.get('cloudid')
+        except Exception,e:
+            return HttpResponse(status=404)
+        return shop_discountinfo.objects.filter(cloudid=cloudid)
+
+    def get(self, request, *args, **kwargs):
+
+        return self.list(request, args, kwargs)
 
 
-def getAllProfit(request):
+class getAllProfit(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
     saveShopDiscountInfo()
-    shopinfolist = shop_discountinfo.objects.all()
-    resultlist = []
-    for shopinfo in shopinfolist:
-        tempdict = {}
-        tempdict['id'] = shopinfo.id
-        tempdict['cloudid'] = shopinfo.cloudid
-        tempdict['shopid'] = shopinfo.shopid
-        tempdict['discount'] = shopinfo.discount
-        tempdict['totalincome'] = shopinfo.totalincome
-        tempdict['availablecash'] = shopinfo.availablecash
-        tempdict['cashed'] = shopinfo.cashed
-        resultlist.append(tempdict)
-    return HttpResponse(json.dumps(resultlist))
+
+    def get_queryset(self):
+        queryset = shop_discountinfo.objects.values('cloudid')\
+            .annotate(totalincome=Sum('totalincome'),
+                     cashed=Sum('cashed'),
+                     availablecash=Sum('availablecash')).values('cloudid',
+                                                                'totalincome',
+                                                                'availablecash',
+                                                                'cashed')
+        return queryset
+    serializer_class = shop_discountinfoSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, args, kwargs)
+
+
 
 # 计算收益量和粉丝量
 def earnings(cloudid,shopid,startDate,enddate):
@@ -543,17 +571,20 @@ def closerecord(request):
     # return JsonResponse({'result':result})
     return render(request, 'wechatfans/applyfor_records.html',context)
 
-def getThirdpartInfo(request):
-    Thridpartlist = ThridPartyConfig.objects.all()
-    resultlist = []
-    for item in Thridpartlist:
-        tempdict = {}
-        tempdict["id"]=item.id
-        tempdict["name"]=item.thirdpartname
-        tempdict["url"]=item.url
-        tempdict["type"]=item.type
-        resultlist.append(tempdict)
-    return HttpResponse(json.dumps(resultlist))
+class getThirdpartInfo(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
+
+    queryset = ThridPartyConfig.objects.all()
+    serializer_class = ThridPartyConfigSerializer
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('alldata','')=='1':
+            print 'get all data'
+            queryset = ThridPartyConfig.objects.all()
+            serializer = ThridPartyConfigSerializer(queryset, many=True)
+            return JsonResponse(serializer.data, safe=False)
+        return self.list(request, args, kwargs)
+
 def saveThirdpartInfo(request):
     name = request.GET.get('name')
     url = request.GET.get('url')
@@ -597,7 +628,10 @@ def getCloudname(request):
     for item in cloudinfo:
         itemdict = {}
         itemdict['cloudname']=item.cloudName
-        itemdict['cloudid']=item.cloudNum
+        if item.cloudNum:
+            itemdict['cloudid']=item.cloudNum
+        else:
+            itemdict['cloudid']=item.tmpCloudNum
         cloudinfolist.append(itemdict)
     return HttpResponse(json.dumps(cloudinfolist))
 
@@ -608,11 +642,16 @@ def saveCloudconfig(request):
     operationtype = request.GET.get('typeThird','')
     result = {}
     result['msg']='操作成功'
+    result['error']=0
     cloudinfo = CloudInformation.objects.filter(cloudNum=cloudid)
     if cloudinfo.count() > 0:
         cloudname = cloudinfo[0].cloudName
     else:
-        cloudname = ''
+        cloudinfo = CloudInformation.objects.filter(tmpcloudNum=cloudid)
+        if cloudinfo.count() > 0:
+            cloudname = cloudinfo[0].cloudName
+        else:
+            cloudname = ''
     iteminfo = CloudConfig.objects.filter(cloudid=cloudid)
     thirdpart = ThridPartyConfig.objects.filter(thirdpartname = thirdpartname)
     # try:
@@ -621,7 +660,7 @@ def saveCloudconfig(request):
             if iteminfo.count() == 0:
                 iteminfo = CloudConfig(cloudname = cloudname,thirdpart=thirdpart[0],cloudid=cloudid)
                 iteminfo.save()
-                result['error']=0
+
             else:
                 result['error']=3
                 result['msg']='新增失败'
@@ -631,29 +670,30 @@ def saveCloudconfig(request):
                 result['msg']='编辑失败'
             else:
                 iteminfo.update(thirdpart=thirdpart[0])
-                result['error']=0
+
         elif operationtype == 'del':
             if iteminfo.count() == 0:
                 result['error']=5
                 result['msg']='删除失败'
             else:
                 iteminfo.delete()
-                result['error']=0
+
     # except Exception,e:
     #     result['error']=2
     #     result['msg']= e
     return HttpResponse(json.dumps(result))
 
-def getCloudConfig(request):
-    cloudconfiginfo = CloudConfig.objects.all()
-    cloudinfolist = []
-    for item in cloudconfiginfo:
-        itemdict = {}
-        itemdict['cloudname']=item.cloudname
-        itemdict['cloudid']=item.cloudid
-        itemdict['thirdpart_name']=item.thirdpart.thirdpartname
-        cloudinfolist.append(itemdict)
-    return HttpResponse(json.dumps(cloudinfolist))
+class getCloudConfig(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
+    serializer_class = CloudConfigSerializer
+
+    queryset = CloudConfig.objects.all()
+
+    def get(self, request, *args, **kwargs):
+
+        return self.list(request, args, kwargs)
+
 
 
 class Register(View):
@@ -776,58 +816,55 @@ def savediscountinfo(request):
     uu = {'res':result}
     return JsonResponse(uu)
 
-def getalldiscountinfo(request):
+class getalldiscountinfo(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
     '''
     获取所有商铺的折扣信息
     :param request:
     :return:
     '''
-    try:
-        shopinfo = shop_discountinfo.objects.all()
-        shopinfolist = []
-        for shop in shopinfo:
-            itemdict = {}
-            itemdict['id'] = shop.id
-            itemdict['cloudid'] = shop.cloudid
-            itemdict['shopid'] = shop.shopid
-            itemdict['bonus'] = shop.discount
-            shopinfolist.append(itemdict)
-    except:
-        shopinfolist = []
 
-    return HttpResponse(json.dumps(shopinfolist))
+    serializer_class = Shop_discountinfoSerializer
 
-def getApplyforWithdrawal(request):
+    queryset = shop_discountinfo.objects.all()
+
+    def get(self, request, *args, **kwargs):
+
+        return self.list(request, args, kwargs)
+
+
+class getApplyforWithdrawal(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
     '''
     获取可提现记录
     :param request:
     :return:
     '''
-    applyfor = ApplyforWithdrawalRecords.objects.filter(paymentresult=103)
-    accesspaylist = []
-    for applyforitem in applyfor:
-        #确认是否可提现
-        if isSafe(applyforitem.cloudid,applyforitem.shopid,applyforitem.getmoney):
-            itemdict = {}
-            itemdict['id'] = applyforitem.id
-            itemdict['paymentmode'] = applyforitem.paymentmode
-            itemdict['shopid'] = applyforitem.shopid
-            itemdict['username'] = applyforitem.username
-            itemdict['cloudid'] = applyforitem.cloudid
-            itemdict['applyfortime'] = applyforitem.applyfortime.strftime('%Y-%m-%d %H:%M:%S')
-            itemdict['alipay_name'] = applyforitem.alipay_name
-            itemdict['alipaynum'] = applyforitem.alipaynum
-            itemdict['company'] = applyforitem.company
-            itemdict['bank_name'] = applyforitem.bank_name
-            itemdict['banknum'] = applyforitem.banknum
-            itemdict['getmoney'] = applyforitem.getmoney
-            itemdict['paymentresult'] = applyforitem.paymentresult
-            itemdict['note'] = applyforitem.note
-            accesspaylist.append(itemdict)
-        else:
-            applyforitem.paymentresult=102
-            applyforitem.save()
-    return HttpResponse(json.dumps(accesspaylist))
+
+    serializer_class = ApplyforWithdrawalRecordsSerializer
+    saveShopDiscountInfo()
+    def get_queryset(self):
+        applyfor = ApplyforWithdrawalRecords.objects.filter(paymentresult=103)
+        for applyforitem in applyfor:
+            #确认是否可提现
+            if isSafe(applyforitem.cloudid,applyforitem.shopid,applyforitem.getmoney):
+                pass
+            else:
+                applyforitem.paymentresult=102
+                applyforitem.save()
+        pagetype = self.request.GET.get('pagetype')
+        if pagetype == 'Apply':
+            return ApplyforWithdrawalRecords.objects.filter(paymentresult=103).filter(paymentmode=1)
+        elif pagetype == 'Bank':
+            return ApplyforWithdrawalRecords.objects.filter(paymentresult=103).filter(paymentmode=2)
+
+
+    def get(self, request, *args, **kwargs):
+
+        return self.list(request, args, kwargs)
+
 
 def isSafe(cloudid,shopid,getmoney):
     shopinfo = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
@@ -836,33 +873,28 @@ def isSafe(cloudid,shopid,getmoney):
             return  True
     return False
 
-def getallApplyforWithdrawalRecords(request):
+class getallApplyforWithdrawalRecords(mixins.ListModelMixin,
+                mixins.CreateModelMixin,
+                generics.GenericAPIView):
     '''
     获取所有提现记录
     :param request:
     :return:
     '''
-    applyfor = ApplyforWithdrawalRecords.objects.exclude(paymentresult=103)
-    accesspaylist = []
-    for applyforitem in applyfor:
-            itemdict = {}
-            itemdict['id'] = applyforitem.id
-            itemdict['paymentmode'] = applyforitem.paymentmode
-            itemdict['shopid'] = applyforitem.shopid
-            itemdict['username'] = applyforitem.username
-            itemdict['cloudid'] = applyforitem.cloudid
-            itemdict['applyfortime'] = applyforitem.applyfortime.strftime('%Y-%m-%d %H:%M:%S')
-            itemdict['alipay_name'] = applyforitem.alipay_name
-            itemdict['alipaynum'] = applyforitem.alipaynum
-            itemdict['company'] = applyforitem.company
-            itemdict['bank_name'] = applyforitem.bank_name
-            itemdict['banknum'] = applyforitem.banknum
-            itemdict['getmoney'] = applyforitem.getmoney
-            itemdict['paymentresult'] = applyforitem.paymentresult
-            itemdict['note'] = applyforitem.note
-            accesspaylist.append(itemdict)
-            print applyforitem.id
-    return HttpResponse(json.dumps(accesspaylist))
+    serializer_class = ApplyforWithdrawalRecordsSerializer
+
+    def get_queryset(self):
+        pagetype = self.request.GET.get('pagetype')
+        if pagetype == 'Apply':
+            return ApplyforWithdrawalRecords.objects.exclude(paymentresult=103).filter(paymentmode=1)
+        elif pagetype == 'Bank':
+            return ApplyforWithdrawalRecords.objects.exclude(paymentresult=103).filter(paymentmode=2)
+
+    def get(self, request, *args, **kwargs):
+
+        return self.list(request, args, kwargs)
+
+
 
 class Transferaccounts(View):
     def get(self,request):
@@ -965,4 +997,3 @@ def modify_password(request):
         except Exception, e:
             print e
     return render(request, 'wechatfans/modify_password.html',uu)
-
