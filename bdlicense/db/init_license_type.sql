@@ -9,7 +9,7 @@ INSERT INTO auth_user(username, password,is_staff,is_active,is_superuser,user_le
 
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (1,'CBSOF-CDS0047A','BCP8200-OS-STD',4,0,0,1,1);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (2,'CBSOF-CDS0052A','BCP8200-Lic-64',64,1,1280,1,2);
-INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (3,'CBSOF-CDS0053A','BCP8200-Lic-128',128,2,2560,1,2);
+INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (3,'CBSOF-CDS0053A','BCP8200-Lic-128',256,2,5120,1,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (4,'CBSOF-CDS0055A','BCP8200-Lic-1024',1024,4,20480,1,2);
 
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (5,'CBSOF-CDS0095A','BCP8200-Ext-Map-0',8,0,0,1,3);
