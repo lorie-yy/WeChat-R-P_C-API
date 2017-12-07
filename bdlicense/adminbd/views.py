@@ -98,11 +98,11 @@ class IndexViewYun(View):
         context = {}
         if is_superuser:
             # cloudInfos = CloudInformation.objects.filter(cloudNum__istartswith = "BUSS")
-            cloudInfos = CloudInformation.objects.exclude(cloudName= "")
+            cloudInfos = CloudInformation.objects.exclude(cloudName= "").order_by('-id')
             context['cloudInfos'] = cloudInfos
         else:
             user = User.objects.get(username=username)
-            cloudInfos = user.cloudinformation_set.exclude(cloudName = "")
+            cloudInfos = user.cloudinformation_set.exclude(cloudName = "").order_by('-id')
             context['cloudInfos'] = cloudInfos
 
         context['username'] = username
@@ -1366,7 +1366,9 @@ class RegisterLicenseView(View):
         uu = {}
         params = request.GET.copy()
         license_code = params['license_code']
-
+        license_key = params['usb_key_hardwareId']
+        print "license_key"
+        print license_key
         print "get code from cloud ",license_code
         cloud_id = request.GET.get('cloud_id','')
         # if cloud_id[:4] == 'TEMP':
@@ -1385,6 +1387,10 @@ class RegisterLicenseView(View):
                 licenses.update(is_valid=0)
                 print "无效的license---已过期"
                 uu['result'] = 2
+                return JsonResponse(uu)
+            if licenses[0].key_id != license_key:
+                print "license code 对应的key_id 与所给key_id不匹配"
+                uu['result'] = 9
                 return JsonResponse(uu)
             license_type = licenses[0].licenseType
             new_cloud_id = licenses[0].cloudInfo.id
@@ -1626,8 +1632,16 @@ class LicenseResetView(View):
         license_id = params['license_id']
         licenses = LicenseRecord.objects.filter(id=int(license_id))
         if licenses:
-            licenses.update(is_reset=0,is_valid=1)
-            return JsonResponse({"result":0})
+            try:
+                licenses.update(is_reset=0,is_valid=1)
+                cloud = CloudInformation.objects.filter(id = licenses[0].cloudInfo_id)
+                cloud.update(tmpCloudNum = "")
+                tmp_cloud = CloudInformation.objects.filter(cloudNum=cloud[0].cloudNum,cloudName="")
+                tmp_cloud.update(cloudNum = "")
+                return JsonResponse({"result":0})
+            except Exception,e:
+                print e
+                return JsonResponse({"result":1})
         else:
             return JsonResponse({"result":1})
 
