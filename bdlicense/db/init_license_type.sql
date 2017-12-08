@@ -16,7 +16,7 @@ INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,v
 
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (6,'ZXSOF-CDS0004A','ZXWL OMCP',4,0,0,2,1);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (7,'ZXSOF-CDS0017A','ZXWL OMCP（精简版）',1,0,0,2,1);
-<<<<<<< HEAD
+
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (8,'ZXSOF-CDS0014A','ZXWL OMCP-License',1024,4,20480,2,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (9,'ZXSOF-CDS0015A','ZXWL OMCP-License',32,1,640,2,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (10,'ZXSOF-CDS0016A','ZXWL OMCP-License',128,2,2560,2,2);
