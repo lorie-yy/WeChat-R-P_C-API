@@ -29,7 +29,7 @@ if os.geteuid() != 0:
     print 'No authority, use sudo'
     sys.exit(1)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR =  os.path.split(os.path.realpath(__file__))[0]
 # sys.path.append(os.path.join(BASE_DIR))
 #
 # from bdlslib import *
@@ -325,9 +325,9 @@ class LicenseManager:
             if result == 1:
                 msg = u"订单信息获取错误"
             elif result == 2:
-                msg = u"非法的OS工单, OS版本只能有一个"
+                msg = u"工单中云平台OS物料太多，不能多于1个"
             elif result == 3:
-                msg = u"新出工单必须有一个OS版本"
+                msg = u"新工单必须有一个OS版本,或者扩容必须提供LicenseCode"
             elif result == 4:
                 msg = u"工单号格式错误"
             elif result == 5:
@@ -538,6 +538,12 @@ class LicenseManager:
             msg = u"请先验证License，再写入"
             self.show_info(msg)
             return
+
+        if params['max_ap_allowed'] == 0 and params['max_ac_allowed'] == 0:
+            msg = u"License中AP,AC数量为0，请确认工单信息是否有误"
+            self.show_info(msg)
+            return
+
         self.writeMessage(u'开始写入USB Key ...')
 
         rst = LicenseLib.writeUsbKeyContent(params)
@@ -547,6 +553,7 @@ class LicenseManager:
         else:
             msg = u"USB Key写入失败"
 
+        self.generateLicenseFile(params['license_key'])
         self.RemoveContent()
         time.sleep(1)
 
@@ -554,6 +561,19 @@ class LicenseManager:
 
         self.writeMessage(msg)
         self.show_info(msg)
+    def generateLicenseFile(self, license_code):
+        try:
+            license_dir = "/tmp/bdls"
+            if not os.path.exists(license_dir):
+                os.makedirs(license_dir)
+
+            license_file = os.path.join(license_dir,license_code)
+            f = open(license_file,'w')
+            f.write(license_code + '\n')
+            f.close()
+        except:
+            msg = u"生成LicenseCode文本文件失败"
+            self.writeMessage(msg)
 
     def execShellCmd(self,PRO_DIR):
         cmd_out = ""
@@ -948,8 +968,10 @@ def center_window(root, width, height):
 
 root = Tk()
 
-imgicon = PhotoImage(file=os.path.join(BASE_DIR, 'file/license.gif'))
-root.tk.call('wm', 'iconphoto', root._w, imgicon)
+image_path = os.path.join(BASE_DIR, 'file/license.gif')
+if os.path.exists(image_path):
+    imgicon = PhotoImage(file=image_path)
+    root.tk.call('wm', 'iconphoto', root._w, imgicon)
 root.title(u"Bdyun License 激活工具")
 
 # root.geometry("1050x650")
