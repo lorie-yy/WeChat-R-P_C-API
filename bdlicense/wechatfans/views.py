@@ -498,8 +498,8 @@ def apply_for_withdrawal(request):
     history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
-    # elif getmoney < 10000:
-    #     result=3
+    elif getmoney < 10000:
+        result=3
     else:
         # 创建表的实例对象(取款记录)
         applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
@@ -595,6 +595,12 @@ def closerecord(request):
         id = request.GET.get('id')
         record=ApplyforWithdrawalRecords.objects.filter(id=id)
         record.update(paymentresult=102)
+
+        #更新shop_discountinfo
+        sdc = shop_discountinfo.objects.filter(cloudid=record[0].cloudid,shopid=record[0].shopid)
+        availablecash = sdc[0].availablecash + record[0].getmoney
+        applying = sdc[0].applying - record[0].getmoney
+        sdc.update(applying=applying,availablecash=availablecash)
         print '***************record',record
         result=1
         context['result']=result
