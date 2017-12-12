@@ -63,6 +63,8 @@ class cloudtouser(models.Model):
     password = models.CharField('密码',max_length=32)
     cloudid = models.CharField('云平台编号',max_length=64)
     shopid = models.IntegerField('云平台商铺id')
+    userlever = models.IntegerField(default=1)          #用户的级别
+    fathernode = models.IntegerField(default=0)         #上一级用户的id
 
 
 class shop_discountinfo(models.Model):
@@ -72,3 +74,6 @@ class shop_discountinfo(models.Model):
     totalincome = models.IntegerField('总收益(分)',default= 0)      #打折
     availablecash = models.IntegerField('可提现(分)',default= 0)    #打折
     cashed = models.IntegerField('已提现(分)',default= 0)           #打折
+    applying = models.IntegerField('申请中(分)',default= 0)         #打折
+    start = models.IntegerField('计算收益的起点',default= 0)
+    cloudtouser = models.ForeignKey(cloudtouser)

@@ -218,6 +218,14 @@ class Sub_detail(View):
                 to.save()
 
 def showfans(request):
+    '''
+    1.更新TwechatOffline，获取最近两天的收益
+    2.计算今日收益与粉丝
+    3.计算可提现金额
+    4.总金额=可提现金额+已提现+申请中
+    :param request:
+    :return:
+    '''
     path_url=request.build_absolute_uri('/wechatfans/sub_detail')
     print 'path_url',path_url
     requests.get(path_url)
@@ -237,10 +245,21 @@ def showfans(request):
     print endDate
     context ={}
     # 调用函数
-    totalprofit,totalfans=earnings(cloudid,shopid,'','')
+    # totalprofit,totalfans=earnings(cloudid,shopid,'','')
+    #获取今日收益以及粉丝
     todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
+    #获取可提现金额
     takemoney,flag=support_takemoney(cloudid,shopid)
-
+    #重新计算可提现金额以及总收入
+    saveShopProfit(cloudid,shopid,takemoney)
+    #获取总收入
+    shopprofit = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+    if shopprofit.count() > 0:
+        totalprofit = shopprofit[0].totalincome
+    else:
+        totalprofit = 0
+    #获取粉丝数
+    totalfans = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid).count()
     # x轴日期数据
     today = datetime.date.today()
     oneweekago = today - datetime.timedelta(7)
@@ -281,20 +300,28 @@ def showfans(request):
     context['todayfans']=todayfans
     context['takemoney']=takemoney/100.000
     # return HttpResponse(json.dumps(context))
-    saveShopProfit(cloudid,shopid,totalprofit)
+
     return render(request, 'wechatfans/showfans.html',context)
 #保存收益
-def saveShopProfit(cloudid,shopid,totalprofit):
-    shopinfolist = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
-    if shopinfolist.count() > 0:
-        cashed = shopinfolist[0].cashed
-        shopinfolist.update(totalincome=totalprofit,availablecash=totalprofit-cashed)
+def saveShopProfit(cloudid,shopid,takemoney):
+    shopprofit = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+    if shopprofit.count() > 0:
+        totalprofit = shopprofit[0].applying + shopprofit[0].cashed + takemoney
+        if shopprofit[0].availablecash == takemoney and \
+            shopprofit[0].totalincome == totalprofit:
+            pass
+        else:
+            shopprofit.update(totalincome=totalprofit,availablecash=takemoney)
     else:
-        sd = shop_discountinfo(cloudid=cloudid,
-                          shopid=shopid,
-                          totalincome=totalprofit,
-                          availablecash=totalprofit)
-        sd.save()
+        totalprofit = takemoney
+        cloudtouserobj = cloudtouser.objects.get(cloudid=cloudid,shopid=shopid)
+        ad = shop_discountinfo(cloudid=cloudid,
+                               totalincome=totalprofit,
+                               availablecash=takemoney,
+                               cloudtouser=cloudtouserobj,
+                               shopid=shopid)
+        ad.save()
+
 
 #保存所有shop_discountinfo
 def saveShopDiscountInfo():
@@ -318,11 +345,13 @@ def saveShopDiscountInfo():
             print shopidlist
             for itemshopid in shopidlist:
                 shopinfolist = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=itemshopid)
-                if shopinfolist.count() == 0:
-                    sd = shop_discountinfo(cloudid=cloudid,shopid=itemshopid)
-                    sd.save()
-                    totalprofit,totalfans=earnings(cloudid,itemshopid,'','')
-                    saveShopProfit(cloudid,itemshopid,totalprofit)
+                cloudtouserob = cloudtouser.objects.filter(cloudid=cloudid,shopid=itemshopid)
+                if cloudtouserob.count() > 0:
+                    if shopinfolist.count() == 0:
+                        sd = shop_discountinfo(cloudid=cloudid,shopid=itemshopid,cloudtouser=cloudtouserob[0])
+                        sd.save()
+                        takemoney,flag=support_takemoney(cloudid,itemshopid)
+                        saveShopProfit(cloudid,itemshopid,takemoney)
 
 class getCloudProfit(mixins.ListModelMixin,
                 mixins.CreateModelMixin,
@@ -469,8 +498,8 @@ def apply_for_withdrawal(request):
     history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
-    elif getmoney < 10000:
-        result=3
+    # elif getmoney < 10000:
+    #     result=3
     else:
         # 创建表的实例对象(取款记录)
         applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
@@ -486,6 +515,12 @@ def apply_for_withdrawal(request):
         applyrecords.banknum = banknum
         applyrecords.flag = flag
         applyrecords.save()
+
+        #更新shop_discountinfo
+        sd = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+        availablecash = sd[0].availablecash - getmoney
+        sd.update(availablecash=availablecash,applying=getmoney)
+
         result = 1
 
     context ={}
@@ -793,7 +828,8 @@ def savediscountinfo(request):
         shopinfo = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
         if operationtype == 'add':
             if shopinfo.count() ==0:
-                sd = shop_discountinfo(cloudid=cloudid,shopid=shopid,discount=discount)
+                cloudtouserob = cloudtouser.objects.get(cloudid=cloudid,shopid=shopid)
+                sd = shop_discountinfo(cloudid=cloudid,shopid=shopid,discount=discount,cloudtouser=cloudtouserob)
                 sd.save()
                 result = 0
             else:
@@ -869,7 +905,7 @@ class getApplyforWithdrawal(mixins.ListModelMixin,
 def isSafe(cloudid,shopid,getmoney):
     shopinfo = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
     if shopinfo.count() > 0:
-        if getmoney <= shopinfo[0].availablecash:
+        if getmoney <= shopinfo[0].applying:
             return  True
     return False
 
@@ -904,11 +940,10 @@ class Transferaccounts(View):
         applyfor = ApplyforWithdrawalRecords.objects.filter(id=id)
         result = {}
         if applyfor.count() > 0:
+            cloudid = applyfor[0].cloudid
+            shopid = applyfor[0].shopid
+            getmoney = applyfor[0].getmoney
             if typeThird == 'pass':
-
-                cloudid = applyfor[0].cloudid
-                shopid = applyfor[0].shopid
-                getmoney = applyfor[0].getmoney
                 #是否符合提现条件
                 if isSafe(cloudid,shopid,getmoney):
                     #判断转账方式，如需实现自动转账，在此码代码
@@ -925,14 +960,20 @@ class Transferaccounts(View):
 
                     #3.更新shop_discountinfo
                     sdc = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
-                    availablecash = sdc[0].availablecash-getmoney
-                    getmoney = sdc[0].cashed+getmoney
-                    sdc.update(availablecash=availablecash,cashed=getmoney)
+                    cashed = sdc[0].cashed + getmoney
+                    applying = sdc[0].applying - getmoney
+                    sdc.update(applying=applying,cashed=cashed)
                     result['res'] = 0
                     result['msg'] = '转账成功'
             elif typeThird == 'no':
                 #转账失败
                 applyfor.update(paymentresult=102)
+
+                #更新shop_discountinfo
+                sdc = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+                availablecash = sdc[0].availablecash + getmoney
+                applying = sdc[0].applying - getmoney
+                sdc.update(applying=applying,availablecash=availablecash)
                 result['res'] = 0
                 result['msg'] = '转账失败，拒绝转账'
         else:
