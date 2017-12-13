@@ -418,7 +418,7 @@ def earnings(cloudid,shopid,startDate,enddate):
         # print 'usermac',item.id
         # print 'usermac',item.price
         profit += (float(item.price)*100)
-    profit_dis=int(profit*discount)
+    profit_dis=int(profit*float(discount))
     print 'profit_dis',profit_dis
 
     return profit_dis,userobject.count()
@@ -452,7 +452,7 @@ def support_takemoney(cloudid,shopid):
         # print 'usermac',item.id
         # print 'usermac',item.price
         profit += (float(item.price)*100)
-    profit_dis=int(profit*discount)-applyformoney
+    profit_dis=int(profit*float(discount))-applyformoney
     print '可提现金额',profit_dis
     return profit_dis,flag
 
