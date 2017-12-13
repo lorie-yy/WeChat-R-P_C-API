@@ -498,8 +498,8 @@ def apply_for_withdrawal(request):
     history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
     if history.count()>0:
         result=2
-    elif getmoney < 10000:
-        result=3
+    # elif getmoney < 10000:
+    #     result=3
     else:
         # 创建表的实例对象(取款记录)
         applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
@@ -578,7 +578,7 @@ def applyfor_records(request):
     else:
         for i in suc:
             totalsuc += i.getmoney
-            print '成功提现总计为',totalsuc
+    print '成功提现总计为',totalsuc
     context['totalsuc']=totalsuc/100.000
     context['recordslist']=recordslist
     return render(request, 'wechatfans/applyfor_records.html',context)
@@ -603,14 +603,11 @@ def closerecord(request):
         sdc.update(applying=applying,availablecash=availablecash)
         print '***************record',record
         result=1
-        context['result']=result
         print result
 
     except Exception,e:
         result=2
-        context['result']=result
-    # return JsonResponse({'result':result})
-    return render(request, 'wechatfans/applyfor_records.html',context)
+    return JsonResponse({'result':result})
 
 class getThirdpartInfo(mixins.ListModelMixin,
                 mixins.CreateModelMixin,

@@ -41,19 +41,26 @@
                             <td>
                                 <a onclick="closerecord({{ record.id }})" {% if record.paymentresult != 103 %}disabled {% endif %} class="btn btn-default btn-xs">关闭</a>
                             </td>
-                            <input type="hidden" id="result" value="{{ result }}"/>
                             <script>
-                                var result=$('#result');
                                 function closerecord(id){
-                                    if(result=1){
-                                        layer.msg("已关闭!",function() {
-                                            $.get("/wechatfans/closerecord", {'id': id}, function () {
-                                                window.location.href="/wechatfans/applyfor_records"
-                                            })
-                                        })
-                                    }else{
-                                        layer.msg("error")
-                                    }
+                                    $.ajax({
+                                        url: "wechatfans/closerecord",
+                                        method: 'GET',
+                                        dataType: 'json',
+                                        data: {'id':id},
+                                        success: function(result){
+                                            if (result.result==1){
+                                                layer.msg('已关闭!',function(){
+                                                    window.location.reload()
+                                                });
+                                            }else{
+                                                layer.msg('操作失败!')
+                                            }
+                                        },
+                                        error:function(result){
+                                            layer.msg('error')
+                                        }
+                                    });
                                 }
                             </script>
                         </tr>
