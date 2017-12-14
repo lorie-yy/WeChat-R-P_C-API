@@ -773,6 +773,7 @@ def license_login(request):
                     if clouduser.count() > 0:
                         request.session['sc_cloudid'] = clouduser[0].cloudid
                         request.session['sc_shopid'] = clouduser[0].shopid
+                        request.session['sc_userlevel'] = clouduser[0].userlever
                         result['res'] = 3
                     else:
                         result['res'] = 4
