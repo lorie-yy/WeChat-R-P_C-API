@@ -1,0 +1,29 @@
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
+    <style>
+    .data-inline{
+        display: inline-flex;
+        margin-bottom: 25px;
+    }
+    .data-inline .data-table{
+        display: table;
+        height: 60px;
+        background-color: #fff;
+        margin-right: 25px;
+        text-align: center;
+        width: 160px;
+    }
+    .data-inline .data-table div{
+        display: table-cell;
+        width:35px;
+        background-color: #00838f
+    }
+    .data-inline .data-table dl{
+        margin: 0;
+        padding: 10px 0;
+    }
+    </style>
+{{ applyrecords }}
+{% endblock %}

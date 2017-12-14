@@ -1054,3 +1054,196 @@ def child_list(request):
     shopid = request.session.get('sc_shopid')
     context={}
     return render(request, 'wechatfans/child_list.html',context)
+
+def updateAllShopProfit():
+    '''
+    计算所有商户的收益
+    :param :
+    :return:
+    '''
+    alluser = cloudtouser.objects.filter(fathernode=0)
+    for fathernode in alluser:
+        fathernodeid = fathernode.id
+        childid = [item.id for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
+        for id in childid:
+            updateProfit(id,fathernodeid)
+
+
+def updateProfit(id,fathernodeid):
+    '''
+    计算二级商户的总收益，可提现
+    :param id:cloudtouser表中二级商户的id
+    :param fathernodeid:cloudtouser表中上级商户的id
+    :return:
+    '''
+    sd = shop_discountinfo.objects.filter(cloudtouser_id=id)
+    if sd.count() > 0:
+        ct = shop_discountinfo.objects.filter(cloudtouser_id=fathernodeid)
+        if ct.count() > 0:
+            #上级商户可提现金额
+            total = ct[0].cashed
+            #下级商户总收益
+            totalincome = sd[0].totalincome +(total-sd[0].start)*sd[0].discount
+            #下级商户可提现
+            availablecash = totalincome - sd[0].cashed - sd[0].applying
+            if sd[0].totalincome == totalincome and availablecash==sd[0].availablecash:
+                pass
+            else:
+                sd.update(totalincome=totalincome,availablecash=availablecash)
+
+def showAllChildshopProfit(request):
+    '''
+    显示所有子商户的收益情况
+    :param request:
+    :return:
+    '''
+    username = request.session.get('username','')
+    userlevel = request.session.get('sc_userlevel','')
+    user_type = request.session.get('user_type','')
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1 or userlevel!=1:
+        return render(request,'license_login.html')
+    fathernode = cloudtouser.objects.filter(username=username)
+    if fathernode.count() > 0:
+
+        #1.更新所有子商户的收益
+        #2.取出所有子商户的收益信息
+        context = {}
+        context["username"] = username
+        data = []
+        fathernodeid = fathernode[0].id
+        childid = [item.id for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
+        for id in childid:
+            updateProfit(id,fathernodeid)
+            ct = shop_discountinfo.objects.filter(cloudtouser_id=fathernodeid)
+            if ct.count() > 0:
+                tmpdict = {}
+                tmpdict["totalincome"] = ct[0].totalincome
+                tmpdict["availablecash"] = ct[0].availablecash
+                tmpdict["cashed"] = ct[0].cashed
+                tmpdict["applying"] = ct[0].applying
+                tmpdict["discount"] = ct[0].discount
+                data.append(tmpdict)
+        context["data"]=data
+        return render(request,'wechatfans/showallchildshopprofit.html',context)
+
+class getChildApply(View):
+    def get(self,request):
+        self.islogin(request)
+        username = request.session.get('username','')
+        fathernode = cloudtouser.objects.filter(username=username)
+        context = {}
+        if fathernode.count() > 0:
+            fathernodeid = fathernode[0].id
+            childname = [item.username for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
+            request.session["childname"]=childname
+            applyrecords = ApplyforWithdrawalRecords.objects.filter(paymentresult=103,username__in=childname)
+            context["username"] = username
+            context["applyrecords"] = applyrecords
+        return render(request,'wechatfans/showallchildshopapply.html',context)
+    def post(self,request):
+        self.islogin(request)
+        applyrecordid = request.GET.get('applyrecordid',-1)
+        result = request.GET.get('result','')
+        res = 1
+        if result == "pass":
+            if self.isSafe(request):
+                #1.转账代码可在此添加
+                #2.转帐成功后修改数据库
+                record = ApplyforWithdrawalRecords.objects.filter(id=applyrecordid)
+                applyingmoney = record[0].getmoney
+                #ApplyforWithdrawalRecords
+                record.update(paymentresult=101)
+                #shop_discountinfo
+                sd = shop_discountinfo.objects.filter(username=record[0].username)
+                cashed = sd[0].cashed + applyingmoney
+                applying = sd[0].applying - applyingmoney
+                sd.update(cashed=cashed,applying=applying)
+                res = 0
+        elif result == "refuse":
+            #拒绝转账
+            record = ApplyforWithdrawalRecords.objects.filter(id=applyrecordid)
+            applyingmoney = record[0].getmoney
+            #ApplyforWithdrawalRecords
+            record.update(paymentresult=102)
+            #shop_discountinfo
+            sd = shop_discountinfo.objects.filter(username=record[0].username)
+            availablecash = sd[0].availablecash + applyingmoney
+            applying = sd[0].applying - applyingmoney
+            sd.update(availablecash=availablecash,applying=applying)
+            res = 2
+        return JsonResponse({"res":res})
+
+    def isSafe(self,request):
+        try:
+            childname = request.session.get("childname",[])
+            applyrecordid = request.GET.get('applyrecordid',-1)
+            name = ApplyforWithdrawalRecords.objects.filter(id=applyrecordid)[0].username
+            if name in childname:
+                return True
+            else:
+                return False
+        except Exception,e:
+            return False
+
+    def islogin(self,request):
+        username = request.session.get('username','')
+        userlevel = request.session.get('sc_userlevel','')
+        user_type = request.session.get('user_type','')
+        is_superuser = request.session.get('is_superuser','')
+        if not username or user_type==0 or is_superuser==1 or userlevel!=1:
+            return render(request,'license_login.html')
+
+def getRecords(request):
+    '''
+    所有子商户的申请记录
+    :param request:
+    :return:
+    '''
+    username = request.session.get('username','')
+    userlevel = request.session.get('sc_userlevel','')
+    user_type = request.session.get('user_type','')
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1 or userlevel!=1:
+        return render(request,'license_login.html')
+
+    fathernode = cloudtouser.objects.filter(username=username)
+    context = {}
+    if fathernode.count() > 0:
+        fathernodeid = fathernode[0].id
+        childname = [item.username for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
+        request.session["childname"]=childname
+        applyrecords = ApplyforWithdrawalRecords.objects.filter(username__in=childname).exclude(paymentresult=103)
+        context["username"] = username
+        context["applyrecords"] = applyrecords
+    return render(request,'wechatfans/showapplyrecords.html',context)
+
+#=============子商户页面开始=================
+#1.查看收益
+def showProfit(request):
+    username = request.session.get('username','')
+    userlevel = request.session.get('sc_userlevel','')
+    user_type = request.session.get('user_type','')
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1 or userlevel!=2:
+        return render(request,'license_login.html')
+    #先计算更新
+    user = cloudtouser.objects.filter(username=username)
+    context = {}
+    context["username"] = username
+    if user.count() > 0:
+        fathernodeid = user[0].fathernode
+        updateProfit(user[0].id,fathernodeid)
+        sd = shop_discountinfo.objects.filter(cloudtouser_id=user[0].id)
+        if sd.count() > 0:
+            context["totalincome"] = sd[0].totalincome
+            context["availablecash"] = sd[0].availablecash
+            context["cashed"] = sd[0].cashed
+            context["applying"] = sd[0].applying
+        return render(request,'wechatfans/showprofit.html',context)
+
+#2.提现申请
+
+#3.申请记录
+
+#=============子商户页面结束=================

@@ -28,4 +28,8 @@ urlpatterns = patterns(
     url(r'child_list',views.child_list, name='child_list'),
     url(r'^getallprofit',views.getAllProfit.as_view(), name='getallprofit'),
     url(r'^getcloudprofit',views.getCloudProfit.as_view(), name='getcloudprofit'),
+    url(r'^getchildapply',views.getChildApply.as_view(), name='getchildapply'),
+    url(r'^showallchildshopprofit',views.showAllChildshopProfit, name='showallchildshopprofit'),
+    url(r'^getrecords',views.getRecords, name='getrecords'),
+    url(r'^showprofit',views.showProfit, name='showprofit'),
 )
