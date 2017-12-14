@@ -1041,3 +1041,16 @@ def modify_password(request):
         except Exception, e:
             print e
     return render(request, 'wechatfans/modify_password.html',uu)
+
+# 子商户列表
+def child_list(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    is_superuser = request.session.get('is_superuser','')
+    user_level=request.session.get('user_level','')
+    if not username or user_type==0 or is_superuser==1:
+        return render(request,'license_login.html')
+    cloudid = request.session.get('sc_cloudid')
+    shopid = request.session.get('sc_shopid')
+    context={}
+    return render(request, 'wechatfans/child_list.html',context)
