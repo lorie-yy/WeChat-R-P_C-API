@@ -25,11 +25,12 @@ urlpatterns = patterns(
     url(r'^transferaccounts',views.Transferaccounts.as_view(), name='transferaccounts'),
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
     url(r'closerecord',views.closerecord, name='closerecord'),
-    url(r'child_list',views.child_list, name='child_list'),
     url(r'^getallprofit',views.getAllProfit.as_view(), name='getallprofit'),
     url(r'^getcloudprofit',views.getCloudProfit.as_view(), name='getcloudprofit'),
     url(r'^getchildapply',views.getChildApply.as_view(), name='getchildapply'),
     url(r'^showallchildshopprofit',views.showAllChildshopProfit, name='showallchildshopprofit'),
+    url(r'^addchild',views.addchild, name='addchild'),
+    url(r'^edit_child_dis',views.edit_child_dis, name='edit_child_dis'),
     url(r'^getrecords',views.getRecords, name='getrecords'),
     url(r'^showprofit',views.showProfit, name='showprofit'),
 )

@@ -601,7 +601,6 @@ def closerecord(request):
         availablecash = sdc[0].availablecash + record[0].getmoney
         applying = sdc[0].applying - record[0].getmoney
         sdc.update(applying=applying,availablecash=availablecash)
-        print '***************record',record
         result=1
         print result
 
@@ -1042,19 +1041,6 @@ def modify_password(request):
             print e
     return render(request, 'wechatfans/modify_password.html',uu)
 
-# 子商户列表
-def child_list(request):
-    username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    user_level=request.session.get('user_level','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
-    cloudid = request.session.get('sc_cloudid')
-    shopid = request.session.get('sc_shopid')
-    context={}
-    return render(request, 'wechatfans/child_list.html',context)
-
 def updateAllShopProfit():
     '''
     计算所有商户的收益
@@ -1083,13 +1069,114 @@ def updateProfit(id,fathernodeid):
             #上级商户可提现金额
             total = ct[0].cashed
             #下级商户总收益
-            totalincome = sd[0].totalincome +(total-sd[0].start)*sd[0].discount
+            totalincome = sd[0].beforediscountincome +(total-sd[0].start)*sd[0].discount
             #下级商户可提现
             availablecash = totalincome - sd[0].cashed - sd[0].applying
             if sd[0].totalincome == totalincome and availablecash==sd[0].availablecash:
                 pass
             else:
                 sd.update(totalincome=totalincome,availablecash=availablecash)
+@csrf_exempt
+def addchild(request):
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        discount = request.POST.get('discount')
+        fa_username = request.session.get('username','')
+        result = 4
+        uu = {'res':result}
+
+        userSet = User.objects.filter(username=username)
+        if userSet.count() > 0:
+            print "user exists"
+            result = 2
+            uu = {'res':result}
+            return JsonResponse(uu)
+        else:
+            clouduser = cloudtouser.objects.filter(username=fa_username)
+            #add cloud admin
+            if clouduser.count() > 0:
+                father_id=clouduser[0].id
+                all_dis=calculate_discount(father_id,discount)
+                #总折扣大于1时,不允许新增
+                if all_dis > 1:
+                    return JsonResponse({'res':5})
+                # auth_user表
+                user = User.objects.create_user(username=username,password=password,user_type = 1)
+                print user
+
+                user.is_staff = 1
+                user.is_active = 1
+                user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
+                user.save()
+                #cloud_user表
+                co = cloudtouser(username=username,password=password,fathernode=clouduser[0].id,userlever=2)
+                co.save()
+                #获取子商户总收益
+                fa_dis=shop_discountinfo.objects.filter(cloudtouser_id=clouduser[0].id)
+                if fa_dis.count() > 0:
+                    total=fa_dis[0].cashed*float(discount)
+                    #discount表
+                    sd = shop_discountinfo(cloudtouser=co,
+                                           discount=discount,
+                                           totalincome=total,
+                                           beforediscountincome=total,
+                                           availablecash=total,
+                                           start=fa_dis[0].cashed)
+                    sd.save()
+                    result = 0
+                    uu = {'res':result}
+                    return JsonResponse(uu)
+            else:
+                result = 1
+                uu = {'res':result}
+                return JsonResponse(uu)
+            return JsonResponse(uu)
+
+# 修改子商户discount
+def edit_child_dis(request):
+    username = request.session.get('username','')
+    user_type = request.session.get('user_type','')
+    is_superuser = request.session.get('is_superuser','')
+    id = request.GET.get('id')
+    discount = request.GET.get('discount')
+    print 'id,discount',id,discount
+    result=0
+    if not username or user_type==0 or is_superuser==1:
+        return render(request,'license_login.html')
+    try:
+        clouduser = cloudtouser.objects.filter(username=username)
+        if clouduser.count() > 0:
+            #获取子商户总收益
+            fa_id=clouduser[0].id
+            fa_dis=shop_discountinfo.objects.filter(cloudtouser_id=fa_id)
+            total=fa_dis[0].cashed
+            #更新shop_discountinfo
+            sdc = shop_discountinfo.objects.filter(id=id)
+            user_id=sdc[0].cloudtouser_id
+            beforediscountincome=sdc[0].totalincome
+            all_dis=calculate_discount(fa_id,discount,user_id)
+            #总折扣小于等于1时,允许修改
+            if all_dis <= 1:
+                print 'all_dis',all_dis
+                sdc.update(discount=discount,start=total,beforediscountincome=beforediscountincome)
+                result=1
+                print result
+            else:
+                result=3
+    except Exception,e:
+        print e
+        result=2
+    print result
+    return JsonResponse({'result':result})
+
+# 计算总折扣
+def calculate_discount(father_id,discount,child_id=-100):
+    allchild = cloudtouser.objects.filter(fathernode=father_id).exclude(id=child_id)
+    allid=[child.id for child in allchild]
+    allid_rec=shop_discountinfo.objects.filter(cloudtouser_id__in=allid)
+    all_dis=sum([dis.discount for dis in allid_rec])+float(discount)
+    return all_dis
+
 
 def showAllChildshopProfit(request):
     '''
@@ -1115,14 +1202,16 @@ def showAllChildshopProfit(request):
         childid = [item.id for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
         for id in childid:
             updateProfit(id,fathernodeid)
-            ct = shop_discountinfo.objects.filter(cloudtouser_id=fathernodeid)
+            ct = shop_discountinfo.objects.filter(cloudtouser_id=id)
             if ct.count() > 0:
                 tmpdict = {}
-                tmpdict["totalincome"] = ct[0].totalincome
-                tmpdict["availablecash"] = ct[0].availablecash
-                tmpdict["cashed"] = ct[0].cashed
-                tmpdict["applying"] = ct[0].applying
+                tmpdict["id"] = ct[0].id
+                tmpdict["totalincome"] = ct[0].totalincome/100.000
+                tmpdict["availablecash"] = ct[0].availablecash/100.000
+                tmpdict["cashed"] = ct[0].cashed/100.000
+                tmpdict["applying"] = ct[0].applying/100.000
                 tmpdict["discount"] = ct[0].discount
+                tmpdict["ch_username"] = ct[0].cloudtouser.username
                 data.append(tmpdict)
         context["data"]=data
         return render(request,'wechatfans/showallchildshopprofit.html',context)
