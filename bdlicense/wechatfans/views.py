@@ -1226,14 +1226,19 @@ class getChildApply(View):
             fathernodeid = fathernode[0].id
             childname = [item.username for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
             request.session["childname"]=childname
-            applyrecords = ApplyforWithdrawalRecords.objects.filter(paymentresult=103,username__in=childname)
+            allapplyrecords = ApplyforWithdrawalRecords.objects.filter(username__in=childname)
+            applyrecords103=allapplyrecords.filter(paymentresult=103)
+            applyrecords=allapplyrecords.exclude(paymentresult=103)
             context["username"] = username
+            context["applyrecords103"] = applyrecords103
             context["applyrecords"] = applyrecords
         return render(request,'wechatfans/showallchildshopapply.html',context)
+    @csrf_exempt
     def post(self,request):
         self.islogin(request)
-        applyrecordid = request.GET.get('applyrecordid',-1)
-        result = request.GET.get('result','')
+        applyrecordid = request.POST.get('applyrecordid','')
+        result = request.POST.get('result','')
+        print 'recordid**********',applyrecordid,result
         res = 1
         if result == "pass":
             if self.isSafe(request):
@@ -1244,7 +1249,9 @@ class getChildApply(View):
                 #ApplyforWithdrawalRecords
                 record.update(paymentresult=101)
                 #shop_discountinfo
-                sd = shop_discountinfo.objects.filter(username=record[0].username)
+                username=cloudtouser.objects.filter(username=record[0].username)
+                userid=username[0].id
+                sd = shop_discountinfo.objects.filter(cloudtouser_id=userid)
                 cashed = sd[0].cashed + applyingmoney
                 applying = sd[0].applying - applyingmoney
                 sd.update(cashed=cashed,applying=applying)
@@ -1256,11 +1263,14 @@ class getChildApply(View):
             #ApplyforWithdrawalRecords
             record.update(paymentresult=102)
             #shop_discountinfo
-            sd = shop_discountinfo.objects.filter(username=record[0].username)
+            username=cloudtouser.objects.filter(username=record[0].username)
+            userid=username[0].id
+            sd = shop_discountinfo.objects.filter(cloudtouser_id=userid)
             availablecash = sd[0].availablecash + applyingmoney
             applying = sd[0].applying - applyingmoney
             sd.update(availablecash=availablecash,applying=applying)
             res = 2
+        print '************res',res
         return JsonResponse({"res":res})
 
     def isSafe(self,request):
@@ -1302,7 +1312,9 @@ def getRecords(request):
         fathernodeid = fathernode[0].id
         childname = [item.username for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
         request.session["childname"]=childname
-        applyrecords = ApplyforWithdrawalRecords.objects.filter(username__in=childname).exclude(paymentresult=103)
+        applyrecords = ApplyforWithdrawalRecords.objects.filter(username__in=childname)
+        print 'applyrecords**********',applyrecords
+        print 'applyrecords**********',applyrecords[0].username
         context["username"] = username
         context["applyrecords"] = applyrecords
     return render(request,'wechatfans/showapplyrecords.html',context)

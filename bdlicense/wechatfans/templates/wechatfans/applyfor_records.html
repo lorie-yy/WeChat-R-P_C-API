@@ -43,24 +43,27 @@
                             </td>
                             <script>
                                 function closerecord(id){
-                                    $.ajax({
-                                        url: "wechatfans/closerecord",
-                                        method: 'GET',
-                                        dataType: 'json',
-                                        data: {'id':id},
-                                        success: function(result){
-                                            if (result.result==1){
-                                                layer.msg('已关闭!',function(){
-                                                    window.location.reload()
-                                                });
-                                            }else{
-                                                layer.msg('操作失败!')
+                                    var btnSn=function(){
+                                        $.ajax({
+                                            url: "wechatfans/closerecord",
+                                            method: 'GET',
+                                            dataType: 'json',
+                                            data: {'id':id},
+                                            success: function(result){
+                                                if (result.result==1){
+                                                    layer.msg('已关闭!',function(){
+                                                        window.location.reload()
+                                                    });
+                                                }else{
+                                                    layer.msg('操作失败!')
+                                                }
+                                            },
+                                            error:function(result){
+                                                layer.msg('error')
                                             }
-                                        },
-                                        error:function(result){
-                                            layer.msg('error')
-                                        }
-                                    });
+                                        });
+                                    };
+                                    layer.confirm('确定要关闭此申请吗?',{title:'确认'},btnSn)
                                 }
                             </script>
                         </tr>

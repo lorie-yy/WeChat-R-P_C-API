@@ -137,25 +137,26 @@
     }
     function stop_child(id){
         var discount=0;
-        $.ajax({
-            url: "/wechatfans/edit_child_dis",
-            method: 'GET',
-            dataType: 'json',
-            data: {'id':id,'discount':discount},
-            success: function(result){
-                layer.confirm('确定要停用此商户吗?',{title:'停用'},function(){
+        var btnSn=function(){
+            $.ajax({
+                url: "/wechatfans/edit_child_dis",
+                method: 'GET',
+                dataType: 'json',
+                data: {'id':id,'discount':discount},
+                success: function(result){
                     if (result.result==1){
                         layer.msg('停用成功!');
                         setTimeout(function(){window.location.reload()}, 2000)
                     }else{
                         layer.msg('停用失败!')
                     }
-                })
-            },
-            error:function(result){
-                layer.msg('error')
-            }
-        })
+                },
+                error:function(result){
+                    layer.msg('error')
+                }
+            })
+        };
+        layer.confirm('确定要停用此商户吗?',{title:'确认'},btnSn)
     }
     </script>
     <div class="panel" id="add_child">
