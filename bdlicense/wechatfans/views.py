@@ -10,6 +10,7 @@ from django.template.context_processors import csrf
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.contrib.auth import authenticate
+from django.core.cache import cache
 import requests
 from rest_framework import mixins,generics
 import simplejson
@@ -246,20 +247,37 @@ def showfans(request):
     context ={}
     # 调用函数
     # totalprofit,totalfans=earnings(cloudid,shopid,'','')
-    #获取今日收益以及粉丝
-    todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
     #获取可提现金额
     takemoney,flag=support_takemoney(cloudid,shopid)
-    #重新计算可提现金额以及总收入
-    saveShopProfit(cloudid,shopid,takemoney)
-    #获取总收入
-    shopprofit = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
-    if shopprofit.count() > 0:
-        totalprofit = shopprofit[0].totalincome
-    else:
-        totalprofit = 0
     #获取粉丝数
     totalfans = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid).count()
+    if cache.get("takemoney",'')== takemoney and \
+        cache.get("totalfans",'')== totalfans:
+        print "get value in cache"
+        takemoney = cache.get("takemoney")
+        totalprofit = cache.get("totalprofit")
+        totalfans = cache.get("totalfans")
+        todayprofit = cache.get("todayprofit")
+        todayfans = cache.get("todayfans")
+    else:
+        print "update value "
+        #获取今日收益以及粉丝
+        todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
+
+        #重新计算可提现金额以及总收入
+        saveShopProfit(cloudid,shopid,takemoney)
+        #获取总收入
+        shopprofit = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+        if shopprofit.count() > 0:
+            totalprofit = shopprofit[0].totalincome
+        else:
+            totalprofit = 0
+
+        cache.set("todayprofit", todayprofit, timeout=None)
+        cache.set("todayfans", todayfans, timeout=None)
+        cache.set("takemoney", takemoney, timeout=None)
+        cache.set("totalprofit", totalprofit, timeout=None)
+        cache.set("totalfans", totalfans, timeout=None)
     # x轴日期数据
     today = datetime.date.today()
     oneweekago = today - datetime.timedelta(7)
@@ -284,9 +302,12 @@ def showfans(request):
     seriesdata=[]
     for item in xdata:
         # 某天开始0点-结束24点
-        startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
-        endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
-        dayprofit,dayfans=earnings(cloudid,shopid,startDate,endDate)
+        dayprofit = cache.get(item,'')
+        if dayprofit =="" or item == end :
+            startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
+            endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
+            dayprofit,dayfans=earnings(cloudid,shopid,startDate,endDate)
+            cache.set(item, dayprofit, timeout=None)
         seriesdata.append(dayprofit/100.00)
     print 'seriesdata',seriesdata
     context['seriesdata']=seriesdata
@@ -578,7 +599,7 @@ def applyfor_records(request):
     else:
         for i in suc:
             totalsuc += i.getmoney
-            print '成功提现总计为',totalsuc
+        print '成功提现总计为',totalsuc
     context['totalsuc']=totalsuc/100.000
     context['recordslist']=recordslist
     return render(request, 'wechatfans/applyfor_records.html',context)
@@ -661,6 +682,7 @@ def saveThirdpartInfo(request):
 
     except Exception,e:
         result['error']=2
+        result['msg']=str(e)
     return HttpResponse(json.dumps(result))
 
 def getCloudname(request):
