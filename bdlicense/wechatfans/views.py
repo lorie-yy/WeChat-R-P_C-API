@@ -231,11 +231,9 @@ def showfans(request):
     print 'path_url',path_url
     requests.get(path_url)
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
-    print 'user_type',user_type
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    sc_userlevel = request.session.get('sc_userlevel','')
+    if sc_userlevel ==2:
+        return HttpResponseRedirect('showprofit')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     # 今天开始0点-结束24点
@@ -479,10 +477,7 @@ def support_takemoney(cloudid,shopid):
 
 def takemoney(request):
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    islogin(request)
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     takemoney,flag=support_takemoney(cloudid,shopid)
@@ -498,10 +493,7 @@ def takemoney(request):
 @csrf_exempt
 def apply_for_withdrawal(request):
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    islogin(request)
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     paymentmode = request.POST.get('paymentmode')
@@ -552,10 +544,7 @@ def apply_for_withdrawal(request):
 # 申请提现记录
 def applyfor_records(request):
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    islogin(request)
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
     records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
@@ -607,11 +596,8 @@ def applyfor_records(request):
 # 关闭申请
 def closerecord(request):
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
     context ={}
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    islogin(request)
     try:
         id = request.GET.get('id')
         record=ApplyforWithdrawalRecords.objects.filter(id=id)
@@ -1011,11 +997,7 @@ class Transferaccounts(View):
 @csrf_exempt
 def logout(request):
     if request.method == "GET":
-        username = request.session.get('username','')
-        user_type = request.session.get('user_type','')
-        is_superuser = request.session.get('is_superuser','')
-        if not username or user_type==0 or is_superuser==1:
-            return render(request,'license_login.html')
+        islogin(request)
         request.session.flush()
         return render(request,'license_login.html')
 
@@ -1024,11 +1006,8 @@ def logout(request):
 @csrf_exempt
 def modify_password(request):
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
     uu = {'username': username}
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    islogin(request)
     if request.method == 'POST':
         username = request.session['username']
         password = request.POST.get('password')
@@ -1157,14 +1136,10 @@ def addchild(request):
 # 修改子商户discount
 def edit_child_dis(request):
     username = request.session.get('username','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
     id = request.GET.get('id')
     discount = request.GET.get('discount')
-    print 'id,discount',id,discount
     result=0
-    if not username or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
+    islogin(request)
     try:
         clouduser = cloudtouser.objects.filter(username=username)
         if clouduser.count() > 0:
@@ -1207,11 +1182,7 @@ def showAllChildshopProfit(request):
     :return:
     '''
     username = request.session.get('username','')
-    userlevel = request.session.get('sc_userlevel','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1 or userlevel!=1:
-        return render(request,'license_login.html')
+    islogin(request)
     fathernode = cloudtouser.objects.filter(username=username)
     if fathernode.count() > 0:
 
@@ -1240,7 +1211,7 @@ def showAllChildshopProfit(request):
 
 class getChildApply(View):
     def get(self,request):
-        self.islogin(request)
+        islogin(request)
         username = request.session.get('username','')
         fathernode = cloudtouser.objects.filter(username=username)
         context = {}
@@ -1257,7 +1228,7 @@ class getChildApply(View):
         return render(request,'wechatfans/showallchildshopapply.html',context)
     @csrf_exempt
     def post(self,request):
-        self.islogin(request)
+        islogin(request)
         applyrecordid = request.POST.get('applyrecordid','')
         result = request.POST.get('result','')
         print 'recordid**********',applyrecordid,result
@@ -1307,13 +1278,13 @@ class getChildApply(View):
         except Exception,e:
             return False
 
-    def islogin(self,request):
-        username = request.session.get('username','')
-        userlevel = request.session.get('sc_userlevel','')
-        user_type = request.session.get('user_type','')
-        is_superuser = request.session.get('is_superuser','')
-        if not username or user_type==0 or is_superuser==1 or userlevel!=1:
-            return render(request,'license_login.html')
+def islogin(request):
+    username = request.session.get('username','')
+    userlevel = request.session.get('sc_userlevel','')
+    user_type = request.session.get('user_type','')
+    is_superuser = request.session.get('is_superuser','')
+    if not username or user_type==0 or is_superuser==1 or userlevel!=1:
+        return render(request,'license_login.html')
 
 def getRecords(request):
     '''
@@ -1322,11 +1293,7 @@ def getRecords(request):
     :return:
     '''
     username = request.session.get('username','')
-    userlevel = request.session.get('sc_userlevel','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1 or userlevel!=1:
-        return render(request,'license_login.html')
+    islogin(request)
 
     fathernode = cloudtouser.objects.filter(username=username)
     context = {}
@@ -1345,11 +1312,7 @@ def getRecords(request):
 #1.查看收益
 def showProfit(request):
     username = request.session.get('username','')
-    userlevel = request.session.get('sc_userlevel','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
-    if not username or user_type==0 or is_superuser==1 or userlevel!=2:
-        return render(request,'license_login.html')
+    islogin(request)
     #先计算更新
     user = cloudtouser.objects.filter(username=username)
     context = {}
@@ -1363,7 +1326,7 @@ def showProfit(request):
             context["availablecash"] = sd[0].availablecash
             context["cashed"] = sd[0].cashed
             context["applying"] = sd[0].applying
-        return render(request,'wechatfans/showprofit.html',context)
+        return render(request,'wechatfans/showfans.html',context)
 
 #2.提现申请
 
