@@ -31,6 +31,5 @@ urlpatterns = patterns(
     url(r'^showallchildshopprofit',views.showAllChildshopProfit, name='showallchildshopprofit'),
     url(r'^addchild',views.addchild, name='addchild'),
     url(r'^edit_child_dis',views.edit_child_dis, name='edit_child_dis'),
-    url(r'^getrecords',views.getRecords, name='getrecords'),
     url(r'^showprofit',views.showProfit, name='showprofit'),
 )

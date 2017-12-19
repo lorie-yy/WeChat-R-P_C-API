@@ -1296,7 +1296,7 @@ class getChildApply(View):
     def isSafe(self,request):
         try:
             childname = request.session.get("childname",[])
-            applyrecordid = request.GET.get('applyrecordid',-1)
+            applyrecordid = request.POST.get('applyrecordid',-1)
             name = ApplyforWithdrawalRecords.objects.filter(id=applyrecordid)[0].username
             if name in childname:
                 return True
@@ -1314,27 +1314,6 @@ def islogin(request):
 
     return username,userlevel,user_type,is_superuser
 
-def getRecords(request):
-    '''
-    所有子商户的申请记录
-    :param request:
-    :return:
-    '''
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
-    if username=='':
-        return render(request,'license_login.html')
-
-    fathernode = cloudtouser.objects.filter(username=username)
-    context = {}
-    if fathernode.count() > 0:
-        fathernodeid = fathernode[0].id
-        childname = [item.username for item in cloudtouser.objects.filter(fathernode=fathernodeid)]
-        request.session["childname"]=childname
-        applyrecords = ApplyforWithdrawalRecords.objects.filter(username__in=childname)
-        context["username"] = username
-        context["sc_userlevel"] = sc_userlevel
-        context["applyrecords"] = applyrecords
-    return render(request,'wechatfans/showapplyrecords.html',context)
 
 #=============子商户页面开始=================
 #1.查看收益
