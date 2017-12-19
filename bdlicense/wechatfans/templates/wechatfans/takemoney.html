@@ -131,7 +131,7 @@
                     <label for="totalmoney" class="col-sm-2 control-label">可提现余额 ：</label>
                     <div class="col-sm-3">
                         <span class="btn special-color" id="totalmoney" style="cursor: default;">
-                            <strong>{{ takemoney }} 元</strong>
+                            <strong>{% if sc_userlevel == 1 %}{{ takemoney }}{% else %}{{ availablecash }}{% endif %} 元</strong>
                         </span>
                         <span>(最低100元起)</span>
                     </div>

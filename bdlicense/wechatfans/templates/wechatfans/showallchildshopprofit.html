@@ -45,9 +45,12 @@
                 },
                 discount: {
                     required: "必填",
-                    range:"请输入0~1之间的数"
+                    range:"请输入0~1之间的数",
+                    min:"请输入大于等于0的数",
+                    max:"请输入小于等于1的数"
                 }
-            }
+            },
+            submitHandler:function(form){submit_add()}
         });
         $('#add_child').hide();
     });
@@ -192,7 +195,7 @@
                 </div>
                 <div class="form-group button-group">
                     <div class="col-sm-4">
-                        <input type="button" onclick="submit_add()" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="确定">
+                        <input type="submit" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="确定">
                     </div>
                     <div class="col-sm-2" style="float: right">
                         <a onclick="show_list()" class="btn btn-default" style="float: right">返回</a>
