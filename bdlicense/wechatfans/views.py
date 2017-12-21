@@ -249,10 +249,8 @@ def showfans(request):
     # totalprofit,totalfans=earnings(cloudid,shopid,'','')
     #获取可提现金额
     takemoney,flag=support_takemoney(cloudid,shopid)
-    #获取粉丝数
-    totalfans = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid).count()
-    if cache.get("takemoney",'')== takemoney and \
-        cache.get("totalfans",'')== totalfans:
+
+    if cache.get("takemoney",'')== takemoney :
         print "get value in cache"
         takemoney = cache.get("takemoney")
         totalprofit = cache.get("totalprofit")
@@ -263,15 +261,10 @@ def showfans(request):
         print "update value "
         #获取今日收益以及粉丝
         todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
-
+        #获取粉丝数
+        totalfans = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid).count()
         #重新计算可提现金额以及总收入
-        saveShopProfit(cloudid,shopid,takemoney)
-        #获取总收入
-        shopprofit = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
-        if shopprofit.count() > 0:
-            totalprofit = shopprofit[0].totalincome
-        else:
-            totalprofit = 0
+        totalprofit = saveShopProfit(cloudid,shopid,takemoney)
 
         cache.set("todayprofit", todayprofit, timeout=None)
         cache.set("todayfans", todayfans, timeout=None)
@@ -342,7 +335,7 @@ def saveShopProfit(cloudid,shopid,takemoney):
                                cloudtouser=cloudtouserobj,
                                shopid=shopid)
         ad.save()
-
+    return totalprofit
 
 #保存所有shop_discountinfo
 def saveShopDiscountInfo():
