@@ -16,6 +16,7 @@ class TwechatOffline(models.Model):
     price = models.CharField('价格',max_length=4,default='0')
     settlement = models.CharField('是否结算',max_length=1,default='0')#0：不可以结算;1:可以结算;2:已结算
     gh_name = models.CharField('公众号名称',max_length=32,default='')
+    username = models.CharField('用户名',max_length=32)
 
 class ThridPartyConfig(models.Model):
     thirdpartname = models.CharField('第三方接口名称',max_length=16)

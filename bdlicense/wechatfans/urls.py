@@ -32,4 +32,5 @@ urlpatterns = patterns(
     url(r'^addchild',views.addchild, name='addchild'),
     url(r'^edit_child_dis',views.edit_child_dis, name='edit_child_dis'),
     url(r'^showprofit',views.showProfit, name='showprofit'),
+    url(r'^is_valid',views.is_valid, name='is_valid'),
 )

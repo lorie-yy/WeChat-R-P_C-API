@@ -58,11 +58,12 @@ class TAuthdata(View):
                     tpc = ThridPartyConfig.objects.get(type='1')
                     cloudconfig = CloudConfig(cloudid=cloudid,thirdpart=tpc)
                     cloudconfig.save()
-
+                else:
+                    cloudconfig=cloudconfig[0]
                 context={}
-                context['url'] = cloudconfig[0].thirdpart.url
+                context['url'] = cloudconfig.thirdpart.url
 
-                if cloudconfig[0].thirdpart.type == '1':#bigwifi
+                if cloudconfig.thirdpart.type == '1':#bigwifi
                     context['mac'] = mac
                     context['bmac'] = bmac
                     context['wlanacport'] = wlanacport
@@ -83,6 +84,7 @@ class Getfansnumber(View):
         cloudid = request.GET.get('cloudid','')
         shopid = request.GET.get('shop_id',0)
         usermac = request.GET.get('usermac','')
+        username = request.GET.get('username','')
         type = request.GET.get('type','')
         oid = request.GET.get('oid','')
         openid = request.GET.get('openid','')
@@ -98,7 +100,7 @@ class Getfansnumber(View):
             if key != 'sign':
                 stringparm.append(key+'='+unicode(request.GET[key]))
         stringparm.append('key=1qazxsw23edcvfr4')
-        newsign = self.direct_sign_md5(stringparm)
+        newsign = direct_sign_md5(stringparm)
         sign = request.GET.get('sign','')
 
         if newsign == sign:
@@ -118,9 +120,10 @@ class Getfansnumber(View):
                                               apmac=wlanapmac,
                                               type=type,
                                               settlement='1',
+                                              username=username,
                                               cloudid=cloudid)
                 else:
-                    userlist.update(shopid=int(shopid),cloudid=cloudid)
+                    userlist.update(shopid=int(shopid),username=username,cloudid=cloudid)
                     userlist = userlist[0]
                 url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
                 response = requests.get(url)
@@ -137,11 +140,11 @@ class Getfansnumber(View):
                         result['error']='0'
                     userlist.save()
         return HttpResponse(json.dumps(result))
-    def direct_sign_md5(self,parameters):
-        s = '&'.join(sorted(parameters))
-        m = hashlib.md5()
-        m.update(s.encode('utf-8'))
-        return "".join("{:02x}".format(ord(c)) for c in m.digest())
+def direct_sign_md5(parameters):
+    s = '&'.join(sorted(parameters))
+    m = hashlib.md5()
+    m.update(s.encode('utf-8'))
+    return "".join("{:02x}".format(ord(c)) for c in m.digest())
 
 class Sub_detail(View):
     '''
@@ -249,7 +252,7 @@ def showfans(request):
     # 调用函数
     # totalprofit,totalfans=earnings(cloudid,shopid,'','')
     #获取可提现金额
-    takemoney,flag=support_takemoney(cloudid,shopid)
+    takemoney,flag=support_takemoney(username)
 
     if cache.get("takemoney",'')== takemoney :
         print "get value in cache"
@@ -261,9 +264,9 @@ def showfans(request):
     else:
         print "update value "
         #获取今日收益以及粉丝
-        todayprofit,todayfans=earnings(cloudid,shopid,startDate,endDate)
+        todayprofit,todayfans=earnings(username,startDate,endDate)
         #获取粉丝数
-        totalfans = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid).count()
+        totalfans = TwechatOffline.objects.filter(username=username).count()
         #重新计算可提现金额以及总收入
         totalprofit = saveShopProfit(cloudid,shopid,takemoney)
 
@@ -300,7 +303,7 @@ def showfans(request):
         if dayprofit =="" or item == end :
             startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
             endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
-            dayprofit,dayfans=earnings(cloudid,shopid,startDate,endDate)
+            dayprofit,dayfans=earnings(username,startDate,endDate)
             cache.set(item, dayprofit, timeout=None)
         seriesdata.append(dayprofit/100.00)
     print 'seriesdata',seriesdata
@@ -366,7 +369,7 @@ def saveShopDiscountInfo():
                     if shopinfolist.count() == 0:
                         sd = shop_discountinfo(cloudid=cloudid,shopid=itemshopid,cloudtouser=cloudtouserob[0])
                         sd.save()
-                        takemoney,flag=support_takemoney(cloudid,itemshopid)
+                        takemoney,flag=support_takemoney(cloudtouserob[0].username)
                         saveShopProfit(cloudid,itemshopid,takemoney)
 
 class getCloudProfit(mixins.ListModelMixin,
@@ -408,18 +411,16 @@ class getAllProfit(mixins.ListModelMixin,
 
 
 # 计算收益量和粉丝量
-def earnings(cloudid,shopid,startDate,enddate):
+def earnings(username,startDate,enddate):
+    usernamelist = cloudtouser.objects.filter(username=username)
     if (not startDate) and (not enddate):
-        userobject = TwechatOffline.objects.filter(cloudid=cloudid,
-                                          shopid=shopid
-                                          )
+        userobject = TwechatOffline.objects.filter(username=username)
     else:
-        userobject = TwechatOffline.objects.filter(cloudid=cloudid,
-                                          shopid=shopid,
+        userobject = TwechatOffline.objects.filter(username=username,
                                         authtime__range=(startDate,enddate)
                                           )
     # 用户权限收益打折扣
-    shop_discount=shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+    shop_discount=shop_discountinfo.objects.filter(cloudid=usernamelist[0].cloudid,shopid=usernamelist[0].shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if shop_discount.count()==0:
         if discountlist.count()==0:
@@ -435,19 +436,20 @@ def earnings(cloudid,shopid,startDate,enddate):
         # print 'usermac',item.price
         profit += (float(item.price)*100)
     profit_dis=int(profit*float(discount))
-    print 'profit_dis',profit_dis
+    print 'profit_dis:',profit_dis,profit
 
     return profit_dis,userobject.count()
 
 # 可提现金额
-def support_takemoney(cloudid,shopid):
-    userobject = TwechatOffline.objects.filter(cloudid=cloudid,shopid=shopid,settlement=1).order_by('-id')
+def support_takemoney(username):
+    usernamelist = cloudtouser.objects.filter(username=username)
+    userobject = TwechatOffline.objects.filter(username=username,settlement=1).order_by('-id')
     if userobject.count() > 0:
         flag = userobject[0].id
     else:
         flag = 0
     # 用户权限收益打折扣
-    shop_discount=shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
+    shop_discount=shop_discountinfo.objects.filter(cloudid=usernamelist[0].cloudid,shopid=usernamelist[0].shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
     if shop_discount.count()==0:
         if discountlist.count()==0:
@@ -459,7 +461,7 @@ def support_takemoney(cloudid,shopid):
     profit=0
 
     #申请提现的金额
-    record = ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
+    record = ApplyforWithdrawalRecords.objects.filter(username=username,paymentresult=103)
     if record.count() > 0:
         applyformoney = record[0].getmoney
     else:
@@ -478,7 +480,7 @@ def takemoney(request):
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
-    takemoney,flag=support_takemoney(cloudid,shopid)
+    takemoney,flag=support_takemoney(username)
     context ={}
     context['cloudid']=cloudid
     context['flag']=flag
@@ -518,7 +520,7 @@ def apply_for_withdrawal(request):
     bank_name = request.POST.get('bank_name')
     banknum = request.POST.get('banknum')
     # 如果记录中有可转账状态,则不允许再次申请
-    history=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=103)
+    history=ApplyforWithdrawalRecords.objects.filter(username=username,paymentresult=103)
     if history.count()>0:
         result=2
     # elif getmoney < 10000:
@@ -558,7 +560,7 @@ def applyfor_records(request):
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
-    records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
+    records=ApplyforWithdrawalRecords.objects.filter(username=username)
     context ={}
     context['records']=records
     context['username']=username
@@ -594,7 +596,7 @@ def applyfor_records(request):
 
     # 成功提现总计
     totalsuc=0
-    suc=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=101)
+    suc=ApplyforWithdrawalRecords.objects.filter(username=username,paymentresult=101)
     if suc.count()==0:
         print '成功提现总计为0'
     else:
@@ -963,6 +965,7 @@ class Transferaccounts(View):
         if applyfor.count() > 0:
             cloudid = applyfor[0].cloudid
             shopid = applyfor[0].shopid
+            usernamelist = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
             getmoney = applyfor[0].getmoney
             if typeThird == 'pass':
                 #是否符合提现条件
@@ -973,7 +976,7 @@ class Transferaccounts(View):
                     #确认转账成功后更新数据库
                     #1.更新TwechatOffline
                     oldflag = applyfor[0].flag
-                    twolist = TwechatOffline.objects.filter(id__lte=oldflag,cloudid=cloudid,shopid=shopid,settlement=1)
+                    twolist = TwechatOffline.objects.filter(id__lte=oldflag,username=usernamelist[0].username,settlement=1)
                     twolist.update(settlement=2)
 
                     #2.更新ApplyforWithdrawalRecords
@@ -1366,3 +1369,61 @@ def showProfit(request):
 #3.申请记录
 
 #=============子商户页面结束=================
+
+#校验云平台发送的用户名和密码
+def is_valid(request):
+    username = request.GET.get('username','')
+    password = request.GET.get('password','')
+    timestamp = request.GET.get('timestamp','')
+    oldsign = request.GET.get('sign','')
+    context={}
+    pc = prpcrypt('thisismykeysqazx')
+    username = pc.decrypt(username)
+    password = pc.decrypt(password)
+    timestamp = pc.decrypt(timestamp)
+    context['username']=username
+    context['password']=password
+    context['timestamp']=timestamp
+    stringparm=[]
+    for key,value in context.items():
+        stringparm.append(key+'='+unicode(value))
+    stringparm.append('key=gyufytdoiu')
+    sign = direct_sign_md5(stringparm)
+    print oldsign,sign
+    if oldsign == sign:
+        newtimestamp = (int(time.time() * 1000))
+        timestamp = int(timestamp)
+        print newtimestamp,timestamp
+        if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+            user_pass = authenticate(username=username,password=password)
+            if user_pass:
+                return JsonResponse({'res':0})
+    return JsonResponse({'res':1})
+
+import sys
+from Crypto.Cipher import AES
+from binascii import b2a_hex, a2b_hex
+
+class prpcrypt():
+    def __init__(self, key):
+        self.key = key
+        self.mode = AES.MODE_CBC
+
+    #加密函数，如果text不是16的倍数【加密文本text必须为16的倍数！】，那就补足为16的倍数
+    def encrypt(self, text):
+        cryptor = AES.new(self.key, self.mode, self.key)
+        #这里密钥key 长度必须为16（AES-128）、24（AES-192）、或32（AES-256）Bytes 长度.目前AES-128足够用
+        length = 16
+        count = len(text)
+        add = length - (count % length)
+        text = text + ('\0' * add)
+        self.ciphertext = cryptor.encrypt(text)
+        #因为AES加密时候得到的字符串不一定是ascii字符集的，输出到终端或者保存时候可能存在问题
+        #所以这里统一把加密后的字符串转化为16进制字符串
+        return b2a_hex(self.ciphertext)
+
+    #解密后，去掉补足的空格用strip() 去掉
+    def decrypt(self, text):
+        cryptor = AES.new(self.key, self.mode, self.key)
+        plain_text = cryptor.decrypt(a2b_hex(text))
+        return plain_text.rstrip('\0')
