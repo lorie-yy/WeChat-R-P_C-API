@@ -1,0 +1,258 @@
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
+    <script>
+    $(function(){
+        //用户名
+        $.validator.addMethod('username', function (value) {
+        return /^\s*[a-zA-Z]{1}([a-zA-Z0-9]|[_]){2,19}\s*$/.test(value);
+        }, "输入3-20个，以字母开头，可以字母、数字、_");
+        //密码
+        $.validator.addMethod('password', function (value) {
+        return /^[a-zA-Z]{1}([\@A-Za-z0-9\!\#\$\%\^\&\*\.\~\_\[\]\{\}\:\<\>\?\|\(\)\@\`]){4,19}$/.test(value);
+        }, "输入5-20个，以字母开头");
+        //表单验证
+        $("form#addchild").validate({
+            rules: {
+                child_name: {
+                    required: true,
+                    username:"请输入3-20个，以字母开头，可以字母、数字、_"
+                },
+                password: {
+                    required: true,
+                    password:"请输入5-20个，以字母开头"
+                },
+                password2: {
+                    required: true,
+                    equalTo: "#password"
+                },
+                discount: {
+                    required: true,
+                    range:[0,1]
+                }
+            },
+            messages: {
+                child_name: {
+                    required: "必填"
+                },
+                password: {
+                    required: "必填"
+                },
+                password2: {
+                    required: "必填",
+                    equalTo: '{% trans "两次输入密码不一致" %}'
+                },
+                discount: {
+                    required: "必填",
+                    range:"请输入0~1之间的数",
+                    min:"请输入大于等于0的数",
+                    max:"请输入小于等于1的数"
+                }
+            },
+            submitHandler:function(form){submit_add()}
+        });
+        $('#add_child').hide();
+    });
+    function show_add(){
+        $('#add_child').show();
+        $('#child_list').hide()
+    }
+    function show_list(){
+        $('#add_child').hide();
+        $('#child_list').show()
+    }
+    //添加子商户
+    function submit_add(){
+        var username=$('#child_name').val();
+        var password=$('#password').val();
+        var discount=$('#discount').val();
+        $.ajax({
+            url: "/wechatfans/addchild",
+            method: 'POST',
+            dataType: 'json',
+            data: {'username':username,'password':password,'discount':discount},
+            success: function(result){
+                if (result.res==0){
+                    layer.msg('注册成功!');
+                    setTimeout(function(){window.location.reload()}, 2000)
+                }else if(result.res==1){
+                    layer.msg('云商城已存在,不要重复注册!')
+                }else if(result.res==2){
+                    layer.msg('用户名已存在!')
+                }else if(result.res==5){
+                    layer.msg('注册失败,总折扣已大于1!')
+                }else if(result.res==3){
+{#                    alert(result.msg)#}
+                    layer.msg('error!')
+                }
+            },
+            error:function(result){
+                layer.msg('error')
+            }
+        });
+    }
+    function show_edit(id){
+        layer.open({
+            type: 1,
+            skin: 'layui-layer-rim', //加上边框
+            area: ['420px', '200px'], //宽高
+            title:"修改折扣",
+            closeBtn:1,
+            btn: ['确认','取消'], //按钮
+            scrollbar: false,
+            yes: function(index){
+                var discount=$('#editdiscount').val();
+                if(!discount){
+                    layer.msg('请输入折扣');
+                }else{
+                    $.ajax({
+                        url: "/wechatfans/edit_child_dis",
+                        method: 'GET',
+                        dataType: 'json',
+                        data: {'id':id,'discount':discount},
+                        success: function(result){
+                            if (result.result==1){
+                                layer.msg('修改成功!');
+                                setTimeout(function(){window.location.reload()}, 2000)
+                            }else if(result.result==3){
+                                layer.msg('修改失败,总折扣已大于1!')
+                            }else{
+                                layer.msg('修改失败!')
+                            }
+                        },
+                        error:function(result){
+                            layer.msg('error')
+                        }
+                    })
+                }
+            },
+            content:
+                '<form id="addNewAppid" class="addNewAppid form-horizontal" style="padding:30px;padding-bottom:0">'+
+                    '<div class="form-group">'+
+                        '<label for="editdiscount" class="col-sm-3 control-label">折扣 ：</label>'+
+                        '<div class="col-sm-8">'+
+                            '<input type="number" min="0" max="1" step="0.1" class="form-control" name="editdiscount" id="editdiscount" placeholder="请输入折扣 (0~1之间)">'+
+                        '</div>'+
+                    '</div>'+
+                '</form>'
+        });
+    }
+    function stop_child(id){
+        var discount=0;
+        var btnSn=function(){
+            $.ajax({
+                url: "/wechatfans/edit_child_dis",
+                method: 'GET',
+                dataType: 'json',
+                data: {'id':id,'discount':discount},
+                success: function(result){
+                    if (result.result==1){
+                        layer.msg('停用成功!');
+                        setTimeout(function(){window.location.reload()}, 2000)
+                    }else{
+                        layer.msg('停用失败!')
+                    }
+                },
+                error:function(result){
+                    layer.msg('error')
+                }
+            })
+        };
+        layer.confirm('确定要停用此商户吗?',{title:'确认'},btnSn)
+    }
+    </script>
+    <div class="panel" id="add_child">
+        <div class="panel-heading">
+            <div>新增子商户</div>
+        </div>
+        <div class="panel-body">
+            <form class="form-horizontal" action="" id="addchild" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="child_name" class="col-sm-2 control-label">子商户名称 ：</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" name="child_name" id="child_name" placeholder="请输入子商户名称">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="col-sm-2 control-label">密码 ：</label>
+                    <div class="col-sm-4">
+                        <input type="password" class="form-control" name="password" id="password" placeholder="请输入密码">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password2" class="col-sm-2 control-label">确认密码 ：</label>
+                    <div class="col-sm-4">
+                        <input type="password" class="form-control" name="password2" id="password2" placeholder="请再次输入密码">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="discount" class="col-sm-2 control-label">折扣 ：</label>
+                    <div class="col-sm-4">
+                        <input type="number" min="0" max="1" step="0.1" class="form-control" name="discount" id="discount" placeholder="请输入折扣 (0~1之间)">
+                    </div>
+                </div>
+                <div class="form-group button-group">
+                    <div class="col-sm-4">
+                        <input type="submit" class="btn btn-info btn-tixian" style="padding: 6px 30px;" value="确定">
+                    </div>
+                    <div class="col-sm-2" style="float: right">
+                        <a onclick="show_list()" class="btn btn-default" style="float: right">返回</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="panel" id="child_list">
+        <div class="panel-heading">
+            <div>子商户</div>
+            <button class="btn btn-tixian" onclick="show_add()" style="float: right;position: relative;top: -30px;color: white">新增子商户</button>
+        </div>
+        <div class="panel-body">
+            <div >
+                <table id="" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>子商户名</th>
+                            <th>折扣</th>
+                            <th>总收益 (元)</th>
+                            <th>可提现 (元)</th>
+                            <th>已提现 (元)</th>
+                            <th>申请中 (元)</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="middle-align">
+                    {% if data %}
+                        {% for record in data %}
+                        <tr {% if record.discount == 0 %} style="background-color: #eee;color:#999;"{% endif %}>
+                            <td>{{ record.ch_username }}</td>
+                            <td>{{ record.discount }}</td>
+                            <td>{{ record.totalincome }}</td>
+                            <td>{{ record.availablecash }}</td>
+                            <td>{{ record.cashed }}</td>
+                            <td>{{ record.applying }}</td>
+                            <td>
+                                <a class="btn btn-default btn-xs" id="recordid" title="修改子商户折扣" onclick="show_edit({{ record.id }})">修改折扣</a>
+                                {% if record.discount == 0 %}
+                                    <a class="btn btn-danger btn-xs" id="recordid" title="已停用该子商户" disabled>已停用</a>
+                                {% else %}
+                                    <a class="btn btn-danger btn-xs" id="recordid" title="停用子商户" onclick="stop_child({{ record.id }})">停用</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>暂无记录</tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <a href="javascript:history.back()" class="btn btn-default" style="float: right">返回</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

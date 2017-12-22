@@ -51,7 +51,7 @@
             background-color: #2C3749;
         }
         .page-container .sidebar-menu .sidebar-header{
-            padding: 35px 15px 65px 10px;
+            padding: 35px 15px 15px 10px;
             position: relative;
             top: -20px;
         }
@@ -146,10 +146,12 @@
         .btn-tixian{
             background-color: #0099cc;
             border-color: #0099cc;
+            color: #fff;
         }
         .btn-tixian:hover{
             background-color: #048fbd;
             border-color: #048fbd;
+            color: #fff;
         }
         label.error{
             position: absolute;
@@ -171,14 +173,22 @@
         $('#metismenu').metisMenu();
         //菜单高亮
         var urlstr = location.href;
-{#        alert(urlstr);#}
         var urlstatus=false;
+        var sc_userlevel={{ sc_userlevel }};
         $(".metismenu a").each(function () {
             if ((urlstr + '/').indexOf($(this).attr('href')) > -1 && $(this).attr('href') != '') {
                 $(this).addClass('active');
                 urlstatus = true;
             } else {
                 $(this).removeClass('active');
+            }
+            //找不到当前url时默认第一个导航高亮
+            if ( sc_userlevel == 2 ) {
+                if (!urlstatus) {
+                    $(".metismenu a").eq(0).addClass('active');
+                } else {
+                    $(".metismenu a").eq(0).removeClass('active');
+                }
             }
         })
     });
@@ -188,7 +198,7 @@
 <div class="sidebar-menu">
     <div class="sidebar-header">
         <a class="" href="/wechatfans/showfans">
-            <img src="{% static 'images/logowhite.png' %}"/>
+            <img src="{% static 'images/wechatcloud.png' %}"/>
         </a>
     </div>
     <ul class="metismenu" id="metismenu">
@@ -200,22 +210,30 @@
             <span class="faicon" style="padding-right: 17px"><img src="{% static 'images/icon4.png' %}"></span>
             <span class="menuitem">申请提现</span>
         </a></li>
+        {% if sc_userlevel == 1 %}
         <li><a href="/wechatfans/applyfor_records">
             <span class="faicon"><img src="{% static 'images/icon2.png' %}"></span>
             <span class="menuitem">申请记录</span>
         </a></li>
+{#        二级菜单#}
+{#        <li>#}
+{#            <a href="#" class="has-arrow">#}
+{#                <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>#}
+{#                <span class="menuitem">子商户</span></a>#}
+{#            <ul>#}
+{#                <li><a href="/wechatfans/showallchildshopprofit">#}
+{#                    <span class="menuitem">子商户收益</span>#}
+{#                </a></li>#}
+{#                <li><a href="/wechatfans/getchildapply">#}
+{#                    <span class="menuitem">子商户申请记录</span>#}
+{#                </a></li>#}
+{#            </ul>#}
+{#        </li>#}
+        {% endif %}
         <li><a href="/wechatfans/modify_password">
             <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>
             <span class="menuitem">修改密码</span>
         </a></li>
-{#        二级菜单#}
-{#        <li>#}
-{#            <a href="#" class="has-arrow"><i class="fa fa-cog"></i>云商城管理</a>#}
-{#            <ul>#}
-{#                <li><a href="">设置</a></li>#}
-{#                <li><a href="">记录</a></li>#}
-{#            </ul>#}
-{#        </li>#}
 
     </ul>
 </div>

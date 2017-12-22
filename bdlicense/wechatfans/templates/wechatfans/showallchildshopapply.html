@@ -1,0 +1,172 @@
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
+    <script>
+        $(function(){
+            //将拿到的金额除以100
+            var getmoneylist=$('.getmoneyid');
+            for(var i= 0;i<getmoneylist.length;i++){
+                var before=getmoneylist[i].innerHTML;
+                getmoneylist[i].innerHTML=before/100.00;
+            }
+            //获取申请需要处理的个数
+            var len=$('.mes-lenth').length;
+            if(len>0){
+                $('.badge-mes').html(len);
+            }else{
+                $('.badge-mes').html();
+            }
+
+            $('#solve_apply').hide()
+        });
+        function show_solve(){
+            $('#solve_apply').show();
+            $('#apply_list').hide();
+
+        }
+        //拒绝申请
+        function refuserecord(id){
+            var result='refuse';
+            var btnSn=function(){
+                $.ajax({
+                    url: "/wechatfans/getchildapply",
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {'applyrecordid':id,'result':result,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    success: function(result){
+                        if (result.res==2){
+                            layer.msg('已拒绝!',function(){
+                                window.location.reload()
+                            });
+                        }else{
+                            layer.msg('操作失败!')
+                        }
+                    },
+                    error:function(result){
+                        layer.msg('error')
+                    }
+                });
+            };
+            layer.confirm('确定拒绝此申请吗?',{title:'确认'},btnSn)
+        }
+        //通过申请
+        function passrecord(id){
+            var result='pass';
+            var btnSn=function(){
+                $.ajax({
+                    url: "/wechatfans/getchildapply",
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {'applyrecordid':id,'result':result,csrfmiddlewaretoken:'{{ csrf_token }}'},
+                    success: function(result){
+                        if (result.res==0){
+                            layer.msg('已通过!',function(){
+                                window.location.reload()
+                            });
+                        }else{
+                            layer.msg('操作失败!')
+                        }
+                    },
+                    error:function(result){
+                        layer.msg('error')
+                    }
+                });
+            };
+            layer.confirm('确定通过此申请吗?',{title:'确认'},btnSn)
+        }
+    </script>
+    <div class="panel" id="solve_apply">
+        <div class="panel-heading">
+            <div>处理申请</div>
+        </div>
+        <div class="panel-body">
+            <div >
+                <table id="" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>子商户名称</th>
+                            <th>提现金额(元)</th>
+                            <th>提现时间</th>
+                            <th>提现方式</th>
+                            <th>账号</th>
+                            <th>状态</th>
+                            <th>处理</th>
+                        </tr>
+                    </thead>
+                    <tbody class="middle-align">
+                    {% if applyrecords103 %}
+                        {% for record in applyrecords103 %}
+                        <tr>
+                            <td>{{ record.username }}</td>
+                            <td class="mes-lenth">{{ record.getmoney }}</td>
+                            <td>{{ record.applyfortime }}</td>
+                            <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
+                            <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
+                            <td><span class="special-color">待审核</span></td>
+                            <td>
+                                <a onclick="passrecord({{ record.id }})" {% if record.paymentresult != 103 %}disabled {% endif %} class="btn btn-sm btn-tixian">通过</a>
+                                <a onclick="refuserecord({{ record.id }})" {% if record.paymentresult != 103 %}disabled {% endif %} class="btn btn-default btn-sm">拒绝</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>暂无需要处理的申请</tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <a href="javascript:window.location.reload()" class="btn btn-default" style="float: right">返回</a>
+            </div>
+        </div>
+    </div>
+    <div class="panel" id="apply_list">
+        <div class="panel-heading">
+            <div>申请记录列表</div>
+            <button class="btn btn-tixian" onclick="show_solve()" style="float: right;position: relative;top: -30px;color: white">
+                提现处理
+                <span class="badge badge-mes"></span>
+            </button>
+        </div>
+        <div class="panel-body">
+            <div >
+                <table id="" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>子商户名称</th>
+                            <th>提现金额(元)</th>
+                            <th>提现时间</th>
+                            <th>提现方式</th>
+                            <th>账号</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody class="middle-align">
+                    {% if applyrecords %}
+                        {% for record in applyrecords %}
+                        <tr>
+                            <td>{{ record.username }}</td>
+                            <td class="getmoneyid">{{ record.getmoney }}</td>
+                            <td>{{ record.applyfortime }}</td>
+                            <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
+                            <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
+                            <td>
+                                {% if record.paymentresult == 101 %}<span style="color: #0099cc">提现成功</span>
+                                {% elif record.paymentresult == 102 %}<span style="color: orange;">提现失败</span>{% endif%}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>暂无记录</tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <a href="javascript:history.back()" class="btn btn-default" style="float: right">返回</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

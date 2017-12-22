@@ -16,6 +16,7 @@ class TwechatOffline(models.Model):
     price = models.CharField('价格',max_length=4,default='0')
     settlement = models.CharField('是否结算',max_length=1,default='0')#0：不可以结算;1:可以结算;2:已结算
     gh_name = models.CharField('公众号名称',max_length=32,default='')
+    username = models.CharField('用户名',max_length=32)
 
 class ThridPartyConfig(models.Model):
     thirdpartname = models.CharField('第三方接口名称',max_length=16)
@@ -61,14 +62,20 @@ class ApplyforWithdrawalRecords(models.Model):
 class cloudtouser(models.Model):
     username = models.CharField('用户名',max_length=32)
     password = models.CharField('密码',max_length=32)
-    cloudid = models.CharField('云平台编号',max_length=64)
-    shopid = models.IntegerField('云平台商铺id')
+    cloudid = models.CharField('云平台编号',max_length=64,null=True,blank=True)
+    shopid = models.IntegerField('云平台商铺id',null=True,blank=True)
+    userlever = models.IntegerField(default=1)          #用户的级别
+    fathernode = models.IntegerField(default=0)         #上一级用户的id
 
 
 class shop_discountinfo(models.Model):
-    cloudid = models.CharField('云平台编号',max_length=64)
-    shopid = models.IntegerField('云平台商铺id')
+    cloudid = models.CharField('云平台编号',max_length=64,null=True,blank=True)
+    shopid = models.IntegerField('云平台商铺id',null=True,blank=True)
     discount = models.FloatField('云平台商铺折扣',default= 0.8)
     totalincome = models.IntegerField('总收益(分)',default= 0)      #打折
     availablecash = models.IntegerField('可提现(分)',default= 0)    #打折
     cashed = models.IntegerField('已提现(分)',default= 0)           #打折
+    applying = models.IntegerField('申请中(分)',default= 0)         #打折
+    start = models.IntegerField('计算收益的起点',default= 0)
+    beforediscountincome = models.IntegerField('配置折扣时的总收益',default= 0) #打折
+    cloudtouser = models.ForeignKey(cloudtouser)

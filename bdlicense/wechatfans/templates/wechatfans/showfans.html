@@ -25,6 +25,7 @@
         padding: 10px 0;
     }
     </style>
+    {% if sc_userlevel == 1 %}
     <div class="data-inline">
         <div class="data-table">
             <div style="background-color: #FF8762"></div>
@@ -210,4 +211,108 @@
             </script>
         </div>
     </div>
+    {% elif sc_userlevel == 2 %}
+    <div class="data-inline">
+        <div class="data-table">
+            <div style="background-color: #FF8762"></div>
+            <dl>
+                <span>总收益￥</span>
+                <dt style="color: #FF8762">{{ totalincome }}</dt>
+            </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #B198DC"></div>
+            <dl>
+                <span>已提现￥</span>
+                <dt style="color: #B198DC">{{ cashed  }}</dt>
+            </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #FEC400"></div>
+            <dl>
+                <span>正在提现￥</span>
+                <dt style="color: #FEC400">{{ applying }}</dt>
+            </dl>
+        </div>
+        <div class="data-table">
+            <div style="background-color: #71CE34"></div>
+            <dl>
+                <span>可提现￥</span>
+                <dt style="color: #71CE34">{{ availablecash }}</dt>
+            </dl>
+        </div>
+    </div>
+    <div style="padding: 10px 0;float: right;margin-right: 250px;">
+        <a href="takemoney.html" class="btn btn-info btn-tixian" style="padding:9px 20px;top: -10px;">提现</a>
+    </div>
+    <div class="panel">
+        <div class="panel-heading">
+            <span>提现记录</span>
+        </div>
+        <div class="panel-body">
+            <div id="apply_records_reload">
+                <table id="apply_records" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>提现金额(元)</th>
+                            <th>提现时间</th>
+                            <th>提现方式</th>
+                            <th>账号</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="middle-align">
+                        {% for record in recordslist %}
+                        <tr>
+                            <td>{{ record.getmoney }}</td>
+                            <td>{{ record.applyfortime }}</td>
+                            <td>{% if record.paymentmode == 1 %}支付宝{% else %}银行卡{% endif%}</td>
+                            <td>{% if record.paymentmode == 1 %}{{ record.alipaynum }}{% else %}{{ record.banknum }}{% endif%}</td>
+                            <td>
+                                {% if record.paymentresult == 103 %}<span class="special-color">审核中...</span>
+                                {% elif record.paymentresult == 101 %}提现成功
+                                {% elif record.paymentresult == 102 %}<span style="color:orange">提现失败</span>{% endif%}
+                            </td>
+                            <td>
+                                <a onclick="closerecord({{ record.id }})" {% if record.paymentresult != 103 %}disabled {% endif %} class="btn btn-default btn-xs">关闭</a>
+                            </td>
+                            <script>
+                                function closerecord(id){
+                                    var btnSn=function(){
+                                        $.ajax({
+                                            url: "wechatfans/closerecord",
+                                            method: 'GET',
+                                            dataType: 'json',
+                                            data: {'id':id},
+                                            success: function(result){
+                                                if (result.result==1){
+                                                    layer.msg('已关闭!',function(){
+                                                        window.location.reload()
+                                                    });
+                                                }else if(result.result==2){
+                                                    layer.msg('操作失败!')
+                                                }
+                                            },
+                                            error:function(result){
+                                                layer.msg('error')
+                                            }
+                                        });
+                                    };
+                                    layer.confirm('确定要关闭此申请吗?',{title:'确认'},btnSn)
+                                }
+                            </script>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>暂无提现记录</tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <a href="javascript:history.back()" class="btn btn-default" style="float: right">返回</a>
+            </div>
+        </div>
+        </div>
+    {% endif %}
 {% endblock %}
