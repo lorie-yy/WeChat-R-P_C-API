@@ -551,6 +551,18 @@ def apply_for_withdrawal(request):
     print result
     return JsonResponse({'result':result})
 
+# 分页
+def paging(request):
+    # 当前页码/页面条数
+    currentPage = request.GET.get('page',1)
+    currentPage = int(currentPage)
+    page_size = request.GET.get('page_size',10)
+    page_size = int(page_size)
+    # 对页面始/末位置进行切片处理
+    start = (currentPage-1)*page_size
+    end = currentPage*page_size
+    return start,end
+
 # 申请提现记录
 def applyfor_records(request):
     username,sc_userlevel,user_type,is_superuser=islogin(request)
@@ -558,18 +570,21 @@ def applyfor_records(request):
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
     shopid = request.session.get('sc_shopid')
-    records=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid)
+    allrecords=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid).order_by('-id')
     context ={}
-    context['records']=records
     context['username']=username
     context['sc_userlevel']=sc_userlevel
-    recordslist=[]
+    context['allrecords']=allrecords
+    # 调用分页函数
+    start,end=paging(request)
+    records=allrecords[start:end]
+    context['records']=records
 
+    recordslist=[]
     if records.count()==0:
         print '无记录'
     else:
         for record in records:
-            # context['record']=record
             tempdict={}
             id = record.id
             cloudname = record.cloudname
@@ -595,9 +610,7 @@ def applyfor_records(request):
     # 成功提现总计
     totalsuc=0
     suc=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid,paymentresult=101)
-    if suc.count()==0:
-        print '成功提现总计为0'
-    else:
+    if suc.count()>0:
         for i in suc:
             totalsuc += i.getmoney
         print '成功提现总计为',totalsuc
