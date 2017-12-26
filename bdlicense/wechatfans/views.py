@@ -253,28 +253,29 @@ def showfans(request):
     # totalprofit,totalfans=earnings(cloudid,shopid,'','')
     #获取可提现金额
     takemoney,flag=support_takemoney(username)
-
-    if cache.get("takemoney",'')== takemoney :
-        print "get value in cache"
-        takemoney = cache.get("takemoney")
-        totalprofit = cache.get("totalprofit")
-        totalfans = cache.get("totalfans")
-        todayprofit = cache.get("todayprofit")
-        todayfans = cache.get("todayfans")
+    #获取今日收益以及粉丝
+    todayprofit,todayfans=earnings(username,startDate,endDate)
+    if cache.get(username+"takemoney",'')== takemoney and\
+        cache.get(username+"todayprofit",'')== todayprofit:
+        print "get value in cache",username+"takemoney"
+        takemoney = cache.get(username+"takemoney")
+        totalprofit = cache.get(username+"totalprofit")
+        totalfans = cache.get(username+"totalfans")
+        todayprofit = cache.get(username+"todayprofit")
+        todayfans = cache.get(username+"todayfans")
     else:
         print "update value "
-        #获取今日收益以及粉丝
-        todayprofit,todayfans=earnings(username,startDate,endDate)
+
         #获取粉丝数
         totalfans = TwechatOffline.objects.filter(username=username).count()
         #重新计算可提现金额以及总收入
         totalprofit = saveShopProfit(cloudid,shopid,takemoney)
 
-        cache.set("todayprofit", todayprofit, timeout=None)
-        cache.set("todayfans", todayfans, timeout=None)
-        cache.set("takemoney", takemoney, timeout=None)
-        cache.set("totalprofit", totalprofit, timeout=None)
-        cache.set("totalfans", totalfans, timeout=None)
+        cache.set(username+"todayprofit", todayprofit, timeout=None)
+        cache.set(username+"todayfans", todayfans, timeout=None)
+        cache.set(username+"takemoney", takemoney, timeout=None)
+        cache.set(username+"totalprofit", totalprofit, timeout=None)
+        cache.set(username+"totalfans", totalfans, timeout=None)
     # x轴日期数据
     today = datetime.date.today()
     oneweekago = today - datetime.timedelta(7)
@@ -299,12 +300,12 @@ def showfans(request):
     seriesdata=[]
     for item in xdata:
         # 某天开始0点-结束24点
-        dayprofit = cache.get(item,'')
+        dayprofit = cache.get(username+item,'')
         if dayprofit =="" or item == end :
             startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
             endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
             dayprofit,dayfans=earnings(username,startDate,endDate)
-            cache.set(item, dayprofit, timeout=None)
+            cache.set(username+item, dayprofit, timeout=None)
         seriesdata.append(dayprofit/100.00)
     print 'seriesdata',seriesdata
     context['seriesdata']=seriesdata
@@ -349,7 +350,7 @@ def saveShopDiscountInfo():
     for clouditem in cloudinfo:
         #获取云平台下的商铺id
         if clouditem.cloudNum:
-            cloudid = clouditem.cloudNum
+            cloudid = clouditem.id
         else:
             cloudid = clouditem.tmpCloudNum
         resultlist = TwechatOffline.objects.filter(cloudid=cloudid)
@@ -523,8 +524,8 @@ def apply_for_withdrawal(request):
     history=ApplyforWithdrawalRecords.objects.filter(username=username,paymentresult=103)
     if history.count()>0:
         result=2
-    # elif getmoney < 10000:
-    #     result=3
+    elif getmoney < 10000:
+        result=3
     else:
         # 创建表的实例对象(取款记录)
         applyrecords = ApplyforWithdrawalRecords(paymentresult=103)
@@ -687,7 +688,7 @@ def getCloudname(request):
         itemdict = {}
         itemdict['cloudname']=item.cloudName
         if item.cloudNum:
-            itemdict['cloudid']=item.cloudNum
+            itemdict['cloudid']=item.id
         else:
             itemdict['cloudid']=item.tmpCloudNum
         cloudinfolist.append(itemdict)
@@ -701,7 +702,7 @@ def saveCloudconfig(request):
     result = {}
     result['msg']='操作成功'
     result['error']=0
-    cloudinfo = CloudInformation.objects.filter(cloudNum=cloudid)
+    cloudinfo = CloudInformation.objects.filter(id=cloudid)
     if cloudinfo.count() > 0:
         cloudname = cloudinfo[0].cloudName
     else:
@@ -773,7 +774,7 @@ class Register(View):
         try:
 
 
-            clouduser = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
+            clouduser = cloudtouser.objects.filter(username=user_name)
             #add cloud admin
             if clouduser.count() == 0:
                 # auth_user表
@@ -791,7 +792,10 @@ class Register(View):
                 user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
                 user.save()
                 #cloud_user表
-                co = cloudtouser(username=user_name,password=password,cloudid=cloudid,shopid=shopid)
+                if cloudid == '' or shopid == '':
+                    co = cloudtouser(username=user_name,password=password)
+                else:
+                    co = cloudtouser(username=user_name,password=password,cloudid=cloudid,shopid=shopid)
                 co.save()
                 result = 0
                 uu = {'res':result}
@@ -1045,6 +1049,8 @@ def modify_password(request):
                     uu = {'res': result}
                     pn.set_password(password_new1)
                     pn.save()
+                    user=cloudtouser.objects.filter(username=username)
+                    user.update(password=password_new1)
                     return JsonResponse(uu)
                 else:
                     result = 0
@@ -1375,15 +1381,21 @@ def is_valid(request):
     username = request.GET.get('username','')
     password = request.GET.get('password','')
     timestamp = request.GET.get('timestamp','')
+    cloudid = request.GET.get('cloudid','')
+    shopid = request.GET.get('shopid','')
     oldsign = request.GET.get('sign','')
     context={}
     pc = prpcrypt('thisismykeysqazx')
     username = pc.decrypt(username)
     password = pc.decrypt(password)
     timestamp = pc.decrypt(timestamp)
+    shopid = pc.decrypt(shopid)
+    cloudid = pc.decrypt(cloudid)
     context['username']=username
     context['password']=password
     context['timestamp']=timestamp
+    context['cloudid']=cloudid
+    context['shopid']=shopid
     stringparm=[]
     for key,value in context.items():
         stringparm.append(key+'='+unicode(value))
@@ -1397,6 +1409,10 @@ def is_valid(request):
         if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
             user_pass = authenticate(username=username,password=password)
             if user_pass:
+                user = cloudtouser.objects.filter(username=username)
+                if user.count() > 0:
+                    if not user[0].cloudid:
+                        user.update(cloudid=cloudid,shopid=shopid)
                 return JsonResponse({'res':0})
     return JsonResponse({'res':1})
 

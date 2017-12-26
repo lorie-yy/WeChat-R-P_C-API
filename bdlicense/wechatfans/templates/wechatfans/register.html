@@ -31,12 +31,6 @@
                     passwordagain: {
                         required: true,
                         equalTo: "#password"
-                    },
-                    shopid: {
-                        required: true
-                    },
-                    cloudid: {
-                        required: true
                     }
                 },
                 messages: {
@@ -49,12 +43,6 @@
                     passwordagain: {
                         required: "必填",
                         equalTo: '{% trans "两次输入密码不一致" %}'
-                    },
-                    shopid: {
-                        required: "必填"
-                    },
-                    cloudid: {
-                        required: "必填"
                     }
                 },
                 submitHandler: function(form) {
