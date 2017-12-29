@@ -1,7 +1,6 @@
 import time
 import httplib, urllib
 from datetime import datetime,timedelta
-from wechatfans.views import updateAllShopProfit
 
 
 def get_wechatfans_data():
@@ -22,12 +21,11 @@ if __name__ == "__main__":
 
     while True:
         try:
-            print datetime.now().strftime("%H:%M"),datetime.now().strftime("%H:%M") == '13:37'
-            if datetime.now().strftime("%H:%M") == '13:37':
-                print datetime.now().strftime("%H:%M") == '13:37'
-                get_wechatfans_data()
-                updateAllShopProfit()
-            time.sleep(59)
+            # print datetime.now().strftime("%H:%M"),datetime.now().strftime("%H:%M") == '03:37'
+            # if datetime.now().strftime("%H:%M") == '03:37':
+            #     print datetime.now().strftime("%H:%M") == '03:37'
+            get_wechatfans_data()
+            time.sleep(60)
         except:
             print "error"
 
