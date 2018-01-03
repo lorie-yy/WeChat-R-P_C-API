@@ -1,15 +1,14 @@
 import time
 import httplib, urllib
 from datetime import datetime,timedelta
-from wechatfans.views import updateAllShopProfit
 
 
-def get_wechatfans_data():
+def get_wechatfans_data(url):
     print "[INFO][get_wechatfans_data] starting ..."
     try:
         hostname ="localhost:8000"
         conn = httplib.HTTPConnection(hostname)
-        connnectString = '/wechatfans/sub_detail'
+        connnectString = url
         conn.request("GET",connnectString)
         r1 = conn.getresponse()
         conn.close()
@@ -22,11 +21,12 @@ if __name__ == "__main__":
 
     while True:
         try:
-            print datetime.now().strftime("%H:%M"),datetime.now().strftime("%H:%M") == '13:37'
-            if datetime.now().strftime("%H:%M") == '13:37':
-                print datetime.now().strftime("%H:%M") == '13:37'
-                get_wechatfans_data()
-                updateAllShopProfit()
+            print datetime.now().strftime("%H:%M"),datetime.now().strftime("%H:%M") == '23:58'
+            if datetime.now().strftime("%H:%M") == '23:58':
+                print datetime.now().strftime("%H:%M") == '23:58'
+                get_wechatfans_data('/wechatfans/update_everybodyprofit')
+            get_wechatfans_data('/wechatfans/sub_detail')
+            get_wechatfans_data('/wechatfans/update_userprice')
             time.sleep(59)
         except:
             print "error"

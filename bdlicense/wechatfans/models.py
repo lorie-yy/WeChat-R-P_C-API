@@ -13,7 +13,9 @@ class TwechatOffline(models.Model):
     shopid = models.IntegerField('云平台商铺id',default=0)
     cloudid = models.CharField('云平台id',max_length=32,null=True,blank=True)
     authtime = models.DateTimeField('关注时间',auto_now_add=True)
-    price = models.CharField('价格',max_length=4,default='0')
+    price = models.CharField('价格',max_length=6,default='0')
+    bdyunprice = models.CharField('bdyun价格',max_length=6,default='0')
+    userprice = models.CharField('用户价格',max_length=6,default='0')
     settlement = models.CharField('是否结算',max_length=1,default='0')#0：不可以结算;1:可以结算;2:已结算
     gh_name = models.CharField('公众号名称',max_length=32,default='')
     username = models.CharField('用户名',max_length=32)

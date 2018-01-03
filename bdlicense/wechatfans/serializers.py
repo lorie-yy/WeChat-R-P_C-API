@@ -4,13 +4,14 @@ from wechatfans.models import shop_discountinfo, ThridPartyConfig, CloudConfig
 
 
 class shop_discountinfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     cloudid = serializers.CharField(read_only=True)
     shopid = serializers.IntegerField(read_only=True)
     discount = serializers.FloatField(read_only=True,default= 0.8)
     totalincome = serializers.IntegerField(read_only=True,default= 0)      #打折
     availablecash = serializers.IntegerField(read_only=True,default= 0)    #打折
     cashed = serializers.IntegerField(read_only=True,default= 0)           #打折
-
+    username = serializers.CharField(source='cloudtouser.username')
     def create(self, validated_data):
         """
         Create and return a new `shop_discountinfo` instance, given the validated data.
