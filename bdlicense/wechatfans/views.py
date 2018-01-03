@@ -155,7 +155,7 @@ class Sub_detail(View):
     def get(self,request):
         print '[INFO] call Sub_detail'
         import time
-        daterange = request.GET.get('daterange',1)
+        daterange = request.GET.get('daterange',0)
         url = 'https://api.weifenshi.cn/api/sub_detail'
         now = datetime.datetime.now().strftime('%Y-%m-%d')
         startdate = (datetime.datetime.now() - datetime.timedelta(days = int(daterange))).strftime("%Y-%m-%d")
@@ -209,13 +209,14 @@ class Sub_detail(View):
                                           orderid=orderid,
                                           )
             if userobject.count() > 0:
-                userobject.update(price=price,gh_name=gh_name,apmac=apmac,authtime=sub_time)
+                userobject.update(price=price,bdyunprice=float(price)*0.89,gh_name=gh_name,apmac=apmac,authtime=sub_time)
             else:
                 to = TwechatOffline(openid=openid,
                                    orderid=orderid,
                                    usermac=usermac,
                                    apmac=apmac,
                                    price=price,
+                                   bdyunprice=float(price)*0.89,
                                    gh_name=gh_name,
                                    authtime=sub_time,
                                    subscribe='1',
@@ -397,13 +398,7 @@ class getAllProfit(mixins.ListModelMixin,
     saveShopDiscountInfo()
 
     def get_queryset(self):
-        queryset = shop_discountinfo.objects.values('cloudid')\
-            .annotate(totalincome=Sum('totalincome'),
-                     cashed=Sum('cashed'),
-                     availablecash=Sum('availablecash')).values('cloudid',
-                                                                'totalincome',
-                                                                'availablecash',
-                                                                'cashed')
+        queryset = shop_discountinfo.objects.all()
         return queryset
     serializer_class = shop_discountinfoSerializer
 
@@ -436,9 +431,9 @@ def earnings(username,startDate,enddate):
     for item in userobject:
         # print 'usermac',item.id
         # print 'usermac',item.price
-        profit += (float(item.price)*100)
+        profit += (float(item.userprice)*100)
     profit_dis=int(profit*float(discount))
-    print 'profit_dis:',profit_dis,profit
+    print username,'profit_dis:',profit_dis,profit
 
     return profit_dis,userobject.count()
 
@@ -475,7 +470,7 @@ def support_takemoney(username):
     for item in userobject:
         # print 'usermac',item.id
         # print 'usermac',item.price
-        profit += (float(item.price)*100)
+        profit += (float(item.userprice)*100)
     profit_dis=int((profit-start)*float(discount))+beforediscountincome-applyformoney
     print '可提现金额',profit_dis
     return profit_dis,flag,profit
@@ -896,7 +891,7 @@ class getalldiscountinfo(mixins.ListModelMixin,
     :return:
     '''
 
-    serializer_class = Shop_discountinfoSerializer
+    serializer_class = shop_discountinfoSerializer
 
     queryset = shop_discountinfo.objects.all()
 
@@ -1324,7 +1319,54 @@ def islogin(request):
 
     return username,userlevel,user_type,is_superuser
 
+def update_everybodyprofit(requset):
+    '''
+    1.获取所有的用户名
+    2.更新每一个用户的今日收益
+    :param requset:
+    :return:
+    '''
+    print "[INFO] update everybody profit"
+    startdate=datetime.datetime.now().strftime('%Y-%m-%d')
+    startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
+    endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
+    userlist =[item.username for item in cloudtouser.objects.all()]
+    for user in userlist:
+        #获取今日收益以及粉丝
+        todayprofit,todayfans=earnings(user,startDate,endDate)
+        cache.set(user+startdate, todayprofit, timeout=None)
+    return HttpResponse('OK')
 
+def update_userprice(request):
+    '''
+    更新用户价格
+    :param request:
+    :return:
+    '''
+    print "[INFO] update userprice"
+    needupdatelist = TwechatOffline.objects.filter(userprice=0).exclude(bdyunprice=0).exclude(username="")
+    for item in needupdatelist:
+        if item.type == "1":
+            bdyunprice  = float(item.bdyunprice)
+            username = item.username
+            #获取折扣
+            user = cloudtouser.objects.filter(username=username)
+            print username
+            print user[0].id
+            shop_discount=shop_discountinfo.objects.filter(cloudid=user[0].cloudid,shopid=user[0].shopid)
+            discountlist=SystemConfig.objects.filter(attribute='discount')
+            if shop_discount.count()==0:
+                if discountlist.count()==0:
+                    discount=0.8
+                else:
+                    discount=discountlist[0].value
+            else:
+                discount=shop_discount[0].discount
+
+            userprice = bdyunprice*float(discount)
+            item.userprice = userprice
+            item.save()
+    return HttpResponse('OK')
 #=============子商户页面开始=================
 #1.查看收益
 def showProfit(request):
