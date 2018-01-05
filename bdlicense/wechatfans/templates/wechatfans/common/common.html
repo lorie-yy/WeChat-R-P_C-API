@@ -14,12 +14,12 @@
 	<link rel="stylesheet" href="{% static 'assets/css/font-awesome.css' %}">
 	<link rel="stylesheet" href="{% static 'css/metisMenu.css' %}">
 	<link rel="stylesheet" href="{% static 'css/daterangepicker.css' %}">
-	<link rel="stylesheet" href="{% static 'js/theme/default/layer.css' %}">
+	<link rel="stylesheet" href="{% static 'js/lay/modules/theme/default/layer.css' %}">
     <!-- jQuery Js -->
     <script src="{% static 'js/jquery.3.2.1.js' %}"></script>
     <script src="{% static 'js/metisMenu.js' %}"></script>
     <script src="{% static 'js/jquery.validate.js' %}"></script>
-    <script src="{% static 'js/layer.js' %}"></script>
+    <script src="{% static 'js/lay/modules/layer.js' %}"></script>
     <script src="{% static 'js/moment.min.js' %}"></script>
     <script src="{% static 'js/daterangepicker.js' %}"></script>
     <script src="{% static 'js/echarts.min.js' %}"></script>
@@ -72,7 +72,10 @@
         }
         .metismenu a:hover .menuitem,
         .metismenu a:focus .menuitem,
-        .metismenu a.active .menuitem{
+        .metismenu a.active .menuitem,
+        .metismenu li:hover a.has-arrow,
+        .metismenu li:focus a.has-arrow,
+        .metismenu a.active.has-arrow{
             color: white;
         }
         .metismenu ul li a{
@@ -81,7 +84,7 @@
         .metismenu ul li ul li a{
             padding-left:40px;
         }
-        .metismenu a .menuitem{
+        .metismenu a .menuitem,.metismenu a .menuitem2,.metismenu a.has-arrow{
             color: #adacaa;
         }
         .metismenu a{
@@ -89,6 +92,12 @@
             display: block;
             text-decoration: none;
             font-size:16px;
+        }
+        ul.collapse,ul.collapsing{
+            padding-left:0
+        }
+        ul.collapse li a,ul.collapsing li a{
+            padding-left:70px
         }
 {#        右侧顶部#}
         .page-container .page-right{
@@ -169,7 +178,7 @@
 <body>
 <script>
     $(function () {
-        //二级菜单
+        //左侧菜单
         $('#metismenu').metisMenu();
         //菜单高亮
         var urlstr = location.href;
@@ -178,6 +187,11 @@
         $(".metismenu a").each(function () {
             if ((urlstr + '/').indexOf($(this).attr('href')) > -1 && $(this).attr('href') != '') {
                 $(this).addClass('active');
+                // 二级菜单
+                if($(this).parents('ul').hasClass('collapse')){
+                    $(this).parents('ul.collapse').attr({'aria-expanded':'true','class':'collapse in'});
+                    $(this).parents('ul.collapse').prev('a').attr({'aria-expanded':'true','class':'active has-arrow'});
+                }
                 urlstatus = true;
             } else {
                 $(this).removeClass('active');
@@ -215,20 +229,24 @@
             <span class="faicon"><img src="{% static 'images/icon2.png' %}"></span>
             <span class="menuitem">申请记录</span>
         </a></li>
+        <li><a href="/wechatfans/historical_task">
+            <span class="faicon"><img src="{% static 'images/icon2.png' %}"></span>
+            <span class="menuitem">历史任务</span>
+        </a></li>
 {#        二级菜单#}
-{#        <li>#}
-{#            <a href="#" class="has-arrow">#}
-{#                <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>#}
-{#                <span class="menuitem">子商户</span></a>#}
-{#            <ul>#}
-{#                <li><a href="/wechatfans/showallchildshopprofit">#}
-{#                    <span class="menuitem">子商户收益</span>#}
-{#                </a></li>#}
-{#                <li><a href="/wechatfans/getchildapply">#}
-{#                    <span class="menuitem">子商户申请记录</span>#}
-{#                </a></li>#}
-{#            </ul>#}
-{#        </li>#}
+        <li>
+            <a href="#" class="has-arrow">
+                <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>
+                <span class="menuitem">子商户</span></a>
+            <ul>
+                <li><a href="/wechatfans/showallchildshopprofit">
+                    <span class="menuitem">子商户收益</span>
+                </a></li>
+                <li><a href="/wechatfans/getchildapply">
+                    <span class="menuitem">子商户申请记录</span>
+                </a></li>
+            </ul>
+        </li>
         {% endif %}
         <li><a href="/wechatfans/modify_password">
             <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>

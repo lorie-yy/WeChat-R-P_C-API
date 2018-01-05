@@ -1,0 +1,83 @@
+{% extends "wechatfans/common/common.html" %}
+{% load i18n %}
+{% load static %}
+{% block main %}
+            <script src="{% static 'js/layui.js' %}"></script>
+            <link rel="stylesheet" href="{% static 'js/lay/modules/theme/default/layui.css' %}">
+    <div class="panel">
+        <div class="panel-heading">
+            <div>历史任务</div>
+            <a class="btn btn-tixian" href="/wechatfans/histask_export" style="float: right;position: relative;top: -30px;color: white">导出excel</a>
+        </div>
+        <div class="panel-body">
+            <div id="apply_records_reload">
+                <table id="apply_records" class="table table-condensed table-hover table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>公众号</th>
+                            <th>单价</th>
+                            <th>时间</th>
+                            <th>涨粉量</th>
+                        </tr>
+                    </thead>
+                    <tbody class="middle-align">
+                    {% if recordslist %}
+                        {% for record in recordslist %}
+                        <tr>
+                            <td>{{ record.gh_name }}</td>
+                            <td>{{ record.gh_price }}</td>
+                            <td>{{ record.authtime }}</td>
+                            <td>{{ record.gh_fans }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>暂无记录</tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-group">
+                <div id="paging" style="float: right"></div>
+                <a href="javascript:history.back()" class="btn btn-default" style="float: right;margin-top: 10px;display: none">返回</a>
+            </div>
+            <script>
+                layui.use('laypage', function() {
+                    var laypage = layui.laypage,layer = layui.layer;
+                    laypage.render({
+                        elem:  'paging', //指向存放分页的容器
+                        count: {{ recordslistcount }}, //数据总数
+                        theme: '#0099cc',
+                        first: '首页',
+                        last: '尾页',
+                        prev:'<i class="fa fa-angle-left"></i>',
+                        next:'<i class="fa fa-angle-right"></i>',
+                        //通过检索url中传递的参数,获取当前页码(默认是1)
+                        curr: function(){
+                            var page = location.search.match(/page=(\d+)/);
+                            return page ? page[1] : 1;
+                        }(),
+                        //通过检索url中传递的参数,获取每页显示条数(默认是10)
+                        limit: function(){
+                            var page_size = location.search.match(/page_size=(\d+)/);
+                            return page_size ? page_size[1] : 10;
+                        }(),
+                        limits: [5,10,20,30,50], //每页条数的选择项
+                        groups: 4, //连续出现的页码个数
+                        layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+                        jump: function (obj,first) {
+                            //首次不执行
+                            if(!first){
+                                //获取点击的页码
+                                var currentPage = obj.curr;
+                                //获取点击的每页显示条数
+                                var page_size = obj.limit;
+                                window.location.href ="/wechatfans/historical_task?page="+currentPage+"&page_size="+page_size;
+                            }
+                        }
+                    });
+                })
+            </script>
+        </div>
+    </div>
+
+{% endblock %}
