@@ -80,15 +80,16 @@
                                     {% else %}
                                         <td>暂无</td>
                                     {% endif %}
-                                {% if license.licenseType == "1" %}
-                                    <td>基本功能</td>
-                                {% elif license.licenseType == "3" %}
-                                    <td>基本+计费</td>
-                                {% elif license.licenseType == "5" %}
-                                    <td>基本+大数据</td>
-                                {% elif license.licenseType == "7" %}
-                                    <td>基本+计费+大数据</td>
-                                {% endif %}
+                                    <td>{{ license.discription }}</td>
+{#                                {% if license.licenseType == "1" %}#}
+{#                                    <td>基本功能</td>#}
+{#                                {% elif license.licenseType == "3" %}#}
+{#                                    <td>基本+计费</td>#}
+{#                                {% elif license.licenseType == "5" %}#}
+{#                                    <td>基本+大数据</td>#}
+{#                                {% elif license.licenseType == "7" %}#}
+{#                                    <td>基本+计费+大数据</td>#}
+{#                                {% endif %}#}
                                     <td title="{{ license.license_code }}" style="cursor: pointer;color: #00C853;text-decoration: underline;font-weight: bold" onclick="window.location.href='/adminbd/license_param?id={{ license.id }}'" >
                                         <span>
                                             {{ license.license_code }}
