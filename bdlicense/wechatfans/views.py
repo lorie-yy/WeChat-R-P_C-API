@@ -406,6 +406,104 @@ class getAllProfit(mixins.ListModelMixin,
         return self.list(request, args, kwargs)
 
 
+class getAllFans(View):
+    '''
+    1.总收益，今日收益，用户总收益，用户今日收益，总粉丝数，今日粉丝数
+    2.各个用户的最近七天的收益以及粉丝数
+    '''
+    def get(self,request):
+        startid = cache.get('startid',0)
+        fanslist = TwechatOffline.objects.filter(id__gt=startid).order_by('-id')
+        if fanslist.exists():
+            print fanslist[0].id
+            cache.set('startid',fanslist[0].id)
+        #总粉丝数
+        totalfansnum = cache.get('totalfansnum',0)+fanslist.count()
+        cache.set('totalfansnum',totalfansnum)
+        #今日粉丝集
+        startdate=datetime.datetime.today().strftime('%Y-%m-%d')
+        startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
+        todayfanlist = TwechatOffline.objects.filter(authtime__gte=startDate)
+
+        #总收益，用户总收益
+        deltacount,deltatotalincome,deltausertotalincome = getsomedaysomebodyincome(fanslist)
+        owntotalincome = cache.get("owntotalincome",0)+deltatotalincome
+        usertotalincome = cache.get("usertotalincome",0)+deltausertotalincome
+        cache.set("owntotalincome",owntotalincome)
+        cache.set("usertotalincome",usertotalincome)
+        #今日收益，用户今日收益，今日粉丝数
+        todayfansnum,owntodayincome,usertodayincome = getsomedaysomebodyincome(todayfanlist)
+        #获取用户列表
+        userlist =[item.username for item in cloudtouser.objects.all()]
+        todaydate=datetime.datetime.today()
+        tmplist = []
+        for user in userlist:
+            tmpdict = {}
+            tmpdict[user]=[]
+            conts = {}
+            itemtodaycount,itemtodayownincome,itemtodayuserincome=getsomedaysomebodyincome(todayfanlist)
+            conts['date']=todaydate.strftime("%Y-%m-%d")
+            conts["fansnumber"] = itemtodaycount
+            conts["ownincome"] = itemtodayownincome
+            conts["userincome"] = itemtodayuserincome
+            tmpdict[user].append(conts)
+            for i in range(1,8):
+                cont = {}
+                itemdoday = todaydate-datetime.timedelta(i)
+                startdate = itemdoday.strftime("%Y-%m-%d")
+                print startdate
+                if cache.get(user+startdate+"count",'nnn') == 'nnn':
+                    startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
+                    endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
+                    itemfanlist = TwechatOffline.objects.filter(authtime__range=(startDate,endDate))
+                    itemcount,itemownincome,itemuserincome=getsomedaysomebodyincome(itemfanlist)
+                    cache.set(user+startdate+"count",itemcount)
+                    cache.set(user+startdate+"ownincome",itemownincome)
+                    cache.set(user+startdate+"userincome",itemuserincome)
+
+                cont["date"]=startdate
+                cont["fansnumber"]=cache.get(user+startdate+"count")
+                cont["ownincome"]=cache.get(user+startdate+"ownincome")
+                cont["userincome"]=cache.get(user+startdate+"userincome")
+                tmpdict[user].append(cont)
+            tmplist.append(tmpdict)
+        print tmplist
+        context = {}
+        context["totalfansnum"]=totalfansnum
+        context["owntotalincome"]=owntotalincome
+        context["usertotalincome"]=usertotalincome
+        context["todayfansnum"]=todayfansnum
+        context["usertodayincome"]=usertodayincome
+        context["owntodayincome"]=owntodayincome
+        context["lastweeklydate"]=tmplist
+        print context
+        return JsonResponse(context)
+
+def getsomedaysomebodyincome(fanslist):
+    owntotalincome = 0.0
+    usertotalincome = 0.0
+    for fans in fanslist:
+        owntotalincome += float(fans.bdyunprice)
+        usertotalincome += float(fans.userprice)
+    return fanslist.count(),round(owntotalincome,4),round(usertotalincome,4)
+
+def getRelationBTWUserandCloud(request):
+    '''
+    获取用户名下的云平台
+    :param request:
+    :return:
+    '''
+    #获取用户列表
+    userlist =[item.username for item in cloudtouser.objects.all()]
+    datelist = []
+    for user in userlist:
+        tmpdict = {}
+        tmpdict["username"] = user
+        fanslist = TwechatOffline.objects.filter(username=user).values('cloudid','shopid').distinct()
+        data_list = list(fanslist)
+        tmpdict["cloudinfo"] = json.dumps(data_list)
+        datelist.append(tmpdict)
+    return HttpResponse(json.dumps(datelist))
 
 # 计算收益量和粉丝量
 def earnings(username,startDate,enddate):
