@@ -155,7 +155,7 @@ class Sub_detail(View):
     def get(self,request):
         print '[INFO] call Sub_detail'
         import time
-        daterange = request.GET.get('daterange',0)
+        daterange = request.GET.get('daterange',200)
         url = 'https://api.weifenshi.cn/api/sub_detail'
         now = datetime.datetime.now().strftime('%Y-%m-%d')
         startdate = (datetime.datetime.now() - datetime.timedelta(days = int(daterange))).strftime("%Y-%m-%d")
@@ -1380,6 +1380,48 @@ def update_userprice(request):
             item.userprice = userprice
             item.save()
     return HttpResponse('OK')
+
+# 公众号,历史任务
+def historicalTask(request):
+    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    if username==''or user_type==0 or is_superuser==1:
+        return render(request,'license_login.html')
+    context = {}
+    allrecords = TwechatOffline.objects.filter(username=username).values('gh_name','id','userprice','authtime').order_by('-authtime')
+    context['allrecords']=allrecords
+    recordslist=[]
+    if allrecords.exists():
+        templist=[]
+        for record in allrecords:
+            tempdict={}
+            gh_name=record['gh_name']
+            price=record['userprice']
+            gh_authtime=record['authtime'].strftime('%Y-%m-%d')
+            # 去重
+            if (gh_name)+str(gh_authtime) in templist:
+                pass
+            else:
+                # 一天范围内的涨粉量
+                startDate = datetime.datetime(int(gh_authtime[:4]), int(gh_authtime[5:7]), int(gh_authtime[8:10]), 0, 0,0)
+                endDate = datetime.datetime(int(gh_authtime[:4]), int(gh_authtime[5:7]), int(gh_authtime[8:10]), 23, 59,59)
+                unique_records = TwechatOffline.objects.filter(username=username,gh_name=gh_name,authtime__range=(startDate,endDate))
+                gh_fans=unique_records.count()
+                templist.append((gh_name)+str(gh_authtime))
+                tempdict["gh_name"] = gh_name[0:1]+'***'
+                tempdict["gh_price"] = price
+                tempdict["authtime"] = gh_authtime
+                tempdict["gh_fans"] = gh_fans
+                recordslist.append(tempdict)
+    context["recordslistcount"] = recordslist.__len__()
+    # 调用分页函数
+    start,end=paging(request)
+    recordslist=recordslist[start:end]
+    context["username"] = username
+    context['sc_userlevel']=sc_userlevel
+    context["recordslist"] = recordslist
+    return render(request,'wechatfans/historical_task.html',context)
+
+
 #=============子商户页面开始=================
 #1.查看收益
 def showProfit(request):
