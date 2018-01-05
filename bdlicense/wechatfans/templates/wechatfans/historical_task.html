@@ -7,7 +7,7 @@
     <div class="panel">
         <div class="panel-heading">
             <div>历史任务</div>
-            <button class="btn btn-tixian" onclick="" style="float: right;position: relative;top: -30px;color: white">导出excel</button>
+            <a class="btn btn-tixian" href="/wechatfans/histask_export" style="float: right;position: relative;top: -30px;color: white">导出excel</a>
         </div>
         <div class="panel-body">
             <div id="apply_records_reload">
@@ -21,7 +21,7 @@
                         </tr>
                     </thead>
                     <tbody class="middle-align">
-                    {% if allrecords %}
+                    {% if recordslist %}
                         {% for record in recordslist %}
                         <tr>
                             <td>{{ record.gh_name }}</td>

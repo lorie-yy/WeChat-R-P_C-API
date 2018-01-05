@@ -1381,22 +1381,18 @@ def update_userprice(request):
             item.save()
     return HttpResponse('OK')
 
-# 公众号,历史任务
-def historicalTask(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
-    if username==''or user_type==0 or is_superuser==1:
-        return render(request,'license_login.html')
-    context = {}
-    allrecords = TwechatOffline.objects.filter(username=username).values('gh_name','id','userprice','authtime').order_by('-authtime')
-    context['allrecords']=allrecords
+# 公众号-历史任务的信息
+def task_info(username):
+    allrecords = TwechatOffline.objects.filter(username=username).order_by('-authtime')
     recordslist=[]
     if allrecords.exists():
         templist=[]
+        id=0
         for record in allrecords:
             tempdict={}
-            gh_name=record['gh_name']
-            price=record['userprice']
-            gh_authtime=record['authtime'].strftime('%Y-%m-%d')
+            gh_name=record.gh_name
+            price=record.userprice
+            gh_authtime=record.authtime.strftime('%Y-%m-%d')
             # 去重
             if (gh_name)+str(gh_authtime) in templist:
                 pass
@@ -1407,11 +1403,22 @@ def historicalTask(request):
                 unique_records = TwechatOffline.objects.filter(username=username,gh_name=gh_name,authtime__range=(startDate,endDate))
                 gh_fans=unique_records.count()
                 templist.append((gh_name)+str(gh_authtime))
+                id=id+1
+                tempdict["id"] = id
                 tempdict["gh_name"] = gh_name[0:1]+'***'
                 tempdict["gh_price"] = price
                 tempdict["authtime"] = gh_authtime
                 tempdict["gh_fans"] = gh_fans
                 recordslist.append(tempdict)
+    return recordslist
+
+# 历史任务列表
+def historicalTask(request):
+    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    if username==''or user_type==0 or is_superuser==1:
+        return render(request,'license_login.html')
+    context = {}
+    recordslist = task_info(username)
     context["recordslistcount"] = recordslist.__len__()
     # 调用分页函数
     start,end=paging(request)
@@ -1421,6 +1428,21 @@ def historicalTask(request):
     context["recordslist"] = recordslist
     return render(request,'wechatfans/historical_task.html',context)
 
+# 导出历史任务
+import tablib
+def historyTaskExport(request):
+    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    if username==''or user_type==0 or is_superuser==1:
+        return render(request,'license_login.html')
+    alltask = task_info(username)
+    data=tablib.Dataset()
+    data.headers=['公众号名称','单价','时间','涨粉量']
+    if alltask.__len__() > 0:
+        for task in alltask:
+            data.append([task['gh_name'],task['gh_price'],task['authtime'],task['gh_fans']])
+    response=HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=historicalTask_export_template.xls"
+    return response
 
 #=============子商户页面开始=================
 #1.查看收益
