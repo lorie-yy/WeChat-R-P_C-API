@@ -26,6 +26,8 @@ urlpatterns = patterns(
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
     url(r'closerecord',views.closerecord, name='closerecord'),
     url(r'^getallprofit',views.getAllProfit.as_view(), name='getallprofit'),
+    url(r'^getallfans',views.getAllFans.as_view(), name='getallfans'),
+    url(r'^getrelation',views.getRelationBTWUserandCloud, name='getrelation'),
     url(r'^getcloudprofit',views.getCloudProfit.as_view(), name='getcloudprofit'),
     url(r'^getchildapply',views.getChildApply.as_view(), name='getchildapply'),
     url(r'^showallchildshopprofit',views.showAllChildshopProfit, name='showallchildshopprofit'),
@@ -33,4 +35,8 @@ urlpatterns = patterns(
     url(r'^edit_child_dis',views.edit_child_dis, name='edit_child_dis'),
     url(r'^showprofit',views.showProfit, name='showprofit'),
     url(r'^is_valid',views.is_valid, name='is_valid'),
+    url(r'^update_everybodyprofit',views.update_everybodyprofit, name='update_everybodyprofit'),
+    url(r'^update_userprice',views.update_userprice, name='update_userprice'),
+    url(r'^historical_task',views.historicalTask, name='historical_task'),
+    url(r'^histask_export',views.historyTaskExport, name='histask_export'),
 )
