@@ -905,6 +905,7 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
             license_code = result.get('license_code', '')
 
         tmp_dict = {}
+        print "productNo:", details['productNo']
         if details['productNo'] in os_ids:
             tmp_dict['productNo'] = details['productNo']
             tmp_dict['productType'] = details['productType']
@@ -923,8 +924,11 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
             tmp_dict['sumNo'] = details['sumNo']
 
             rst_dict['buss_info'].append(tmp_dict)
+            rst_dict['license_info'].append(tmp_dict)
         else:
             continue
+
+
         if details['swVersion'] == u"同博达":
             rst_dict['version_type'] = 'bdcode'
         else:
@@ -932,6 +936,11 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
     rst_dict['license_code'] = license_code
 
     rst_dict['license_type'] =1
+    print rst_dict['license_type']
+    print rst_dict['buss_info']
+    print basic_lic_dict
+    print business_dict
+
     if rst_dict['license_code'] == '' and len(rst_dict['os_info']) == 0:
         print "ERROR:new work OS error: %s" % (str(rst_dict['os_info']))
         rst_dict['result'] = 3
@@ -945,7 +954,9 @@ def getWorkNoInfo(work_no,work_lineno, rst_dict={}):
 
     if len(rst_dict['buss_info']) >= 1:
         buss_productNo = rst_dict['buss_info'][0]['productNo']
-        rst_dict['license_type'] = int(rst_dict['license_type']) | os_dict[buss_productNo][1]
+        print "buss_productNo:", buss_productNo
+        print os_dict
+        rst_dict['license_type'] = int(rst_dict['license_type']) | business_dict[buss_productNo][1]
 
     print "[getWorkNoInfo] get return work informations ......"
 
@@ -1012,6 +1023,24 @@ def get_work_order_information(work_order_id,license_id,rst_dict = {}):
 
 
     return rst_dict
+
+def get_license_function(license_type):
+    flg = 0
+    str_license_dis = ''
+    try:
+        func_lic_dict = {1:u'基本',2:u'计费',4:u'大数据',8:u'室外地图'}
+        for each in func_lic_dict.keys():
+            tmp_license_type = int(license_type) & int(each)
+            if tmp_license_type == int(each):
+                if flg == 0:
+                    str_license_dis = func_lic_dict[each]
+                    flg = flg + 1
+                else:
+                    str_license_dis = str_license_dis +'+' + func_lic_dict[each]
+    except:
+        print "ERROR: get_license_function ERROR"
+
+    return str_license_dis
 
 #
 def get_work_order_info(request):
@@ -1093,6 +1122,7 @@ def get_work_order_info(request):
             #     uId = user.id
             # print "uId %s"%uId
 
+
             print "[get_work_order_info] new cloud information"
             #云平台的相关操作
             cloud_name = rst_dict.get('cloud_name','')
@@ -1128,6 +1158,7 @@ def get_work_order_info(request):
             licenseObj.maxAps = rst_dict.get('max_ap_allowed',0)                                #该license支持的最大AP
             licenseObj.maxAcs = rst_dict.get('max_ac_allowed',0)                                #该license支持的最大AC
             licenseObj.maxUsers = rst_dict.get('max_user_allowed',0)                            #该license支持的最大User
+            licenseObj.discription = get_license_function(license_type)
             licenseObj.save()
 
             updateCodeCount(license_code)
@@ -1179,12 +1210,13 @@ def get_work_order_info(request):
             max_ac_allowed = licenseObj[0].maxAcs + int(rst_dict.get('max_ac_allowed',0))
             max_user_allowed = licenseObj[0].maxUsers + int(rst_dict.get('max_user_allowed',0))
             licenseType = int(licenseObj[0].licenseType) | int(rst_dict.get('license_type',5))
-            print rst_dict.get('license_type','9999999999')
+            print rst_dict.get('license_type','99999')
             print licenseObj[0].key_id
             licenseObj.update(maxAps = max_ap_allowed,
                               maxAcs=max_ac_allowed,
                               maxUsers=max_user_allowed,
-                              licenseType=str(licenseType))
+                              licenseType=str(licenseType),
+                              discription=get_license_function(license_type))
 
             #工单号增加操作
             workNUm = WorkOrderNum(workOrderNum=work_no,
