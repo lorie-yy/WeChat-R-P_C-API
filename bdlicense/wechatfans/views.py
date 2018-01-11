@@ -71,8 +71,9 @@ class TAuthdata(View):
                     context['wlanacport'] = wlanacport
                     context['portocol'] = portocol
                     context['authUrl'] = authUrl
-
                     return render(request,'wechatfans/transition.html',context)
+                elif cloudconfig.thirdpart.type == '2':#bdyun
+                    return HttpResponseRedirect('http://'+authUrl+'/portal/login?status=1')
         return HttpResponse('签名失败')
 
 class Getfansnumber(View):
@@ -398,7 +399,7 @@ class getAllProfit(mixins.ListModelMixin,
     saveShopDiscountInfo()
 
     def get_queryset(self):
-        queryset = shop_discountinfo.objects.all()
+        queryset = shop_discountinfo.objects.filter(cloudtouser__fathernode=0)
         return queryset
     serializer_class = shop_discountinfoSerializer
 
@@ -415,11 +416,11 @@ class getAllFans(View):
         startid = cache.get('startid',0)
         fanslist = TwechatOffline.objects.filter(id__gt=startid).order_by('-id')
         if fanslist.exists():
-            print fanslist[0].id
-            cache.set('startid',fanslist[0].id)
+            print 'startid:', fanslist[0].id
+            cache.set('startid',fanslist[0].id, timeout=None)
         #总粉丝数
         totalfansnum = cache.get('totalfansnum',0)+fanslist.count()
-        cache.set('totalfansnum',totalfansnum)
+        cache.set('totalfansnum',totalfansnum, timeout=None)
         #今日粉丝集
         startdate=datetime.datetime.today().strftime('%Y-%m-%d')
         startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
@@ -429,19 +430,20 @@ class getAllFans(View):
         deltacount,deltatotalincome,deltausertotalincome = getsomedaysomebodyincome(fanslist)
         owntotalincome = cache.get("owntotalincome",0)+deltatotalincome
         usertotalincome = cache.get("usertotalincome",0)+deltausertotalincome
-        cache.set("owntotalincome",owntotalincome)
-        cache.set("usertotalincome",usertotalincome)
+        cache.set("owntotalincome",owntotalincome, timeout=None)
+        cache.set("usertotalincome",usertotalincome, timeout=None)
         #今日收益，用户今日收益，今日粉丝数
         todayfansnum,owntodayincome,usertodayincome = getsomedaysomebodyincome(todayfanlist)
         #获取用户列表
-        userlist =[item.username for item in cloudtouser.objects.all()]
+        userlist =[item.cloudtouser.username for item in shop_discountinfo.objects.filter(cloudtouser__fathernode=0).order_by('-totalincome')[0:10]]
         todaydate=datetime.datetime.today()
         tmplist = []
         for user in userlist:
             tmpdict = {}
             tmpdict[user]=[]
             conts = {}
-            itemtodaycount,itemtodayownincome,itemtodayuserincome=getsomedaysomebodyincome(todayfanlist)
+            usertodayfanlist = todayfanlist.filter(username=user)
+            itemtodaycount,itemtodayownincome,itemtodayuserincome=getsomedaysomebodyincome(usertodayfanlist)
             conts['date']=todaydate.strftime("%Y-%m-%d")
             conts["fansnumber"] = itemtodaycount
             conts["ownincome"] = itemtodayownincome
@@ -451,15 +453,15 @@ class getAllFans(View):
                 cont = {}
                 itemdoday = todaydate-datetime.timedelta(i)
                 startdate = itemdoday.strftime("%Y-%m-%d")
-                print startdate
+                # print startdate
                 if cache.get(user+startdate+"count",'nnn') == 'nnn':
                     startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
                     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
-                    itemfanlist = TwechatOffline.objects.filter(authtime__range=(startDate,endDate))
+                    itemfanlist = TwechatOffline.objects.filter(username=user,authtime__range=(startDate,endDate))
                     itemcount,itemownincome,itemuserincome=getsomedaysomebodyincome(itemfanlist)
-                    cache.set(user+startdate+"count",itemcount)
-                    cache.set(user+startdate+"ownincome",itemownincome)
-                    cache.set(user+startdate+"userincome",itemuserincome)
+                    cache.set(user+startdate+"count",itemcount, timeout=None)
+                    cache.set(user+startdate+"ownincome",itemownincome, timeout=None)
+                    cache.set(user+startdate+"userincome",itemuserincome, timeout=None)
 
                 cont["date"]=startdate
                 cont["fansnumber"]=cache.get(user+startdate+"count")
@@ -467,16 +469,16 @@ class getAllFans(View):
                 cont["userincome"]=cache.get(user+startdate+"userincome")
                 tmpdict[user].append(cont)
             tmplist.append(tmpdict)
-        print tmplist
+        # print tmplist
         context = {}
         context["totalfansnum"]=totalfansnum
-        context["owntotalincome"]=owntotalincome
+        context["owntotalincome"]=round(owntotalincome,4)
         context["usertotalincome"]=usertotalincome
         context["todayfansnum"]=todayfansnum
         context["usertodayincome"]=usertodayincome
         context["owntodayincome"]=owntodayincome
         context["lastweeklydate"]=tmplist
-        print context
+        # print context
         return JsonResponse(context)
 
 def getsomedaysomebodyincome(fanslist):
@@ -494,16 +496,23 @@ def getRelationBTWUserandCloud(request):
     :return:
     '''
     #获取用户列表
-    userlist =[item.username for item in cloudtouser.objects.all()]
+    userlist =[item.username for item in cloudtouser.objects.filter(fathernode=0)]
     datelist = []
-    for user in userlist:
+    currentPage = request.GET.get('page',1)
+    page_size = request.GET.get('page_size',10)
+    datedict={'count':userlist.__len__(),'currentPage':currentPage,'page_size':page_size}
+    start,end=paging(request)
+    newuserlist = userlist[start:end]
+    print currentPage,newuserlist
+    for user in newuserlist:
         tmpdict = {}
         tmpdict["username"] = user
         fanslist = TwechatOffline.objects.filter(username=user).values('cloudid','shopid').distinct()
         data_list = list(fanslist)
         tmpdict["cloudinfo"] = json.dumps(data_list)
         datelist.append(tmpdict)
-    return HttpResponse(json.dumps(datelist))
+    datedict["datelist"]=datelist
+    return HttpResponse(json.dumps(datedict))
 
 # 计算收益量和粉丝量
 def earnings(username,startDate,enddate):
@@ -813,11 +822,11 @@ def saveCloudconfig(request):
     result = {}
     result['msg']='操作成功'
     result['error']=0
-    cloudinfo = CloudInformation.objects.filter(id=cloudid)
+    cloudinfo = CloudInformation.objects.filter(tmpCloudNum=cloudid)
     if cloudinfo.count() > 0:
         cloudname = cloudinfo[0].cloudName
     else:
-        cloudinfo = CloudInformation.objects.filter(tmpcloudNum=cloudid)
+        cloudinfo = CloudInformation.objects.filter(id=cloudid)
         if cloudinfo.count() > 0:
             cloudname = cloudinfo[0].cloudName
         else:
@@ -871,10 +880,10 @@ class Register(View):
     def get(self,request):
         user_name = request.GET.get('username')
         password = request.GET.get('password')
-        cloudid = request.GET.get('cloudid','')
-        shopid = request.GET.get('shopid','')
+        cloudid = request.GET.get('cloudid','undefined')
+        shopid = request.GET.get('shopid','undefined')
         super_user = request.GET.get('super_user',0)
-
+        print cloudid,shopid
         userSet = User.objects.filter(username=user_name)
         if userSet.count() > 0:
             print "user exists"
@@ -882,8 +891,8 @@ class Register(View):
             uu = {'res':result}
             return JsonResponse(uu)
 
-        try:
-
+        # try:
+        if True:
 
             clouduser = cloudtouser.objects.filter(username=user_name)
             #add cloud admin
@@ -903,7 +912,7 @@ class Register(View):
                 user.date_joined = datetime.datetime.now().strftime("%Y-%m-%d %H:%I:%S")
                 user.save()
                 #cloud_user表
-                if cloudid == '' or shopid == '':
+                if cloudid == 'undefined' or shopid == 'undefined':
                     co = cloudtouser(username=user_name,password=password)
                 else:
                     co = cloudtouser(username=user_name,password=password,cloudid=cloudid,shopid=shopid)
@@ -915,12 +924,12 @@ class Register(View):
                 result = 1
                 uu = {'res':result}
                 return JsonResponse(uu)
-        except Exception,e:
-            print e
-        result = 3
+        # except Exception,e:
+        #     print e
+        # result = 3
         # uu = {'res':result}
         # return JsonResponse(uu)
-        return render(request, 'wechatfans/register.html',{'res':result})
+        # return render(request, 'wechatfans/register.html',{'res':result})
 
 
 def getshopid(request):
@@ -1004,7 +1013,7 @@ class getalldiscountinfo(mixins.ListModelMixin,
 
     serializer_class = shop_discountinfoSerializer
 
-    queryset = shop_discountinfo.objects.all()
+    queryset = shop_discountinfo.objects.filter(cloudtouser__fathernode=0)
 
     def get(self, request, *args, **kwargs):
 
