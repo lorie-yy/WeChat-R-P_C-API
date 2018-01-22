@@ -26,6 +26,45 @@ from wechatfans.serializers import shop_discountinfoSerializer, ThridPartyConfig
     CloudConfigSerializer, ApplyforWithdrawalRecordsSerializer
 
 
+
+# 可提现金额
+def support_takemoney(username):
+    usernamelist = cloudtouser.objects.filter(username=username)
+    userobject = TwechatOffline.objects.filter(username=username,settlement=1).order_by('-id')
+    if userobject.count() > 0:
+        flag = userobject[0].id
+    else:
+        flag = 0
+    # 用户权限收益打折扣
+    shop_discount=shop_discountinfo.objects.filter(cloudid=usernamelist[0].cloudid,shopid=usernamelist[0].shopid)
+    discountlist=SystemConfig.objects.filter(attribute='discount')
+    if shop_discount.count()==0:
+        if discountlist.count()==0:
+            discount=0.8
+        else:
+            discount=discountlist[0].value
+        start = 0
+        beforediscountincome = 0
+    else:
+        discount=shop_discount[0].discount
+        start = shop_discount[0].start
+        beforediscountincome = shop_discount[0].beforediscountincome
+    profit=0
+
+    #申请提现的金额
+    record = ApplyforWithdrawalRecords.objects.filter(username=username,paymentresult=103)
+    if record.count() > 0:
+        applyformoney = record[0].getmoney
+    else:
+        applyformoney = 0
+    for item in userobject:
+        # print 'usermac',item.id
+        # print 'usermac',item.price
+        profit += (float(item.userprice)*100)
+    profit_dis=int((profit))-applyformoney
+    print '可提现金额',profit_dis
+    return profit_dis,flag,profit
+
 def md5(str):
     import hashlib
     m = hashlib.md5()
@@ -156,7 +195,7 @@ class Sub_detail(View):
     def get(self,request):
         print '[INFO] call Sub_detail'
         import time
-        daterange = request.GET.get('daterange',200)
+        daterange = request.GET.get('daterange',0)
         url = 'https://api.weifenshi.cn/api/sub_detail'
         now = datetime.datetime.now().strftime('%Y-%m-%d')
         startdate = (datetime.datetime.now() - datetime.timedelta(days = int(daterange))).strftime("%Y-%m-%d")
@@ -251,6 +290,8 @@ def showfans(request):
     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
     print startDate
     print endDate
+    startDate = utc2local(startDate)
+    endDate = utc2local(endDate)
     context ={}
     # 调用函数
     # totalprofit,totalfans=earnings(cloudid,shopid,'','')
@@ -307,6 +348,8 @@ def showfans(request):
         if dayprofit =="" or item == end :
             startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
             endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
+            startDate = utc2local(startDate)
+            endDate = utc2local(endDate)
             dayprofit,dayfans=earnings(username,startDate,endDate)
             cache.set(username+item, dayprofit, timeout=None)
         seriesdata.append(dayprofit/100.00)
@@ -391,14 +434,19 @@ class getCloudProfit(mixins.ListModelMixin,
     def get(self, request, *args, **kwargs):
 
         return self.list(request, args, kwargs)
-
+def byUsernameSaveProfit():
+    print 'call byUsername'
+    cloudtouserob = cloudtouser.objects.filter(fathernode=0)
+    for user in cloudtouserob:
+        takemoney,flag,profit=support_takemoney(user.username)
+        saveShopProfit(user.cloudid,user.shopid,takemoney)
 
 class getAllProfit(mixins.ListModelMixin,
                 mixins.CreateModelMixin,
                 generics.GenericAPIView):
-    saveShopDiscountInfo()
 
     def get_queryset(self):
+        byUsernameSaveProfit()
         queryset = shop_discountinfo.objects.filter(cloudtouser__fathernode=0)
         return queryset
     serializer_class = shop_discountinfoSerializer
@@ -414,7 +462,7 @@ class getAllFans(View):
     '''
     def get(self,request):
         startid = cache.get('startid',0)
-        fanslist = TwechatOffline.objects.filter(id__gt=startid).order_by('-id')
+        fanslist = TwechatOffline.objects.filter(id__gt=startid).exclude(price=0).order_by('-id')
         if fanslist.exists():
             print 'startid:', fanslist[0].id
             cache.set('startid',fanslist[0].id, timeout=None)
@@ -424,7 +472,9 @@ class getAllFans(View):
         #今日粉丝集
         startdate=datetime.datetime.today().strftime('%Y-%m-%d')
         startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
-        todayfanlist = TwechatOffline.objects.filter(authtime__gte=startDate)
+        startDate = utc2local(startDate)
+
+        todayfanlist = TwechatOffline.objects.filter(authtime__gte=startDate).exclude(price=0)
 
         #总收益，用户总收益
         deltacount,deltatotalincome,deltausertotalincome = getsomedaysomebodyincome(fanslist)
@@ -457,6 +507,8 @@ class getAllFans(View):
                 if cache.get(user+startdate+"count",'nnn') == 'nnn':
                     startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
                     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
+                    startDate = utc2local(startDate)
+                    endDate = utc2local(endDate)
                     itemfanlist = TwechatOffline.objects.filter(username=user,authtime__range=(startDate,endDate))
                     itemcount,itemownincome,itemuserincome=getsomedaysomebodyincome(itemfanlist)
                     cache.set(user+startdate+"count",itemcount, timeout=None)
@@ -473,10 +525,10 @@ class getAllFans(View):
         context = {}
         context["totalfansnum"]=totalfansnum
         context["owntotalincome"]=round(owntotalincome,4)
-        context["usertotalincome"]=usertotalincome
+        context["usertotalincome"]=round(usertotalincome,4)
         context["todayfansnum"]=todayfansnum
-        context["usertodayincome"]=usertodayincome
-        context["owntodayincome"]=owntodayincome
+        context["usertodayincome"]=round(usertodayincome,4)
+        context["owntodayincome"]= round(owntodayincome,4)
         context["lastweeklydate"]=tmplist
         # print context
         return JsonResponse(context)
@@ -518,11 +570,11 @@ def getRelationBTWUserandCloud(request):
 def earnings(username,startDate,enddate):
     usernamelist = cloudtouser.objects.filter(username=username)
     if (not startDate) and (not enddate):
-        userobject = TwechatOffline.objects.filter(username=username)
+        userobject = TwechatOffline.objects.filter(username=username).exclude(userprice=0)
     else:
         userobject = TwechatOffline.objects.filter(username=username,
                                         authtime__range=(startDate,enddate)
-                                          )
+                                          ).exclude(userprice=0)
     # 用户权限收益打折扣
     shop_discount=shop_discountinfo.objects.filter(cloudid=usernamelist[0].cloudid,shopid=usernamelist[0].shopid)
     discountlist=SystemConfig.objects.filter(attribute='discount')
@@ -544,43 +596,7 @@ def earnings(username,startDate,enddate):
 
     return profit_dis,userobject.count()
 
-# 可提现金额
-def support_takemoney(username):
-    usernamelist = cloudtouser.objects.filter(username=username)
-    userobject = TwechatOffline.objects.filter(username=username,settlement=1).order_by('-id')
-    if userobject.count() > 0:
-        flag = userobject[0].id
-    else:
-        flag = 0
-    # 用户权限收益打折扣
-    shop_discount=shop_discountinfo.objects.filter(cloudid=usernamelist[0].cloudid,shopid=usernamelist[0].shopid)
-    discountlist=SystemConfig.objects.filter(attribute='discount')
-    if shop_discount.count()==0:
-        if discountlist.count()==0:
-            discount=0.8
-        else:
-            discount=discountlist[0].value
-        start = 0
-        beforediscountincome = 0
-    else:
-        discount=shop_discount[0].discount
-        start = shop_discount[0].start
-        beforediscountincome = shop_discount[0].beforediscountincome
-    profit=0
 
-    #申请提现的金额
-    record = ApplyforWithdrawalRecords.objects.filter(username=username,paymentresult=103)
-    if record.count() > 0:
-        applyformoney = record[0].getmoney
-    else:
-        applyformoney = 0
-    for item in userobject:
-        # print 'usermac',item.id
-        # print 'usermac',item.price
-        profit += (float(item.userprice)*100)
-    profit_dis=int((profit-start)*float(discount))+beforediscountincome-applyformoney
-    print '可提现金额',profit_dis
-    return profit_dis,flag,profit
 
 def takemoney(request):
     username,sc_userlevel,user_type,is_superuser=islogin(request)
@@ -1030,8 +1046,8 @@ class getApplyforWithdrawal(mixins.ListModelMixin,
     '''
 
     serializer_class = ApplyforWithdrawalRecordsSerializer
-    saveShopDiscountInfo()
     def get_queryset(self):
+        byUsernameSaveProfit()
         applyfor = ApplyforWithdrawalRecords.objects.filter(paymentresult=103)
         for applyforitem in applyfor:
             #确认是否可提现
@@ -1450,6 +1466,8 @@ def update_everybodyprofit(requset):
     startdate=datetime.datetime.now().strftime('%Y-%m-%d')
     startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
     endDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 23, 59,59)
+    startDate = utc2local(startDate)
+    endDate = utc2local(endDate)
     userlist =[item.username for item in cloudtouser.objects.all()]
     for user in userlist:
         #获取今日收益以及粉丝
@@ -1471,26 +1489,31 @@ def update_userprice(request):
             username = item.username
             #获取折扣
             user = cloudtouser.objects.filter(username=username)
-            print username
-            print user[0].id
-            shop_discount=shop_discountinfo.objects.filter(cloudid=user[0].cloudid,shopid=user[0].shopid)
-            discountlist=SystemConfig.objects.filter(attribute='discount')
-            if shop_discount.count()==0:
-                if discountlist.count()==0:
-                    discount=0.8
+            if user.exists():
+                shop_discount=shop_discountinfo.objects.filter(cloudid=user[0].cloudid,shopid=user[0].shopid)
+                discountlist=SystemConfig.objects.filter(attribute='discount')
+                if shop_discount.count()==0:
+                    if discountlist.count()==0:
+                        discount=0.8
+                    else:
+                        discount=discountlist[0].value
                 else:
-                    discount=discountlist[0].value
-            else:
-                discount=shop_discount[0].discount
+                    discount=shop_discount[0].discount
 
-            userprice = bdyunprice*float(discount)
-            item.userprice = userprice
-            item.save()
+                userprice = bdyunprice*float(discount)
+                item.userprice = userprice
+                item.save()
     return HttpResponse('OK')
-
+def utc2local(utc_st):
+    now_stamp = time.time()
+    local_time = datetime.datetime.fromtimestamp(now_stamp)
+    utc_time = datetime.datetime.utcfromtimestamp(now_stamp)
+    offset = local_time - utc_time
+    local_st = utc_st + offset
+    return local_st
 # 公众号-历史任务的信息
 def task_info(username):
-    allrecords = TwechatOffline.objects.filter(username=username).order_by('-authtime')
+    allrecords = TwechatOffline.objects.filter(username=username).exclude(price=0).order_by('-authtime')
     recordslist=[]
     if allrecords.exists():
         templist=[]
@@ -1507,6 +1530,8 @@ def task_info(username):
                 # 一天范围内的涨粉量
                 startDate = datetime.datetime(int(gh_authtime[:4]), int(gh_authtime[5:7]), int(gh_authtime[8:10]), 0, 0,0)
                 endDate = datetime.datetime(int(gh_authtime[:4]), int(gh_authtime[5:7]), int(gh_authtime[8:10]), 23, 59,59)
+                startDate = utc2local(startDate)
+                endDate = utc2local(endDate)
                 unique_records = TwechatOffline.objects.filter(username=username,gh_name=gh_name,authtime__range=(startDate,endDate))
                 gh_fans=unique_records.count()
                 templist.append((gh_name)+str(gh_authtime))
