@@ -5,6 +5,8 @@ from wechatfans.models import shop_discountinfo, ThridPartyConfig, CloudConfig
 
 class shop_discountinfoSerializer(serializers.Serializer):
     id = serializers.IntegerField()
+    flag = serializers.IntegerField()
+    fixedprice = serializers.FloatField(read_only=True,default= 0.2)
     cloudid = serializers.CharField(read_only=True)
     shopid = serializers.IntegerField(read_only=True)
     discount = serializers.FloatField(read_only=True,default= 0.8)

@@ -26,6 +26,7 @@ urlpatterns = patterns(
     url(r'^applyfor_records',views.applyfor_records, name='applyfor_records'),
     url(r'closerecord',views.closerecord, name='closerecord'),
     url(r'^getallprofit',views.getAllProfit.as_view(), name='getallprofit'),
+    url(r'^showsomedayinfo',views.showSomedayInfo, name='showsomedayinfo'),
     url(r'^getallfans',views.getAllFans.as_view(), name='getallfans'),
     url(r'^getrelation',views.getRelationBTWUserandCloud, name='getrelation'),
     url(r'^getcloudprofit',views.getCloudProfit.as_view(), name='getcloudprofit'),

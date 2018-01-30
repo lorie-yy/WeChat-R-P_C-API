@@ -16,9 +16,11 @@ class TwechatOffline(models.Model):
     price = models.CharField('价格',max_length=6,default='0')
     bdyunprice = models.CharField('bdyun价格',max_length=6,default='0')
     userprice = models.CharField('用户价格',max_length=6,default='0')
+    childuserprice = models.CharField('二级用户价格',max_length=6,default='0')
     settlement = models.CharField('是否结算',max_length=1,default='0')#0：不可以结算;1:可以结算;2:已结算
     gh_name = models.CharField('公众号名称',max_length=32,default='')
     username = models.CharField('用户名',max_length=32)
+    childusername = models.CharField('二级用户名',max_length=32,default='')
 
 class ThridPartyConfig(models.Model):
     thirdpartname = models.CharField('第三方接口名称',max_length=16)
@@ -73,6 +75,8 @@ class cloudtouser(models.Model):
 class shop_discountinfo(models.Model):
     cloudid = models.CharField('云平台编号',max_length=64,null=True,blank=True)
     shopid = models.IntegerField('云平台商铺id',null=True,blank=True)
+    flag = models.IntegerField('定价方式',default= 0)               #0:折扣;1：一口价
+    fixedprice = models.FloatField('一口价',default= 0.2)           #0.2元
     discount = models.FloatField('云平台商铺折扣',default= 0.8)
     totalincome = models.IntegerField('总收益(分)',default= 0)      #打折
     availablecash = models.IntegerField('可提现(分)',default= 0)    #打折

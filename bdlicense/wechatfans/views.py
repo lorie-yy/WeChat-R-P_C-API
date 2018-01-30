@@ -35,20 +35,8 @@ def support_takemoney(username):
         flag = userobject[0].id
     else:
         flag = 0
-    # 用户权限收益打折扣
-    shop_discount=shop_discountinfo.objects.filter(cloudid=usernamelist[0].cloudid,shopid=usernamelist[0].shopid)
-    discountlist=SystemConfig.objects.filter(attribute='discount')
-    if shop_discount.count()==0:
-        if discountlist.count()==0:
-            discount=0.8
-        else:
-            discount=discountlist[0].value
-        start = 0
-        beforediscountincome = 0
-    else:
-        discount=shop_discount[0].discount
-        start = shop_discount[0].start
-        beforediscountincome = shop_discount[0].beforediscountincome
+
+
     profit=0
 
     #申请提现的金额
@@ -150,6 +138,14 @@ class Getfansnumber(View):
             timestamp = int(timestamp)
             print newtimestamp,timestamp
             if (newtimestamp - timestamp)/60000 < 5:#五分钟内有效
+                user = cloudtouser.objects.filter(username=username)
+                childusername = ''
+                if user.exists():
+                    if user[0].userlever == 1:
+                        pass
+                    elif user[0].userlever == 2:
+                        childusername = username
+                        username = cloudtouser.objects.filter(id=user[0].fathernode)[0].username
                 cloud = CloudConfig.objects.filter(cloudid=cloudid)
                 if cloud.count() > 0:
                     type = cloud[0].thirdpart.type
@@ -163,10 +159,14 @@ class Getfansnumber(View):
                                               type=type,
                                               settlement='1',
                                               username=username,
+                                              childusername=childusername,
                                               cloudid=cloudid)
                 else:
-                    userlist.update(shopid=int(shopid),username=username,cloudid=cloudid)
-                    userlist = userlist[0]
+                    if userlist[0].username=='':
+                        print "66666"
+                        userlist.update(shopid=int(shopid),username=username,cloudid=cloudid)
+                        userlist = userlist[0]
+
                 url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
                 response = requests.get(url)
                 text = eval(response.text)
@@ -532,7 +532,35 @@ class getAllFans(View):
         context["lastweeklydate"]=tmplist
         # print context
         return JsonResponse(context)
-
+def showSomedayInfo(request):
+    user = request.GET.get('username','unknown')
+    startdate = request.GET.get('startdate','unknown')
+    enddate = request.GET.get('enddate','unknown')
+    if user == 'unknown':
+        userlist =[item.cloudtouser.username for item in shop_discountinfo.objects.filter(cloudtouser__fathernode=0)]
+    else:
+        userlist = [user]
+    if startdate == 'unknown':
+        startdate = datetime.datetime.today().strftime("%Y-%m-%d")
+    if enddate == 'unknown':
+        enddate = datetime.datetime.today().strftime("%Y-%m-%d")
+    startDate = datetime.datetime(int(startdate[:4]), int(startdate[5:7]), int(startdate[8:10]), 0, 0,0)
+    endDate = datetime.datetime(int(enddate[:4]), int(enddate[5:7]), int(enddate[8:10]), 23, 59,59)
+    startDate = utc2local(startDate)
+    endDate = utc2local(endDate)
+    datalist = []
+    for user in userlist:
+        tmpdict = {}
+        itemfanlist = TwechatOffline.objects.filter(username=user,authtime__range=(startDate,endDate))
+        itemcount,itemownincome,itemuserincome=getsomedaysomebodyincome(itemfanlist)
+        tmpdict["username"] = user
+        tmpdict["startdate"] = startdate
+        tmpdict["enddate"] = enddate
+        tmpdict["fanscount"] = itemcount
+        tmpdict["ownincome"] = itemownincome
+        tmpdict["userincome"] = itemuserincome
+        datalist.append(tmpdict)
+    return JsonResponse(json.dumps(datalist),safe=False)
 def getsomedaysomebodyincome(fanslist):
     owntotalincome = 0.0
     usertotalincome = 0.0
@@ -1224,16 +1252,20 @@ def updateProfit(id,fathernodeid):
     :param fathernodeid:cloudtouser表中上级商户的id
     :return:
     '''
+    user = cloudtouser.objects.filter(id=id)
     sd = shop_discountinfo.objects.filter(cloudtouser_id=id)
     if sd.count() > 0:
         ct = shop_discountinfo.objects.filter(cloudtouser_id=fathernodeid)
         if ct.count() > 0:
-            #上级商户可提现金额
-            total = ct[0].cashed
-            #下级商户总收益
-            totalincome = sd[0].beforediscountincome +(total-sd[0].start)*sd[0].discount
-            #下级商户可提现
-            availablecash = totalincome - sd[0].cashed - sd[0].applying
+            #总收益
+            totalincome = 0.0
+            totalincomelist = TwechatOffline.objects.filter(childusername=user[0].username)
+            for objectitem in totalincomelist:
+                totalincome += float(objectitem.childuserprice)*10000
+            totalincome = int(totalincome/100)#单位转换成分
+            #可提现
+            availablecash = totalincome - sd[0].applying - sd[0].cashed
+
             if sd[0].totalincome == totalincome and availablecash==sd[0].availablecash:
                 pass
             else:
@@ -1368,6 +1400,8 @@ def showAllChildshopProfit(request):
                 tmpdict["cashed"] = ct[0].cashed/100.000
                 tmpdict["applying"] = ct[0].applying/100.000
                 tmpdict["discount"] = ct[0].discount
+                tmpdict["flag"] = ct[0].flag
+                tmpdict["fixedprice"] = ct[0].fixedprice
                 tmpdict["ch_username"] = ct[0].cloudtouser.username
                 data.append(tmpdict)
         context["data"]=data
@@ -1499,9 +1533,41 @@ def update_userprice(request):
                         discount=discountlist[0].value
                 else:
                     discount=shop_discount[0].discount
-
-                userprice = bdyunprice*float(discount)
+                if shop_discount.exists():
+                    if shop_discount[0].flag == 0:
+                        userprice = bdyunprice*float(discount)
+                    else:
+                        userprice = shop_discount[0].fixedprice
+                else:
+                    userprice = bdyunprice*float(discount)
                 item.userprice = userprice
+                item.save()
+    needupdatechildlist = TwechatOffline.objects.filter(childuserprice=0).exclude(userprice=0).exclude(childusername="")
+    for item in needupdatechildlist:
+        if item.type == "1":
+            userprice  = float(item.userprice)
+            childusername = item.childusername
+            #获取折扣
+            user = cloudtouser.objects.filter(username=childusername)
+            print childusername,user[0].id
+            if user.exists():
+                shop_discount=shop_discountinfo.objects.filter(cloudtouser_id=user[0].id)
+                discountlist=SystemConfig.objects.filter(attribute='discount')
+                if shop_discount.count()==0:
+                    if discountlist.count()==0:
+                        discount=0.8
+                    else:
+                        discount=discountlist[0].value
+                else:
+                    discount=shop_discount[0].discount
+                if shop_discount.exists():
+                    if shop_discount[0].flag == 0:
+                        childuserprice = userprice*float(discount)
+                    else:
+                        childuserprice = shop_discount[0].fixedprice
+                else:
+                    childuserprice = userprice*float(discount)
+                item.childuserprice = childuserprice
                 item.save()
     return HttpResponse('OK')
 def utc2local(utc_st):
@@ -1534,11 +1600,12 @@ def task_info(username):
                 endDate = utc2local(endDate)
                 unique_records = TwechatOffline.objects.filter(username=username,gh_name=gh_name,authtime__range=(startDate,endDate))
                 gh_fans=unique_records.count()
+                sumpricelist = unique_records.aggregate(price_sum=Sum('userprice'))
                 templist.append((gh_name)+str(gh_authtime))
                 id=id+1
                 tempdict["id"] = id
                 tempdict["gh_name"] = gh_name[0:1]+'***'
-                tempdict["gh_price"] = price
+                tempdict["gh_price"] = sumpricelist['price_sum']/gh_fans
                 tempdict["authtime"] = gh_authtime
                 tempdict["gh_fans"] = gh_fans
                 recordslist.append(tempdict)
@@ -1670,9 +1737,14 @@ def is_valid(request):
             if user_pass:
                 user = cloudtouser.objects.filter(username=username)
                 if user.count() > 0:
-                    if not user[0].cloudid:
-                        user.update(cloudid=cloudid,shopid=shopid)
-                return JsonResponse({'res':0})
+                    #一个商铺只能绑定一个用户名
+                    obj = cloudtouser.objects.filter(cloudid=cloudid,shopid=shopid)
+                    if obj.exists():
+                        return JsonResponse({'res':3})
+                    if user[0].fathernode==0:
+                        if not user[0].cloudid:
+                            user.update(cloudid=cloudid,shopid=shopid)
+                    return JsonResponse({'res':0})
     return JsonResponse({'res':1})
 
 import sys
