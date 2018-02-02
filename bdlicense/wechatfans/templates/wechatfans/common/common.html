@@ -47,8 +47,10 @@
         .page-container .sidebar-menu{
             display: table-cell;
             position: relative;
-            width: 16%;
+            width: 227px;
             background-color: #2C3749;
+            font-weight: 800;
+            font-size: 15px;
         }
         .page-container .sidebar-menu .sidebar-header{
             padding: 35px 15px 15px 10px;
@@ -68,7 +70,6 @@
         }
         .metismenu li a .menuitem{
             padding-left: 20px;
-            font-size: 14px
         }
         .metismenu a:hover .menuitem,
         .metismenu a:focus .menuitem,
@@ -91,7 +92,6 @@
             padding:13px 2%;
             display: block;
             text-decoration: none;
-            font-size:16px;
         }
         ul.collapse,ul.collapsing{
             padding-left:0
@@ -264,7 +264,10 @@
         <a class="page-logout" href="/wechatfans/logout">退出登录</a>
     </div>
     <div class="page-welconme">
-        <i class="fa fa-bullhorn" style="font-size: 16px"></i>：您好，欢迎来到云商城！
+        <i class="fa fa-bullhorn" style="font-size: 16px"></i>：您好，欢迎来到商业WiFi收益平台！
+        <marquee direction='left' scrolldelay="100" onmouseover="this.stop()" onmouseout='this.start()' width="70%" style="vertical-align:middle;float: right">
+            <a href="" style="text-decoration: none;padding-right: 20px">点我查看上线新功能</a>
+        </marquee>
     </div>
     <div class="main">
         {% block main %}{% endblock %}
