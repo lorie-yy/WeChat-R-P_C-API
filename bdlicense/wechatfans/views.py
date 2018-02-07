@@ -165,7 +165,7 @@ class Getfansnumber(View):
                     if userlist[0].username=='':
                         print "66666"
                         userlist.update(shopid=int(shopid),username=username,cloudid=cloudid)
-                        userlist = userlist[0]
+                    userlist = userlist[0]
 
                 url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
                 response = requests.get(url)
@@ -436,7 +436,7 @@ class getCloudProfit(mixins.ListModelMixin,
         return self.list(request, args, kwargs)
 def byUsernameSaveProfit():
     print 'call byUsername'
-    cloudtouserob = cloudtouser.objects.filter(fathernode=0)
+    cloudtouserob = cloudtouser.objects.filter(fathernode=0).exclude(cloudid=None)
     for user in cloudtouserob:
         takemoney,flag,profit=support_takemoney(user.username)
         saveShopProfit(user.cloudid,user.shopid,takemoney)
@@ -619,7 +619,7 @@ def earnings(username,startDate,enddate):
         # print 'usermac',item.id
         # print 'usermac',item.price
         profit += (float(item.userprice)*100)
-    profit_dis=int(profit*float(discount))
+    profit_dis=int(profit)
     print username,'profit_dis:',profit_dis,profit
 
     return profit_dis,userobject.count()
@@ -1012,16 +1012,21 @@ def savediscountinfo(request):
     cloudid = request.GET.get('cloudid','')
     shopid = request.GET.get('shopid','')
     discount = request.GET.get('bonus','')
+    flag = request.GET.get('public','')
     operationtype = request.GET.get('typeThird','')
-    print cloudid,shopid,discount
+    print '*********',cloudid,shopid,discount,flag
     result = 1
     try:
         shopinfo = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
         if operationtype == 'add':
             if shopinfo.count() ==0:
                 cloudtouserob = cloudtouser.objects.get(cloudid=cloudid,shopid=shopid)
-                sd = shop_discountinfo(cloudid=cloudid,shopid=shopid,discount=discount,cloudtouser=cloudtouserob)
-                sd.save()
+                if flag in [0,'0']:
+                    sd = shop_discountinfo(cloudid=cloudid,shopid=shopid,discount=discount,cloudtouser=cloudtouserob,flag=0)
+                    sd.save()
+                if flag in [1,'1']:
+                    sd = shop_discountinfo(cloudid=cloudid,shopid=shopid,fixedprice=discount,cloudtouser=cloudtouserob,flag=1)
+                    sd.save()
                 result = 0
             else:
                 result = 1
@@ -1030,10 +1035,13 @@ def savediscountinfo(request):
             if shopinfo.count() ==0:
                 result = 2
             else:
-                takemoney,flag,profit=support_takemoney(shopinfo[0].cloudtouser.username)
+                takemoney,f,profit=support_takemoney(shopinfo[0].cloudtouser.username)
                 start = profit
                 beforediscountincome = shopinfo[0].totalincome
-                shopinfo.update(discount=discount,start=start,beforediscountincome=beforediscountincome)
+                if flag in [0,'0']:
+                    shopinfo.update(discount=discount,start=start,beforediscountincome=beforediscountincome,flag=0)
+                if flag in [1,'1']:
+                    shopinfo.update(fixedprice=discount,start=start,beforediscountincome=beforediscountincome,flag=1)
                 result = 0
         elif operationtype == 'del':
             if shopinfo.count() ==0:
@@ -1045,7 +1053,26 @@ def savediscountinfo(request):
         result = 4
     uu = {'res':result}
     return JsonResponse(uu)
-
+def setNotify(request):
+    title = request.GET.get('title','none')
+    detail = request.GET.get('detail','none')
+    sc = SystemConfig.objects.filter(attribute='notify')
+    if sc.count() == 0:
+        scobj = SystemConfig(attribute='notify',value='',description='')
+        scobj.save()
+    else:
+        scobj = sc[0]
+    if title != 'none'and detail != 'none':
+        scobj.value = title
+        scobj.description = detail
+        scobj.save()
+    else:
+        title = scobj.value
+        detail = scobj.description
+    context = {}
+    context['title']=title
+    context['detail']=detail
+    return JsonResponse(context)
 class getalldiscountinfo(mixins.ListModelMixin,
                 mixins.CreateModelMixin,
                 generics.GenericAPIView):
@@ -1579,7 +1606,7 @@ def utc2local(utc_st):
     return local_st
 # 公众号-历史任务的信息
 def task_info(username):
-    allrecords = TwechatOffline.objects.filter(username=username).exclude(price=0).order_by('-authtime')
+    allrecords = TwechatOffline.objects.filter(username=username).exclude(userprice=0).order_by('-authtime')
     recordslist=[]
     if allrecords.exists():
         templist=[]
@@ -1605,7 +1632,7 @@ def task_info(username):
                 id=id+1
                 tempdict["id"] = id
                 tempdict["gh_name"] = gh_name[0:1]+'***'
-                tempdict["gh_price"] = sumpricelist['price_sum']/gh_fans
+                tempdict["gh_price"] = round(sumpricelist['price_sum']/gh_fans,4)
                 tempdict["authtime"] = gh_authtime
                 tempdict["gh_fans"] = gh_fans
                 recordslist.append(tempdict)
