@@ -40,4 +40,5 @@ urlpatterns = patterns(
     url(r'^update_userprice',views.update_userprice, name='update_userprice'),
     url(r'^historical_task',views.historicalTask, name='historical_task'),
     url(r'^histask_export',views.historyTaskExport, name='histask_export'),
+    url(r'^setnotify',views.setNotify, name='setnotify'),
 )
