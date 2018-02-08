@@ -140,6 +140,9 @@
                 }else if(data.res == 5){
 {#                    alert('商城用户');#}
                     window.location.href='/react/adminuserlogin';
+                }else if(data.res == 6){
+{#                    alert('商城用户');#}
+                    layer.msg('用户未验证，请至云平台--“微信收益功能设置”中进行校验！',{time:5000});
                 }
                 else{
                     layer.msg('用户名和密码不匹配!');

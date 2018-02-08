@@ -96,6 +96,7 @@
 
                     var xdata={{ xdata|safe }};
                     var seriesdata={{ seriesdata }};
+                    var seriesdatafans={{ seriesdatafans }};
 {#                    console.log(xdata);#}
 {#                    console.log(seriesdata);#}
 {#                    var startDate=$('input[name=daterangepicker_start]').val();#}
@@ -118,11 +119,16 @@
                             },
                             //工具提示
                             tooltip: {
-                                trigger: 'axis'
+                                trigger: 'axis',
+{#                                //点击隐藏某一图例，数据为空时，鼠标悬浮交互时的信息提示有问题#}
+{#                                formatter: #}
+{#                                '{b}<br/>' +#}
+{#                                '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:#56BDDE;"></span>{a0}：{c0} 元<br/>' +#}
+{#                                '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:#FEC400;"></span>{a1}：{c1} 人'#}
                             },
                             //图例
                             legend: {
-                                data:['收益量']
+                                data:['收益量(￥)','粉丝量(人)']
                             },
                             //网格位置
                             grid: {
@@ -158,20 +164,13 @@
                             yAxis: {
                                 type: 'value',
                                 axisLabel : {
-                                    formatter: '{value} 元'
+                                    formatter: '{value}'
                                 }
                             },
                             series: [
-        {#                                {#}
-        {#                                    name:'粉丝量',#}
-        {#                                    type:'line',#}
-        {#                                    stack: '总量',#}
-        {#                                    data:[120, 132, 101, 134, 90, 230, 210]#}
-        {#                                },#}
                                 {
-                                    name:'收益量',
+                                    name:'收益量(￥)',
                                     type:'line',
-                                    stack: '总量',
                                     data:seriesdata,
                                     markPoint : {
                                         data : [
@@ -189,7 +188,35 @@
                                     smooth:true,
                                     itemStyle : {
                                         normal : {
-                                            color:'#0099cc',
+                                            color:'#56BDDE',
+{#                                            //连线样式#}
+{#                                            lineStyle:{#}
+{#                                                color:'#0099cc'#}
+{#                                            }#}
+                                        }
+                                    }
+                                },
+                                {
+                                    name:'粉丝量(人)',
+                                    type:'line',
+                                    data:seriesdatafans,
+                                    markPoint : {
+                                        data : [
+                                            {type : 'max', name: '最大值'},
+                                            {type : 'min', name: '最小值'}
+
+                                        ]
+                                    },
+                                    markLine : {
+                                        data : [
+                                            {type : 'average', name : '平均值'}
+                                        ]
+                                    },
+                                    //连线平滑
+                                    smooth:true,
+                                    itemStyle : {
+                                        normal : {
+                                            color:'#FEC400',
 {#                                            //连线样式#}
 {#                                            lineStyle:{#}
 {#                                                color:'#0099cc'#}
