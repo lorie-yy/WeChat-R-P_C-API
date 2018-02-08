@@ -774,7 +774,10 @@ def license_login(request):
                         request.session['sc_cloudid'] = clouduser[0].cloudid
                         request.session['sc_shopid'] = clouduser[0].shopid
                         request.session['sc_userlevel'] = clouduser[0].userlever
-                        result['res'] = 3
+                        if clouduser[0].cloudid is None or clouduser[0].shopid is None:
+                            result['res'] = 6
+                        else:
+                            result['res'] = 3
                     else:
                         result['res'] = 4
             return JsonResponse(result)

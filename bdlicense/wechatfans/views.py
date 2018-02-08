@@ -277,7 +277,7 @@ def showfans(request):
     # path_url=request.build_absolute_uri('/wechatfans/sub_detail?daterange=0')
     # print 'path_url',path_url
     # requests.get(path_url)
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username=='' or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     if sc_userlevel ==2:
@@ -342,23 +342,30 @@ def showfans(request):
 
     # y轴收益数据
     seriesdata=[]
+    seriesdatafans=[]
     for item in xdata:
         # 某天开始0点-结束24点
-        dayprofit = cache.get(username+item,'')
+        dayprofit = cache.get(username+item+'dayprofit','')
+        dayfans = cache.get(username+item+'dayfans','')
         if dayprofit =="" or item == end :
             startDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 0, 0,0)
             endDate = datetime.datetime(int(item[:4]), int(item[5:7]), int(item[8:10]), 23, 59,59)
             startDate = utc2local(startDate)
             endDate = utc2local(endDate)
             dayprofit,dayfans=earnings(username,startDate,endDate)
-            cache.set(username+item, dayprofit, timeout=None)
+            cache.set(username+item+'dayprofit', dayprofit, timeout=None)
+            cache.set(username+item+'dayfans', dayfans, timeout=None)
         seriesdata.append(dayprofit/100.00)
-    print 'seriesdata',seriesdata
+        seriesdatafans.append(dayfans)
+    print 'seriesdata,seriesdatafans',seriesdata,seriesdatafans
     context['seriesdata']=seriesdata
+    context['seriesdatafans']=seriesdatafans
 
     context['cloudid']=cloudid
     context['shopid']=shopid
     context['username']=username
+    context['notify_title']=notify_title
+    context['notify_desc']=notify_desc
     context['sc_userlevel']=sc_userlevel
     context['todayprofit']=todayprofit/100.000
     context['totalprofit']=totalprofit/100.000
@@ -620,14 +627,13 @@ def earnings(username,startDate,enddate):
         # print 'usermac',item.price
         profit += (float(item.userprice)*100)
     profit_dis=int(profit)
-    print username,'profit_dis:',profit_dis,profit
 
     return profit_dis,userobject.count()
 
 
 
 def takemoney(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
@@ -638,6 +644,8 @@ def takemoney(request):
     context['flag']=flag
     context['shopid']=shopid
     context['username']=username
+    context['notify_title']=notify_title
+    context['notify_desc']=notify_desc
     context['sc_userlevel']=sc_userlevel
     context['takemoney']=takemoney/100.000
 
@@ -655,7 +663,7 @@ def takemoney(request):
 # 创建取款记录
 @csrf_exempt
 def apply_for_withdrawal(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
@@ -719,7 +727,7 @@ def paging(request):
 
 # 申请提现记录
 def applyfor_records(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     cloudid = request.session.get('sc_cloudid')
@@ -727,6 +735,8 @@ def applyfor_records(request):
     allrecords=ApplyforWithdrawalRecords.objects.filter(cloudid=cloudid,shopid=shopid).order_by('-id')
     context ={}
     context['username']=username
+    context['notify_title']=notify_title
+    context['notify_desc']=notify_desc
     context['sc_userlevel']=sc_userlevel
     context['allrecords']=allrecords
     # 调用分页函数
@@ -774,7 +784,7 @@ def applyfor_records(request):
 
 # 关闭申请
 def closerecord(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     result=0
@@ -1209,7 +1219,7 @@ class Transferaccounts(View):
 @csrf_exempt
 def logout(request):
     if request.method == "GET":
-        username,sc_userlevel,user_type,is_superuser=islogin(request)
+        username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
         if username==''or user_type==0 or is_superuser==1:
             return render(request,'license_login.html')
         request.session.flush()
@@ -1219,10 +1229,10 @@ def logout(request):
 # 修改密码
 @csrf_exempt
 def modify_password(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
-    uu = {'username': username,'sc_userlevel': sc_userlevel}
+    uu = {'username': username,'sc_userlevel': sc_userlevel,'notify_title':notify_title,'notify_desc':notify_desc}
     if request.method == 'POST':
         password = request.POST.get('password')
         password_new1 = request.POST.get('password_new1')
@@ -1358,7 +1368,7 @@ def edit_child_dis(request):
     id = request.GET.get('id')
     discount = request.GET.get('discount')
     result=0
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     try:
@@ -1402,7 +1412,7 @@ def showAllChildshopProfit(request):
     :param request:
     :return:
     '''
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     fathernode = cloudtouser.objects.filter(username=username)
@@ -1412,6 +1422,8 @@ def showAllChildshopProfit(request):
         #2.取出所有子商户的收益信息
         context = {}
         context["username"] = username
+        context['notify_title']=notify_title
+        context['notify_desc']=notify_desc
         context["sc_userlevel"] = sc_userlevel
         data = []
         fathernodeid = fathernode[0].id
@@ -1436,7 +1448,7 @@ def showAllChildshopProfit(request):
 
 class getChildApply(View):
     def get(self,request):
-        username,sc_userlevel,user_type,is_superuser=islogin(request)
+        username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
         if username==''or user_type==0 or is_superuser==1:
             return render(request,'license_login.html')
         fathernode = cloudtouser.objects.filter(username=username)
@@ -1449,13 +1461,15 @@ class getChildApply(View):
             applyrecords103=allapplyrecords.filter(paymentresult=103)
             applyrecords=allapplyrecords.exclude(paymentresult=103)
             context["username"] = username
+            context['notify_title']=notify_title
+            context['notify_desc']=notify_desc
             context["sc_userlevel"] = sc_userlevel
             context["applyrecords103"] = applyrecords103
             context["applyrecords"] = applyrecords
         return render(request,'wechatfans/showallchildshopapply.html',context)
     @csrf_exempt
     def post(self,request):
-        username,sc_userlevel,user_type,is_superuser=islogin(request)
+        username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
         if username==''or user_type==0 or is_superuser==1:
             return render(request,'license_login.html')
         applyrecordid = request.POST.get('applyrecordid','')
@@ -1512,9 +1526,13 @@ def islogin(request):
     userlevel = request.session.get('sc_userlevel','')
     user_type = request.session.get('user_type','')
     is_superuser = request.session.get('is_superuser','')
+    notify_title = SystemConfig.objects.filter(attribute='notify')[0].value
+    if notify_title=='':
+        notify_title='欢迎来到商业WiFi收益平台'
+    notify_desc = SystemConfig.objects.filter(attribute='notify')[0].description
     # if not username or user_type==0 or is_superuser==1:
 
-    return username,userlevel,user_type,is_superuser
+    return username,userlevel,user_type,is_superuser,notify_title,notify_desc
 
 def update_everybodyprofit(requset):
     '''
@@ -1640,7 +1658,7 @@ def task_info(username):
 
 # 历史任务列表
 def historicalTask(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     context = {}
@@ -1650,6 +1668,8 @@ def historicalTask(request):
     start,end=paging(request)
     recordslist=recordslist[start:end]
     context["username"] = username
+    context['notify_title']=notify_title
+    context['notify_desc']=notify_desc
     context['sc_userlevel']=sc_userlevel
     context["recordslist"] = recordslist
     return render(request,'wechatfans/historical_task.html',context)
@@ -1657,7 +1677,7 @@ def historicalTask(request):
 # 导出历史任务
 import tablib
 def historyTaskExport(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     alltask = task_info(username)
@@ -1673,13 +1693,15 @@ def historyTaskExport(request):
 #=============子商户页面开始=================
 #1.查看收益
 def showProfit(request):
-    username,sc_userlevel,user_type,is_superuser=islogin(request)
+    username,sc_userlevel,user_type,is_superuser,notify_title,notify_desc=islogin(request)
     if username==''or user_type==0 or is_superuser==1:
         return render(request,'license_login.html')
     #先计算更新
     user = cloudtouser.objects.filter(username=username)
     context = {}
     context["username"] = username
+    context['notify_title']=notify_title
+    context['notify_desc']=notify_desc
     context["sc_userlevel"] = sc_userlevel
     if user.count() > 0:
         fathernodeid = user[0].fathernode
