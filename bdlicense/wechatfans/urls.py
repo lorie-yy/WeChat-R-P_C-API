@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from . import views
+from . import views,tests
 
 urlpatterns = patterns(
     '',
@@ -41,4 +41,5 @@ urlpatterns = patterns(
     url(r'^historical_task',views.historicalTask, name='historical_task'),
     url(r'^histask_export',views.historyTaskExport, name='histask_export'),
     url(r'^setnotify',views.setNotify, name='setnotify'),
+    url(r'^snippet_list',tests.snippet_list, name='setnotify'),
 )

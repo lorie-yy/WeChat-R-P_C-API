@@ -164,7 +164,7 @@ class Getfansnumber(View):
                 else:
                     if userlist[0].username=='':
                         print "66666"
-                        userlist.update(shopid=int(shopid),username=username,cloudid=cloudid)
+                        userlist.update(shopid=int(shopid),username=username,childusername=childusername,cloudid=cloudid)
                     userlist = userlist[0]
 
                 url = 'http://api.weifenshi.cn/Channel/whether?channelid=1443&oid='+oid+'&openid='+openid
