@@ -1526,10 +1526,14 @@ def islogin(request):
     userlevel = request.session.get('sc_userlevel','')
     user_type = request.session.get('user_type','')
     is_superuser = request.session.get('is_superuser','')
-    notify_title = SystemConfig.objects.filter(attribute='notify')[0].value
-    if notify_title=='':
+
+    notify = SystemConfig.objects.filter(attribute='notify')
+    if notify.exists():
+        notify_title=notify[0].value
+        notify_desc = notify[0].description
+    else:
         notify_title='欢迎来到商业WiFi收益平台'
-    notify_desc = SystemConfig.objects.filter(attribute='notify')[0].description
+        notify_desc = '欢迎来到商业WiFi收益平台'
     # if not username or user_type==0 or is_superuser==1:
 
     return username,userlevel,user_type,is_superuser,notify_title,notify_desc

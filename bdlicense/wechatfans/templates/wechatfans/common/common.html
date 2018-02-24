@@ -10,8 +10,9 @@
     <link rel="icon" href="{% static 'images/bdlogo-166.png' %}">
 
     <!-- Styles-->
+    <link rel="stylesheet" href="{% static 'js/lay/modules/theme/default/layui.css' %}">
 	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
-	<link rel="stylesheet" href="{% static 'assets/css/font-awesome.css' %}">
+	<link rel="stylesheet" href="{% static 'assets/css/font-awesome.min.css' %}">
 	<link rel="stylesheet" href="{% static 'css/metisMenu.css' %}">
 	<link rel="stylesheet" href="{% static 'css/daterangepicker.css' %}">
 	<link rel="stylesheet" href="{% static 'js/lay/modules/theme/default/layer.css' %}">
@@ -20,6 +21,7 @@
     <script src="{% static 'js/metisMenu.js' %}"></script>
     <script src="{% static 'js/jquery.validate.js' %}"></script>
     <script src="{% static 'js/lay/modules/layer.js' %}"></script>
+    <script src="{% static 'js/layui.js' %}"></script>
     <script src="{% static 'js/moment.min.js' %}"></script>
     <script src="{% static 'js/daterangepicker.js' %}"></script>
     <script src="{% static 'js/echarts.min.js' %}"></script>
@@ -62,12 +64,19 @@
             padding-left: 0;
         }
         .metismenu li a .faicon{
-            padding: 14px 16px;
+            padding: 16px;
             color: #ffffff;
-            font-size: 20px;
+        }
+        .metismenu li a .faicon i{
+            width: 20px;
+            text-align: center;
+            color: #dad8d8;
         }
         .metismenu li a.active .faicon{
             background-color: #0099cc;
+        }
+        .metismenu li a.active .faicon i{
+            color: #ffffff;
         }
         .metismenu li a .menuitem{
             padding-left: 20px;
@@ -219,26 +228,26 @@
     </div>
     <ul class="metismenu" id="metismenu">
         <li><a href="/wechatfans/showfans">
-            <span class="faicon" style="padding-right: 13px;padding-left: 14px"><img src="{% static 'images/icon1.png' %}"></span>
+            <span class="faicon"><i class="fa fa-line-chart"></i></span>
             <span class="menuitem">收益统计</span>
         </a></li>
         <li><a href="/wechatfans/takemoney">
-            <span class="faicon" style="padding-right: 17px"><img src="{% static 'images/icon4.png' %}"></span>
+            <span class="faicon"><i class="fa fa-rmb"></i></span>
             <span class="menuitem">申请提现</span>
         </a></li>
         {% if sc_userlevel == 1 %}
         <li><a href="/wechatfans/applyfor_records">
-            <span class="faicon"><img src="{% static 'images/icon2.png' %}"></span>
+            <span class="faicon"><i class="fa fa-table"></i></span>
             <span class="menuitem">申请记录</span>
         </a></li>
         <li><a href="/wechatfans/historical_task">
-            <span class="faicon"><img src="{% static 'images/icon2.png' %}"></span>
+            <span class="faicon"><i class="fa fa-wechat"></i></span>
             <span class="menuitem">历史任务</span>
         </a></li>
 {#        二级菜单#}
 {#        <li>#}
 {#            <a href="#" class="has-arrow">#}
-{#                <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>#}
+{#            <span class="faicon"><i class="fa fa-user-plus"></i></span>#}
 {#                <span class="menuitem">子商户</span></a>#}
 {#            <ul>#}
 {#                <li><a href="/wechatfans/showallchildshopprofit">#}
@@ -251,7 +260,8 @@
 {#        </li>#}
         {% endif %}
         <li><a href="/wechatfans/modify_password">
-            <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>
+{#            <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>#}
+            <span class="faicon"><i class="fa fa-key"></i></span>
             <span class="menuitem">修改密码</span>
         </a></li>
 
@@ -266,8 +276,8 @@
         <a class="page-logout" href="/wechatfans/logout">退出登录</a>
     </div>
     <div class="page-welconme">
-        <i class="fa fa-bullhorn" style="font-size: 16px"></i>：{{ notify_title }}
-        <marquee direction='left' scrolldelay="100" onmouseover="this.stop()" onmouseout='this.start()' width="75%" style="vertical-align:middle;float: right">
+        <i class="fa fa-bullhorn" style="font-size: 16px"></i>：
+        <marquee direction='left' scrolldelay="100" onmouseover="this.stop()" onmouseout='this.start()' width="95%" style="vertical-align:middle;float: right">
             <a href="" style="text-decoration: none;padding-right: 20px">{{ notify_desc }}</a>
         </marquee>
     </div>
