@@ -311,7 +311,7 @@ def showfans(request):
         print "update value "
 
         #获取粉丝数
-        totalfans = TwechatOffline.objects.filter(username=username).count()
+        totalfans = TwechatOffline.objects.filter(username=username).exclude(userprice=0).count()
         #重新计算可提现金额以及总收入
         totalprofit = saveShopProfit(cloudid,shopid,takemoney)
 
