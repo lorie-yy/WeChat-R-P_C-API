@@ -42,4 +42,5 @@ urlpatterns = patterns(
     url(r'^histask_export',views.historyTaskExport, name='histask_export'),
     url(r'^setnotify',views.setNotify, name='setnotify'),
     url(r'^snippet_list',tests.snippet_list, name='setnotify'),
+    url(r'^getrecordscount',views.getRecordsCount, name='getrecordscount'),
 )

@@ -712,7 +712,9 @@ def apply_for_withdrawal(request):
     context['result']=result
     print result
     return JsonResponse({'result':result})
-
+def getRecordsCount(request):
+    records = ApplyforWithdrawalRecords.objects.filter(paymentresult=103)
+    return HttpResponse(records.count())
 # 分页
 def paging(request):
     # 当前页码/页面条数
@@ -1555,7 +1557,8 @@ def update_everybodyprofit(requset):
     for user in userlist:
         #获取今日收益以及粉丝
         todayprofit,todayfans=earnings(user,startDate,endDate)
-        cache.set(user+startdate, todayprofit, timeout=None)
+        cache.set(user+startdate+'dayprofit', todayprofit, timeout=None)
+        cache.set(user+startdate+'dayfans', todayfans, timeout=None)
     return HttpResponse('OK')
 
 def update_userprice(request):
