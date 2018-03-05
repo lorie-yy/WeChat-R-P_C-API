@@ -217,6 +217,15 @@
             }
         })
     });
+    function shownotify(){
+        layer.open({
+            type: 1,
+            skin: 'layui-layer-rim',
+            area: ['420px', '240px'],
+            title:'{{ notify_title }}',
+            content: "<div style='padding:20px'>{{ notify_desc }}</div>"
+        });
+    }
 </script>
 <div class="page-container">
 {% block sidebar-menu %}
@@ -245,19 +254,19 @@
             <span class="menuitem">历史任务</span>
         </a></li>
 {#        二级菜单#}
-{#        <li>#}
-{#            <a href="#" class="has-arrow">#}
-{#            <span class="faicon"><i class="fa fa-user-plus"></i></span>#}
-{#                <span class="menuitem">子商户</span></a>#}
-{#            <ul>#}
-{#                <li><a href="/wechatfans/showallchildshopprofit">#}
-{#                    <span class="menuitem">子商户收益</span>#}
-{#                </a></li>#}
-{#                <li><a href="/wechatfans/getchildapply">#}
-{#                    <span class="menuitem">子商户申请记录</span>#}
-{#                </a></li>#}
-{#            </ul>#}
-{#        </li>#}
+        <li>
+            <a href="#" class="has-arrow">
+            <span class="faicon"><i class="fa fa-user-plus"></i></span>
+                <span class="menuitem">子商户</span></a>
+            <ul>
+                <li><a href="/wechatfans/showallchildshopprofit">
+                    <span class="menuitem">子商户收益</span>
+                </a></li>
+                <li><a href="/wechatfans/getchildapply">
+                    <span class="menuitem">子商户申请记录</span>
+                </a></li>
+            </ul>
+        </li>
         {% endif %}
         <li><a href="/wechatfans/modify_password">
 {#            <span class="faicon"><img src="{% static 'images/icon5.png' %}"></span>#}
@@ -275,11 +284,8 @@
         <span style="padding: 0 3px">|</span>
         <a class="page-logout" href="/wechatfans/logout">退出登录</a>
     </div>
-    <div class="page-welconme">
-        通知 <i class="fa fa-bullhorn" style="font-size: 16px"></i>：
-        <marquee direction='left' scrolldelay="100" onmouseover="this.stop()" onmouseout='this.start()' width="90%" style="vertical-align:middle;float: right">
-            <a href="" style="text-decoration: none;padding-right: 20px">{{ notify_desc }}</a>
-        </marquee>
+    <div class="page-welconme">通知 <i class="fa fa-bullhorn" style="font-size: 16px"></i>：
+        <a onclick="shownotify()" style="text-decoration: none;cursor:pointer;">{{ notify_title }}</a>
     </div>
     <div class="main">
         {% block main %}{% endblock %}
