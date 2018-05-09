@@ -21,3 +21,5 @@ INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,v
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (10,'ZXSOF-CDS0016A','ZXWL OMCP-License-128',128,2,2560,2,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (11,'BDYUN-TEST','BDYUN-Lic-128-128',128,128,2560,1,2);
 INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (12,'CBSOF-CDS0135A','BCP8200-OS-Portal',1,0,0,1,1);
+INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (13,'CBSOF-CDS0082A','BCP8200-OS-ADV',4,0,0,1,1);
+INSERT INTO adminbd_licenseparams(id,code,cloudRankName,maxAPs,maxACs,maxUsers,vesion_type,product_type) VALUES (14,'CBSOF-CDS0083A','BCP8200-OS-ULT',4,0,0,1,1);
