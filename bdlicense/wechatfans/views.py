@@ -373,8 +373,9 @@ def showfans(request):
     context['todayfans']=todayfans
     context['takemoney']=takemoney/100.000
     # return HttpResponse(json.dumps(context))
+    return JsonResponse(context)
 
-    return render(request, 'wechatfans/showfans.html',context)
+    # return render(request, 'wechatfans/showfans.html',context)
 #保存收益
 def saveShopProfit(cloudid,shopid,takemoney):
     shopprofit = shop_discountinfo.objects.filter(cloudid=cloudid,shopid=shopid)
@@ -658,7 +659,8 @@ def takemoney(request):
         sd = shop_discountinfo.objects.filter(cloudtouser_id=user[0].id)
         if sd.count() > 0:
             context["availablecash"] = sd[0].availablecash/100.000
-    return render(request, 'wechatfans/takemoney.html',context)
+    # return render(request, 'wechatfans/takemoney.html',context)
+    return JsonResponse(context)
 
 # 创建取款记录
 @csrf_exempt
@@ -1524,10 +1526,10 @@ class getChildApply(View):
             return False
 
 def islogin(request):
-    username = request.session.get('username','')
-    userlevel = request.session.get('sc_userlevel','')
-    user_type = request.session.get('user_type','')
-    is_superuser = request.session.get('is_superuser','')
+    username = request.session.get('username','lyy')
+    userlevel = request.session.get('sc_userlevel','1')
+    user_type = request.session.get('user_type','1')
+    is_superuser = request.session.get('is_superuser','0')
 
     notify = SystemConfig.objects.filter(attribute='notify')
     if notify.exists():
